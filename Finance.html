@@ -24,6 +24,7 @@
                         var key_length = response['size'];
                         var data = [];
                         var pdata = [];
+                        var mpdata = [];
                         var e = document.getElementById('myDiv');
                         // Plot third value also in same graph
                         for (var i = 0; i < key_length; i++) {
@@ -41,11 +42,18 @@
                                 name: key,
                                 type: 'scatter'
                             });
+                            mpdata.push({
+                                x: value[3][0],
+                                y: value[3][1],
+                                name: key,
+                                type: 'scatter'
+                            });
                         }
                         document.getElementById('loading-spinner').style.display = 'none';
                         for (var i = 0; i < data.length; i++) {
                             var trace = data[i];
                             var ptrace = pdata[i];
+                            var mptrace = mpdata[i];
                             var layout = {
                                 title: keys[i],
                                 xaxis: {
@@ -66,6 +74,7 @@
                             e.appendChild(p);
                             Plotly.newPlot(keys[i], [trace], layout);
                             Plotly.newPlot(keys[i] + 'p', [ptrace], layout);
+                            Plotly.newPlot(keys[i] + 'mp', [mptrace], layout);
                         }
                     }
                 }
