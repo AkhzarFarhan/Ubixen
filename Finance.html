@@ -68,10 +68,13 @@
                             };
                             var d = document.createElement('div');
                             var p = document.createElement('div');
+                            var m = document.createElement('div');
                             d.setAttribute('id', keys[i]);
                             p.setAttribute('id', keys[i] + 'p');
+                            m.setAttribute('id', keys[i] + 'mp');
                             e.appendChild(d);
                             e.appendChild(p);
+                            e.appendChild(m);
                             Plotly.newPlot(keys[i], [trace], layout);
                             Plotly.newPlot(keys[i] + 'p', [ptrace], layout);
                             Plotly.newPlot(keys[i] + 'mp', [mptrace], layout);
