@@ -106,6 +106,18 @@
                                 showline: false
                             }
                         }
+                        var layout_2 = {
+                            title: 'Two-plots',
+                            xaxis: {
+                                title: 'Date',
+                                showgrid: false,
+                                zeroline: false
+                            },
+                            yaxis: {
+                                title: 'MPChange',
+                                showline: false
+                            }
+                        }
                         var m = document.createElement('div');
                         var m2 = document.createElement('div');
                         m.setAttribute('id', 'mp');
@@ -113,7 +125,7 @@
                         e.appendChild(m);
                         e.appendChild(m2);
                         Plotly.newPlot('mp', mptrace, layout);
-                        Plotly.newPlot('mp2', mptrace_2, layout);
+                        Plotly.newPlot('mp2', mptrace_2, layout_2);
                     }
                 }
             }
