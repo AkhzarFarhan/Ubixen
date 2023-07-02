@@ -30,6 +30,7 @@
                         var e = document.getElementById('myDiv');
                         // Plot third value also in same graph
                         for (var i = 0; i < key_length; i++) { // for each ticker
+                            mpdata_2_dict[i] = [];
                             var key = keys[i];
                             var value = response[key];
                             data.push({
