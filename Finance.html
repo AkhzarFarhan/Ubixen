@@ -26,6 +26,7 @@
                         var pdata = [];
                         var mpdata = [];
                         var mpdata_2 = [];
+                        var mpdata_2_dict = {};
                         var e = document.getElementById('myDiv');
                         // Plot third value also in same graph
                         for (var i = 0; i < key_length; i++) { // for each ticker
@@ -57,6 +58,11 @@
                                     name: key,
                                     type: 'scatter'
                                 });
+                                mpdata_2_dict[i].push([true, i]);
+                            }
+                            else
+                            {
+                                mpdata_2_dict[i].push([false, i]);
                             }
                         }
                         document.getElementById('loading-spinner').style.display = 'none';
@@ -66,9 +72,9 @@
                             var trace = data[i];
                             var ptrace = pdata[i];
                             mptrace.push(mpdata[i]);
-                            if (keys[i] == 'Nippon India Nifty 50 Shariah Bees ETF' || keys[i] == 'Tata Ethical Fund Direct Plan Growth')
+                            if (mpdata_2_dict[i][0])
                             {
-                                mptrace_2.push(mpdata_2[i]);
+                                mptrace_2.push(mpdata_2[mpdata_2_dict[i][1]]);
                             }
                             var layout = {
                                 title: keys[i],
@@ -106,18 +112,6 @@
                                 showline: false
                             }
                         }
-                        var layout_2 = {
-                            title: 'Two-plots',
-                            xaxis: {
-                                title: 'Date',
-                                showgrid: false,
-                                zeroline: false
-                            },
-                            yaxis: {
-                                title: 'MPChange',
-                                showline: false
-                            }
-                        }
                         var m = document.createElement('div');
                         var m2 = document.createElement('div');
                         m.setAttribute('id', 'mp');
@@ -125,7 +119,7 @@
                         e.appendChild(m);
                         e.appendChild(m2);
                         Plotly.newPlot('mp', mptrace, layout);
-                        Plotly.newPlot('mp2', mptrace_2, layout_2);
+                        Plotly.newPlot('mp2', mptrace_2, layout);
                     }
                 }
             }
