@@ -50,10 +50,11 @@
                             });
                         }
                         document.getElementById('loading-spinner').style.display = 'none';
+                        var mptrace = [];
                         for (var i = 0; i < data.length; i++) {
                             var trace = data[i];
                             var ptrace = pdata[i];
-                            var mptrace = mpdata[i];
+                            mptrace.push(mpdata[i]);
                             var layout = {
                                 title: keys[i],
                                 xaxis: {
@@ -68,17 +69,32 @@
                             };
                             var d = document.createElement('div');
                             var p = document.createElement('div');
-                            var m = document.createElement('div');
+                            
                             d.setAttribute('id', keys[i]);
                             p.setAttribute('id', keys[i] + 'p');
-                            m.setAttribute('id', keys[i] + 'mp');
+                            
                             e.appendChild(d);
                             e.appendChild(p);
-                            e.appendChild(m);
+                            
                             Plotly.newPlot(keys[i], [trace], layout);
                             Plotly.newPlot(keys[i] + 'p', [ptrace], layout);
-                            Plotly.newPlot(keys[i] + 'mp', [mptrace], layout);
                         }
+                        var layout = {
+                            title: 'Multi-plots',
+                            xaxis: {
+                                title: 'Date',
+                                showgrid: false,
+                                zeroline: false
+                            },
+                            yaxis: {
+                                title: 'MPChange',
+                                showline: false
+                            }
+                        }
+                        var m = document.createElement('div');
+                        m.setAttribute('id', 'mp');
+                        e.appendChild(m);
+                        Plotly.newPlot('mp', mptrace, layout);
                     }
                 }
             }
