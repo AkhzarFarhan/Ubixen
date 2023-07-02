@@ -26,7 +26,6 @@
                         var pdata = [];
                         var mpdata = [];
                         var mpdata_2 = [];
-                        var mpdata_2_dict = {};
                         var e = document.getElementById('myDiv');
                         // Plot third value also in same graph
                         for (var i = 0; i < key_length; i++) { // for each ticker
@@ -59,23 +58,20 @@
                                     name: key,
                                     type: 'scatter'
                                 });
-                                mpdata_2_dict[i].push([true, i]);
                             }
-                            else
-                            {
-                                mpdata_2_dict[i].push([false, i]);
-                            }
+                            
                         }
                         document.getElementById('loading-spinner').style.display = 'none';
                         var mptrace = [];
                         var mptrace_2 = [];
+                        var mptrace_2_counter = 0;
                         for (var i = 0; i < key_length; i++) { // for each ticker
                             var trace = data[i];
                             var ptrace = pdata[i];
                             mptrace.push(mpdata[i]);
-                            if (mpdata_2_dict[i][0])
+                            if (key == 'Nippon India Nifty 50 Shariah Bees ETF' || key == 'Tata Ethical Fund Direct Plan Growth')
                             {
-                                mptrace_2.push(mpdata_2[mpdata_2_dict[i][1]]);
+                                mptrace_2.push(mpdata_2[mptrace_2_counter++]);
                             }
                             var layout = {
                                 title: keys[i],
