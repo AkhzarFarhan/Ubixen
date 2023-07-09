@@ -180,8 +180,8 @@
             debit = getEncryptedNumber(debit, window.data["TimeStamp"]);
             details = getEncryptedString(particulars);
             mode = getEncryptedString(check);
-            email = getEncryptedString(email);
-            username = getEncryptedString(username);
+            email = getEncryptedString(window.data["Email"]);
+            username = getEncryptedString(window.data["Username"]);
             password = getEncryptedString(window.data["Password"]);
             token = md5(window.data["TimeStamp"].toString());
             timestamp = window.data["TimeStamp"];
