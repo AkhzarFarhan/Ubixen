@@ -290,6 +290,7 @@
             window.data["StartTime"] = Date.now();
             project_id = getProjectID();
             username  = getEncryptedString(window.data["Username"]);
+            password = getEncryptedString(window.data["Password"]);
             email = getEncryptedString(window.data["Email"]);
             timestamp = window.data["TimeStamp"];
             shiftkey = window.data["ShiftKey"];
@@ -300,6 +301,7 @@
                 delete_instance: true,
                 email: email,
                 username: username,
+                password: password,
                 timestamp: timestamp,
                 shiftkey: shiftkey,
                 token: token
