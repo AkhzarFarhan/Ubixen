@@ -170,9 +170,6 @@
 	 		debit = container.querySelector('[name="DEBIT"]').value;
 	 		particulars = container.querySelector('[name="PARTICULARS"]').value;
 	 		check = getCheck();
-            email = window.data["Email"];
-            username = window.data["Username"];
-            password = window.data["Password"];
             project_id = getProjectID();
             container.querySelector('[name="CREDIT"]').value = "";
             container.querySelector('[name="DEBIT"]').value = "";
@@ -185,6 +182,7 @@
             mode = getEncryptedString(check);
             email = getEncryptedString(email);
             username = getEncryptedString(username);
+            password = getEncryptedString(window.data["Password"]);
             token = md5(window.data["TimeStamp"].toString());
             timestamp = window.data["TimeStamp"];
             shiftkey = window.data["ShiftKey"];
