@@ -228,6 +228,7 @@
                 cell.classList.remove("active");
             }
             cells[INDEXES[window["user"]["position"]]].classList.add("active");
+            patch_position();
 
             const playStatus = document.getElementById("play_id");
             playStatus.innerHTML = window["user"]["name"] + " moved from " + oldposition + " to " + window["user"]["position"];
@@ -256,6 +257,7 @@
             prepare_snakes();
             prepare_ladder();
             remove_conflicting_snake_and_ladder();
+            get_position();
             console.log(VALUES);
             console.log(INDEXES);
             console.log(SNAKES);
