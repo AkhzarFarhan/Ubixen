@@ -8,7 +8,8 @@
 <body>
     <h1>Snake and Ladder Game</h1>
     <div id="board" class="board"></div>
-    <button onclick="rollDice()">Roll Dice</button>
+    <button class="button" onclick="rollDice()">Roll Dice</button>
+    <div class="play_status" id="play_id"></div>
 
     <script>
         const BOARD_SIZE = 10;
@@ -38,18 +39,18 @@
 
         let position = 0;
 
-        function isLadder(position)
+        function isLadder(p)
         {
-            if (position in LADDERS)
+            if (p in LADDERS)
             {
                 return true
             }
             return false;
         }
 
-        function isSnake(position)
+        function isSnake(p)
         {
-            if (position in SNAKES)
+            if (p in SNAKES)
             {
                 return true
             }
@@ -60,26 +61,37 @@
         {
             const boardElement = document.getElementById("board");
             boardElement.innerHTML = "";
+            let board_number;
 
-            for (let i = BOARD_SIZE * BOARD_SIZE; i > 0; i--)
+            for (let i = BOARD_SIZE * BOARD_SIZE - 1; i >= 0; i--)
             {
+                if ((i / 10) % 2 == 0)
+                {
+                    board_number = i - 10 + 2 * (10 - (i % 10));
+                }
+                else
+                {
+                    board_number = i + 1;
+                }
+
                 const gridItem = document.createElement("div");
-                if (isLadder(i))
+                if (isLadder(board_number))
                 {
                     gridItem.classList.add("cell_ladder");
                 }
-                if (isSnake(i))
+                if (isSnake(board_number))
                 {
                     gridItem.classList.add("cell_snake");
                 }
                 gridItem.classList.add("cell");
-                gridItem.textContent = i;
+                gridItem.textContent = board_number;
                 document.body.querySelector(".board").appendChild(gridItem);
             }
         }
 
         function movePlayer(steps)
         {
+            let oldPosition = position;
             position += steps;
             if (position in SNAKES)
             {
@@ -93,12 +105,13 @@
             if (position == BOARD_SIZE * BOARD_SIZE)
             {
                 position = BOARD_SIZE * BOARD_SIZE;
-                alert("Congratulations! You won!");
+                const playStatus = document.getElementById("play_id");
+                playStatus.innerHTML = "You WON!";
             }
-            updatePlayerPosition();
+            updatePlayerPosition(oldPosition);
         }
 
-        function updatePlayerPosition()
+        function updatePlayerPosition(oldPosition)
         {
             const cells = document.getElementsByClassName("cell");
             for (let cell of cells)
@@ -106,18 +119,29 @@
                 cell.classList.remove("active");
             }
             cells[position - 1].classList.add("active");
+
+            const playStatus = document.getElementById("play_id");
+            playStatus.innerHTML = "Player moved from " + oldPosition + " to " + position;
         }
 
         function rollDice()
         {
             const diceResult = Math.floor(Math.random() * 6) + 1;
-            alert("Dice Result: " + diceResult);
+            const playStatus = document.getElementById("play_id");
+            playStatus.innerHTML = "Dice Result: " + diceResult;
             movePlayer(diceResult);
         }
 
         drawBoard();
     </script>
     <style>
+        .play_status
+        {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
         .button
         {
             display: inline-block;
@@ -164,7 +188,7 @@
             font-weight: lighter;
             color: #333;
         }
-        
+
         @keyframes blink
         {
             0% { opacity: 1; }
