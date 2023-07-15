@@ -16,9 +16,11 @@
         const BOARD_SIZE = 10;
         let SNAKES = new Map();
         let LADDERS = new Map();
-        let VALUES = [];
-        let INDEXES = [];
-        let PLAY_STATUS = "";
+        let VALUES = []; // index to value
+        let INDEXES = []; // value to index
+        let PLAY_STATUS = ""; // game status global variable
+        let POSITIONS = []; // [position of player 1, position of player 2]
+        let PLAYED = []; // [player 1 played, player 2 played]
         window["user"] = {
             "name": "UNKNOWN",
             "password": "UNKNOWN",
@@ -40,29 +42,6 @@
             });
 	    }
 
-        function get_position()
-        {
-            fetch('https://texter-for-me.firebaseio.com/game/' + window["user"]["name"] + '.json', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(res => res.json())
-            .then(res => {
-                if (res == null)
-                {
-                    window["user"]["position"] = 1;
-                    patch_position();
-                    return;
-                }
-                window["user"]["position"] = res["position"];
-                //document.getElementById("counter").innerHTML = window['count'];
-            })
-            .catch(err => console.log(err));
-            
-        }
-
         function get_game_state()
         {
             fetch('https://texter-for-me.firebaseio.com/game/game_state.json', {
@@ -78,28 +57,12 @@
                 VALUES = res["values"];
                 INDEXES = res["indexes"];
                 PLAY_STATUS = res["play_status"];
+                POSITIONS = res["positions"];
+                PLAYED = res["played"];
                 //document.getElementById("counter").innerHTML = window['count'];
             })
             .catch(err => console.log(err));
             
-        }
-
-        function patch_position()
-        {
-            fetch('https://texter-for-me.firebaseio.com/game/' + window["user"]["name"] + '.json', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    "position": window["user"]["position"]
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-            })
-            .catch(error => console.error('Error:', error));
         }
 
         function patch_game_state()
@@ -114,7 +77,9 @@
                     "ladders": LADDERS,
                     "values": VALUES,
                     "indexes": INDEXES,
-                    "play_status": PLAY_STATUS
+                    "play_status": PLAY_STATUS,
+                    "positions": POSITIONS,
+                    "played": PLAYED
                 })
             })
             .then(response => response.json())
@@ -239,32 +204,29 @@
 
         function movePlayer(steps)
         {
-            const playStatus = document.getElementById("play_id");
-            playStatus.innerHTML = window["user"]["name"] + " rolled: " + steps;
+            PLAY_STATUS = window["user"]["name"] + " rolled: " + steps;
             let oldposition = window["user"]["position"];
             var newposition = oldposition + steps;
             if (newposition in SNAKES)
             {
-                playStatus.innerHTML += ("</Br>" + window["user"]["name"] + " Snake Bites!");
+                PLAY_STATUS += ("</Br>" + window["user"]["name"] + " Snake Bites!");
                 newposition = SNAKES[newposition];
             }
             else if (newposition in LADDERS)
             {
-                playStatus.innerHTML += ("</Br>" + window["user"]["name"] + " Climbed Ladder!");
+                PLAY_STATUS += ("</Br>" + window["user"]["name"] + " Climbed Ladder!");
                 newposition = LADDERS[newposition];
             }
 
             if (newposition == BOARD_SIZE * BOARD_SIZE)
             {
-                playStatus.innerHTML = window["user"]["name"] + " WON!";
-                return;
+                PLAY_STATUS = window["user"]["name"] + " WON!";
             }
             window["user"]["position"] = newposition;
             updatePlayerindex(oldposition);
         }
 
-        function 
-        (oldposition)
+        function updatePlayerindex(oldposition)
         {
             const cells = document.getElementsByClassName("cell");
             for (let cell of cells)
@@ -272,18 +234,28 @@
                 cell.classList.remove("active");
             }
             cells[INDEXES[window["user"]["position"]]].classList.add("active");
-            patch_position();
-
-            const playStatus = document.getElementById("play_id");
-            playStatus.innerHTML = window["user"]["name"] + " moved from " + oldposition + " to " + window["user"]["position"];
+            play_status = window["user"]["name"] + " moved from " + oldposition + " to " + window["user"]["position"];
+            if (window["user"]["name"] == "Akhzar") // keeping Akhzar as player 1
+            {
+                POSITIONS[0] = window["user"]["position"];
+                PLAYED[0] = true;
+                PLAYED[1] = false;
+            }
+            else
+            {
+                POSITIONS[1] = window["user"]["position"];
+                PLAYED[1] = true;
+                PLAYED[0] = false;
+            }
+            patch_game_state();
         }
 
         function rollDice()
         {
-            const playStatus = document.getElementById("play_id");
             if (window["user"]["position"] == BOARD_SIZE * BOARD_SIZE)
             {
-                playStatus.innerHTML = "Game Over!";
+                PLAY_STATUS = "Game Over!";
+                patch_game_state();
                 return;
             }
             const diceResult = Math.floor(Math.random() * 6) + 1;
@@ -303,13 +275,11 @@
                 prepare_snakes();
                 prepare_ladder();
                 remove_conflicting_snake_and_ladder();
-                get_position();
                 patch_game_state();
             }
             else
             {
                 get_game_state();
-                get_position();
             }
             console.log(VALUES);
             console.log(INDEXES);
