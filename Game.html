@@ -49,6 +49,12 @@
             })
             .then(res => res.json())
             .then(res => {
+                if (res == null)
+                {
+                    window["user"]["position"] = 1;
+                    patch_position();
+                    return;
+                }
                 window["user"]["position"] = res["position"];
                 //document.getElementById("counter").innerHTML = window['count'];
             })
