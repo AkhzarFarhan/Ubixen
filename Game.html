@@ -23,8 +23,7 @@
         let PLAYED = [false, false]; // [player 1 played, player 2 played]
         window["user"] = {
             "name": "UNKNOWN",
-            "password": "UNKNOWN",
-            "position": 0
+            "password": "UNKNOWN"
         }
 
         function authorize()
@@ -246,28 +245,27 @@
             {
                 PLAY_STATUS = window["user"]["name"] + " WON!</br>";
             }
-            window["user"]["position"] = newposition;
-            updatePlayerindex(oldposition);
+            updatePlayerindex(oldposition, newposition);
         }
 
-        function updatePlayerindex(oldposition)
+        function updatePlayerindex(oldposition, newposition)
         {
             const cells = document.getElementsByClassName("cell");
             for (let cell of cells)
             {
                 cell.classList.remove("active");
             }
-            cells[INDEXES[window["user"]["position"]]].classList.add("active");
-            PLAY_STATUS += " moved from " + oldposition + " to " + window["user"]["position"] + "</br>";
+            cells[INDEXES[newposition]].classList.add("active");
+            PLAY_STATUS += " moved from " + oldposition + " to " + newposition + "</br>";
             if (window["user"]["name"] == "Akhzar") // keeping Akhzar as player 1
             {
-                POSITIONS[0] = window["user"]["position"];
+                POSITIONS[0] = newposition;
                 PLAYED[0] = true;
                 PLAYED[1] = false;
             }
             else
             {
-                POSITIONS[1] = window["user"]["position"];
+                POSITIONS[1] = newposition;
                 PLAYED[1] = true;
                 PLAYED[0] = false;
             }
@@ -286,6 +284,7 @@
             {
                 if (PLAYED[0] == true)
                 {
+                    PLAYED[1] = false;
                     PLAY_STATUS = "Wait for your turn!</br>";
                     patch_game_state();
                     return;
@@ -295,6 +294,7 @@
             {
                 if (PLAYED[1] == true)
                 {
+                    PLAYED[0] = false;
                     PLAY_STATUS = "Wait for your turn!</br>";
                     patch_game_state();
                     return;
