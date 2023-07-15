@@ -13,7 +13,6 @@
 
     <script>
         const BOARD_SIZE = 10;
-        let VALUE_TO_INDEX;
         let SNAKES;
         let LADDERS;
         let VALUES = [];
@@ -22,21 +21,27 @@
 
         function fill_value_to_index()
         {
-            VALUE_TO_INDEX = new Map();
-            let board_number;
-            for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++)
+            let index = 0;
+            for (let i = BOARD_SIZE - 1; i >= 0; i--)
             {
-                if (parseInt(i / 10) % 2 == 0)
+                if (i % 2 == 0)
                 {
-                    board_number = i - 10 + 2 * (10 - (i % 10));
+                    for (let j = 0; j < BOARD_SIZE; j++)
+                    {
+                        VALUES[index] = i * BOARD_SIZE + j + 1;
+                        index++;
+                    }
                 }
                 else
                 {
-                    board_number = i + 1;
+                    for (let j = BOARD_SIZE - 1; j >= 0; j--)
+                    {
+                        VALUES[index] = i * BOARD_SIZE + j + 1;
+                        index++;
+                    }
                 }
-                VALUE_TO_INDEX.set(board_number, i);
-                VALUES[i] = board_number;
             }
+
         }
 
         function isLadder(p)
