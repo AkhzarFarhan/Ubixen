@@ -16,6 +16,7 @@
         let SNAKES;
         let LADDERS;
         let VALUES = [];
+        let INDEXES = [];
 
         let position = 0;
 
@@ -29,6 +30,7 @@
                     for (let j = 0; j < BOARD_SIZE; j++)
                     {
                         VALUES[index] = i * BOARD_SIZE + j + 1;
+                        INDEXES[VALUES[index]] = index;
                         index++;
                     }
                 }
@@ -37,6 +39,7 @@
                     for (let j = BOARD_SIZE - 1; j >= 0; j--)
                     {
                         VALUES[index] = i * BOARD_SIZE + j + 1;
+                        INDEXES[VALUES[index]] = index;
                         index++;
                     }
                 }
@@ -115,7 +118,7 @@
             {
                 cell.classList.remove("active");
             }
-            cells[VALUE_TO_INDEX.get(position)].classList.add("active");
+            cells[INDEXES[position]].classList.add("active");
 
             const playStatus = document.getElementById("play_id");
             playStatus.innerHTML = "Player moved from " + oldposition + " to " + position;
