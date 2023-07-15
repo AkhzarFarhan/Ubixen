@@ -4,12 +4,17 @@
     <title>Snake and Ladder Game</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.js"></script>
 </head>
 <body>
     <h1>Snake and Ladder Game</h1>
     <div id="board" class="board"></div>
     <div class="button_div"><button class="button" onclick="rollDice()">Roll Dice</button></div>
     <div class="play_status" id="play_id"></div>
+    <div class="user_data" id="user_data_id">
+        <input type="text" name="name" placeholder="Enter your name" />
+        <input type="password" name="password" placeholder="Enter your password" />
+    </div>
 
     <script>
         const BOARD_SIZE = 10;
@@ -17,8 +22,28 @@
         let LADDERS = new Map();
         let VALUES = [];
         let INDEXES = [];
+        window["user"] = {
+            "name": "UNKNOWN",
+            "password": "UNKNOWN",
+            "position": 0
+        }
 
         let position = 0;
+
+        function authorize()
+        {
+            var key = window["user"]["password"];
+            var url = `https://script.google.com/macros/s/AKfycbzxWw-sFLslbSCCOYxwculKb4JAZGd4sUjUXPZY2GvpJFKoFf4/exec?key=${key}`;
+            fetch(url).then(response => response.json())
+            .then(data => {
+                console.log(data['error'])
+                if(data['error'] == 'y')
+                {
+                    document.location = 'access_denied.html';
+                    return;
+                }
+            });
+	    }
 
         function prepare_snakes()
         {
@@ -144,23 +169,23 @@
         function movePlayer(steps)
         {
             const playStatus = document.getElementById("play_id");
-            playStatus.innerHTML = "Player rolled: " + steps;
+            playStatus.innerHTML = window["user"]["name"] + " rolled: " + steps;
             let oldposition = position;
             position += steps;
             if (position in SNAKES)
             {
-                playStatus.innerHTML += "</Br>Snake Bites!";
+                playStatus.innerHTML += ("</Br>" + window["user"]["name"] + " Snake Bites!");
                 position = SNAKES[position];
             }
             else if (position in LADDERS)
             {
-                playStatus.innerHTML += "</Br>Climbed Ladder!";
+                playStatus.innerHTML += ("</Br>" + window["user"]["name"] + " Climbed Ladder!");
                 position = LADDERS[position];
             }
 
             if (position == BOARD_SIZE * BOARD_SIZE)
             {
-                playStatus.innerHTML = "You WON!";
+                playStatus.innerHTML = window["user"]["name"] + " WON!";
                 return;
             }
             updatePlayerindex(oldposition);
@@ -176,7 +201,7 @@
             cells[INDEXES[position]].classList.add("active");
 
             const playStatus = document.getElementById("play_id");
-            playStatus.innerHTML = "Player moved from " + oldposition + " to " + position;
+            playStatus.innerHTML = window["user"]["name"] + " moved from " + oldposition + " to " + position;
         }
 
         function rollDice()
@@ -193,6 +218,13 @@
 
         function init()
         {
+            const container = document.getElementById("user_data_id");
+            const name = container.querySelector("input[name='name']");
+            const password = container.querySelector("input[name='password']");
+            window["user"]["name"] = name.value;
+            window["user"]["password"] = password.value;
+            authorize();
+            container.style.display = "none";
             fill_value_to_index();
             prepare_snakes();
             prepare_ladder();
@@ -202,6 +234,7 @@
             console.log(SNAKES);
             console.log(LADDERS);
             drawBoard();
+
         }
         init();
     </script>
