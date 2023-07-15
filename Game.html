@@ -61,7 +61,7 @@
             const boardElement = document.getElementById("board");
             boardElement.innerHTML = "";
 
-            for (let i = 1; i <= BOARD_SIZE * BOARD_SIZE; i++)
+            for (let i = BOARD_SIZE * BOARD_SIZE; i > 0; i--)
             {
                 const gridItem = document.createElement("div");
                 if (isLadder(i))
