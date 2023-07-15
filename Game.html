@@ -33,7 +33,7 @@
             var url = `https://script.google.com/macros/s/AKfycbzxWw-sFLslbSCCOYxwculKb4JAZGd4sUjUXPZY2GvpJFKoFf4/exec?key=${key}`;
             fetch(url).then(response => response.json())
             .then(data => {
-                console.log(data['error'])
+                //console.log(data['error'])
                 if(data['error'] == 'y')
                 {
                     // reload the page
@@ -52,6 +52,7 @@
             })
             .then(res => res.json())
             .then(res => {
+                console.log('get_game_state: ', res);
                 SNAKES = res["snakes"];
                 LADDERS = res["ladders"];
                 VALUES = res["values"];
