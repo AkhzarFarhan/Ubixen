@@ -54,6 +54,24 @@
             }
         }
 
+        function remove_conflicting_snake_and_ladder()
+        {
+            for (let i = 1; i <= 100; i++)
+            {
+                if (i in SNAKES && i in LADDERS)
+                {
+                    if (SNAKES[i] > LADDERS[i])
+                    {
+                        delete SNAKES[i];
+                    }
+                    else
+                    {
+                        delete LADDERS[i];
+                    }
+                }
+            }
+        }
+
         function fill_value_to_index()
         {
             let index = 0;
@@ -125,20 +143,23 @@
 
         function movePlayer(steps)
         {
+            const playStatus = document.getElementById("play_id");
+            playStatus.innerHTML = "Player rolled: " + steps;
             let oldposition = position;
             position += steps;
             if (position in SNAKES)
             {
+                playStatus.innerHTML += "</Br>Snake Bites!";
                 position = SNAKES[position];
             }
             else if (position in LADDERS)
             {
+                playStatus.innerHTML += "</Br>Climbed Ladder!";
                 position = LADDERS[position];
             }
 
             if (position == BOARD_SIZE * BOARD_SIZE)
             {
-                const playStatus = document.getElementById("play_id");
                 playStatus.innerHTML = "You WON!";
                 return;
             }
@@ -160,15 +181,13 @@
 
         function rollDice()
         {
+            const playStatus = document.getElementById("play_id");
             if (position == BOARD_SIZE * BOARD_SIZE)
             {
-                const playStatus = document.getElementById("play_id");
                 playStatus.innerHTML = "Game Over!";
                 return;
             }
             const diceResult = Math.floor(Math.random() * 6) + 1;
-            const playStatus = document.getElementById("play_id");
-            playStatus.innerHTML = "Dice Result: " + diceResult;
             movePlayer(diceResult);
         }
 
@@ -177,6 +196,7 @@
             fill_value_to_index();
             prepare_snakes();
             prepare_ladder();
+            remove_conflicting_snake_and_ladder();
             console.log(VALUES);
             console.log(INDEXES);
             console.log(SNAKES);
