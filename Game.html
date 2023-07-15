@@ -16,6 +16,7 @@
         let VALUE_TO_INDEX;
         let SNAKES;
         let LADDERS;
+        let VALUES = [];
 
         let position = 0;
 
@@ -34,6 +35,7 @@
                     board_number = i + 1;
                 }
                 VALUE_TO_INDEX.set(board_number, i);
+                VALUES[i] = board_number;
             }
         }
 
@@ -63,7 +65,7 @@
 
             for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++)
             {
-                board_number = VALUE_TO_INDEX.get(i);
+                board_number = VALUES[i];
                 const gridItem = document.createElement("div");
                 if (isLadder(board_number))
                 {
