@@ -4,33 +4,11 @@
     <title>Snake and Ladder Game</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        .board
-        {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(10, 1fr);
-            width: 420px;
-            height: 420px;
-        }
-
-        .cell
-        {
-            background-color: #f2f2f2;
-            border: 1px solid #ccc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px;
-            font-weight: lighter;
-            color: #333;
-        }
-    </style>
 </head>
 <body>
     <h1>Snake and Ladder Game</h1>
-    <button onclick="rollDice()">Roll Dice</button>
     <div id="board" class="board"></div>
+    <button onclick="rollDice()">Roll Dice</button>
 
     <script>
         const BOARD_SIZE = 10;
@@ -59,6 +37,24 @@
         };
 
         let position = 0;
+
+        function isLadder(position)
+        {
+            if (position in LADDERS)
+            {
+                return true
+            }
+            return false;
+        }
+
+        function isSnake(position)
+        {
+            if (position in SNAKES)
+            {
+                return true
+            }
+            return false;
+        }
 
         function drawBoard()
         {
@@ -113,5 +109,64 @@
 
         drawBoard();
     </script>
+    <style>
+        .button
+        {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 6px;
+            color: #ffffff;
+            background-color: #4CAF50;
+            border: none;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .button:hover
+        {
+            background-color: #45a049;
+        }
+
+        .button:active
+        {
+            background-color: #3e8e41;
+        }
+
+        .board
+        {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            width: 420px;
+            height: 420px;
+        }
+
+        .cell_ladder
+        {
+            background-color: lightgreen;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: lighter;
+            color: #333;
+        }
+        .cell_snake
+        {
+            background-color: red;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: lighter;
+            color: #333;
+        }
+    </style>
 </body>
 </html>
