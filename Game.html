@@ -7,8 +7,8 @@
 </head>
 <body>
     <h1>Snake and Ladder Game</h1>
-    <div id="board" class="board"></div></br>
-    <button class="button" onclick="rollDice()">Roll Dice</button>
+    <div id="board" class="board"></div>
+    <div class="button_div"><button class="button" onclick="rollDice()">Roll Dice</button></div>
     <div class="play_status" id="play_id"></div>
 
     <script>
@@ -19,6 +19,40 @@
         let INDEXES = [];
 
         let position = 0;
+
+        function prepare_snakes()
+        {
+            for (let i = 0; i < 10; i++)
+            {
+                let start = Math.floor(Math.random() * 99) + 1;
+                let end = Math.floor(Math.random() * (start - 1)) + 1;
+                if (start > end)
+                {
+                    SNAKES[start] = end;
+                }
+                else
+                {
+                    i--;
+                }
+            }
+        }
+
+        function prepare_ladder()
+        {
+            for (let i = 0; i < 10; i++)
+            {
+                let start = Math.floor(Math.random() * 99) + 1;
+                let end = Math.floor(Math.random() * (99 - start)) + start;
+                if (start < end)
+                {
+                    LADDERS[start] = end;
+                }
+                else
+                {
+                    i--;
+                }
+            }
+        }
 
         function fill_value_to_index()
         {
@@ -135,8 +169,10 @@
         function init()
         {
             fill_value_to_index();
-            SNAKES = { 17: 7, 54: 34, 62: 19, 98: 79 };
-            LADDERS = { 3: 38, 24: 33, 42: 93, 72: 84 };
+            console.log(VALUES);
+            console.log(INDEXES);
+            console.log(SNAKES);
+            console.log(LADDERS);
             drawBoard();
         }
         init();
@@ -147,6 +183,12 @@
             font-size: 20px;
             font-weight: bold;
             margin-top: 20px;
+        }
+
+        .button_div
+        {
+            margin-top: 20px;
+            text-align: center;
         }
 
         .button
