@@ -276,23 +276,31 @@
                 prepare_snakes();
                 prepare_ladder();
                 remove_conflicting_snake_and_ladder();
-                patch_game_state();
-                console.log(VALUES);
-                console.log(INDEXES);
-                console.log(SNAKES);
-                console.log(LADDERS);
-                console.log(window["user"]["name"], window["user"]["password"], window["user"]["position"]);
-                drawBoard();
+                patch_game_state(
+                    function()
+                    {
+                        console.log(VALUES);
+                        console.log(INDEXES);
+                        console.log(SNAKES);
+                        console.log(LADDERS);
+                        console.log(window["user"]["name"], window["user"]["password"], window["user"]["position"]);
+                        drawBoard();
+                    }
+                );
             }
             else
             {
-                get_game_state();
-                console.log(VALUES);
-                console.log(INDEXES);
-                console.log(SNAKES);
-                console.log(LADDERS);
-                console.log(window["user"]["name"], window["user"]["password"], window["user"]["position"]);
-                drawBoard();
+                get_game_state(
+                    function()
+                    {
+                        console.log(VALUES);
+                        console.log(INDEXES);
+                        console.log(SNAKES);
+                        console.log(LADDERS);
+                        console.log(window["user"]["name"], window["user"]["password"], window["user"]["position"]);
+                        drawBoard();
+                    }
+                );
             }
         }
         init();
