@@ -11,10 +11,6 @@
     <div id="board" class="board"></div>
     <div class="button_div"><button class="button" onclick="rollDice()">Roll Dice</button></div>
     <div class="play_status" id="play_id"></div>
-    <div class="user_data" id="user_data_id">
-        <input type="text" name="name" placeholder="Enter your name" />
-        <input type="password" name="password" placeholder="Enter your password" />
-    </div>
 
     <script>
         const BOARD_SIZE = 10;
@@ -27,8 +23,6 @@
             "password": "UNKNOWN",
             "position": 0
         }
-
-        let position = 0;
 
         function authorize()
         {
@@ -44,6 +38,41 @@
                 }
             });
 	    }
+
+        function get_position()
+        {
+            fetch('https://texter-for-me.firebaseio.com/game/' + window["user"]["name"] + '.json', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(res => {
+                window["user"]["position"] = res["position"];
+                //document.getElementById("counter").innerHTML = window['count'];
+            })
+            .catch(err => console.log(err));
+            
+        }
+
+        function patch_position()
+        {
+            fetch('https://texter-for-me.firebaseio.com/game/' + window["user"]["name"] + '.json', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "position": window["user"]["position"]
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => console.error('Error:', error));
+        }
 
         function prepare_snakes()
         {
@@ -170,20 +199,20 @@
         {
             const playStatus = document.getElementById("play_id");
             playStatus.innerHTML = window["user"]["name"] + " rolled: " + steps;
-            let oldposition = position;
-            position += steps;
-            if (position in SNAKES)
+            let oldposition = window["user"]["position"];
+            window["user"]["position"] += steps;
+            if (window["user"]["position"] in SNAKES)
             {
                 playStatus.innerHTML += ("</Br>" + window["user"]["name"] + " Snake Bites!");
-                position = SNAKES[position];
+                window["user"]["position"] = SNAKES[window["user"]["position"]];
             }
             else if (position in LADDERS)
             {
                 playStatus.innerHTML += ("</Br>" + window["user"]["name"] + " Climbed Ladder!");
-                position = LADDERS[position];
+                window["user"]["position"] = LADDERS[window["user"]["position"]];
             }
 
-            if (position == BOARD_SIZE * BOARD_SIZE)
+            if (window["user"]["position"] == BOARD_SIZE * BOARD_SIZE)
             {
                 playStatus.innerHTML = window["user"]["name"] + " WON!";
                 return;
@@ -198,10 +227,10 @@
             {
                 cell.classList.remove("active");
             }
-            cells[INDEXES[position]].classList.add("active");
+            cells[INDEXES[window["user"]["position"]]].classList.add("active");
 
             const playStatus = document.getElementById("play_id");
-            playStatus.innerHTML = window["user"]["name"] + " moved from " + oldposition + " to " + position;
+            playStatus.innerHTML = window["user"]["name"] + " moved from " + oldposition + " to " + window["user"]["position"];
         }
 
         function rollDice()
@@ -218,13 +247,11 @@
 
         function init()
         {
-            const container = document.getElementById("user_data_id");
-            const name = container.querySelector("input[name='name']");
-            const password = container.querySelector("input[name='password']");
-            window["user"]["name"] = name.value;
-            window["user"]["password"] = password.value;
+            const name = window.prompt("Please Enter Username");
+            const password = window.prompt("Please Enter Password");
+            window["user"]["name"] = name;
+            window["user"]["password"] = password;
             authorize();
-            container.style.display = "none";
             fill_value_to_index();
             prepare_snakes();
             prepare_ladder();
