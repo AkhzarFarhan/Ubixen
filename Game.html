@@ -61,7 +61,7 @@
             boardElement.innerHTML = "";
             let board_number;
 
-            for (let i = BOARD_SIZE * BOARD_SIZE - 1; i >= 0; i--)
+            for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++)
             {
                 board_number = VALUE_TO_INDEX.get(i);
                 const gridItem = document.createElement("div");
