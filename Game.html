@@ -62,6 +62,17 @@
                 PLAYED = res["played"];
                 //document.getElementById("counter").innerHTML = window['count'];
             })
+            .then(res => {
+                console.log(VALUES);
+                console.log(INDEXES);
+                console.log(SNAKES);
+                console.log(LADDERS);
+                console.log(PLAY_STATUS);
+                console.log(POSITIONS);
+                console.log(PLAYED);
+                console.log(window["user"]["name"], window["user"]["password"], window["user"]["position"]);
+                drawBoard();
+            })
             .catch(err => console.log(err));
             
         }
@@ -86,6 +97,18 @@
             .then(response => response.json())
             .then(data => {
                 console.log(data);
+            })
+            .then(res => {
+                console.log(VALUES);
+                console.log(INDEXES);
+                console.log(SNAKES);
+                console.log(LADDERS);
+                console.log(PLAY_STATUS);
+                console.log(POSITIONS);
+                console.log(PLAYED);
+                console.log(window["user"]["name"], window["user"]["password"], window["user"]["position"]);
+                document.getElementById("play_id").innerHTML = PLAY_STATUS;
+                drawBoard();
             })
             .catch(error => console.error('Error:', error));
         }
@@ -235,7 +258,7 @@
                 cell.classList.remove("active");
             }
             cells[INDEXES[window["user"]["position"]]].classList.add("active");
-            play_status = window["user"]["name"] + " moved from " + oldposition + " to " + window["user"]["position"];
+            PLAY_STATUS += window["user"]["name"] + " moved from " + oldposition + " to " + window["user"]["position"];
             if (window["user"]["name"] == "Akhzar") // keeping Akhzar as player 1
             {
                 POSITIONS[0] = window["user"]["position"];
@@ -276,31 +299,11 @@
                 prepare_snakes();
                 prepare_ladder();
                 remove_conflicting_snake_and_ladder();
-                patch_game_state(
-                    function()
-                    {
-                        console.log(VALUES);
-                        console.log(INDEXES);
-                        console.log(SNAKES);
-                        console.log(LADDERS);
-                        console.log(window["user"]["name"], window["user"]["password"], window["user"]["position"]);
-                        drawBoard();
-                    }
-                );
+                patch_game_state();
             }
             else
             {
-                get_game_state(
-                    function()
-                    {
-                        console.log(VALUES);
-                        console.log(INDEXES);
-                        console.log(SNAKES);
-                        console.log(LADDERS);
-                        console.log(window["user"]["name"], window["user"]["password"], window["user"]["position"]);
-                        drawBoard();
-                    }
-                );
+                get_game_state();
             }
         }
         init();
