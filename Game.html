@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Snake and Ladder Game</title>
+    <style>
+        .board
+        {
+            display: flex;
+            flex-wrap: wrap;
+            width: 400px;
+            height: 400px;
+            border: 1px solid black;
+        }
+
+        .cell
+        {
+            box-sizing: border-box;
+            width: 20%;
+            height: 20%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid black;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Snake and Ladder Game</h1>
+    <button onclick="rollDice()">Roll Dice</button>
+    <div id="board" class="board"></div>
+
+    <script>
+        const BOARD_SIZE = 10;
+        const SNAKES = {
+            16: 6,
+            47: 26,
+            49: 11,
+            56: 53,
+            62: 19,
+            64: 60,
+            87: 24,
+            93: 73,
+            95: 75,
+            98: 78
+        };
+        const LADDERS = {
+            1: 38,
+            4: 14,
+            9: 31,
+            21: 42,
+            28: 84,
+            36: 44,
+            51: 67,
+            71: 91,
+            80: 100
+        };
+
+        let position = 0;
+
+        function drawBoard()
+        {
+            const boardElement = document.getElementById("board");
+            boardElement.innerHTML = "";
+
+            for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++)
+            {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.innerText = i + 1;
+                boardElement.appendChild(cell);
+            }
+        }
+
+        function movePlayer(steps)
+        {
+            position += steps;
+            if (position in SNAKES)
+            {
+                position = SNAKES[position];
+            }
+            else if (position in LADDERS)
+            {
+                position = LADDERS[position];
+            }
+
+            if (position >= BOARD_SIZE * BOARD_SIZE)
+            {
+                position = BOARD_SIZE * BOARD_SIZE;
+                alert("Congratulations! You won!");
+            }
+            updatePlayerPosition();
+        }
+
+        function updatePlayerPosition()
+        {
+            const cells = document.getElementsByClassName("cell");
+            for (let cell of cells)
+            {
+                cell.classList.remove("active");
+            }
+            cells[position - 1].classList.add("active");
+        }
+
+        function rollDice()
+        {
+            const diceResult = Math.floor(Math.random() * 6) + 1;
+            alert("Dice Result: " + diceResult);
+            movePlayer(diceResult);
+        }
+
+        drawBoard();
+    </script>
+</body>
+</html>
