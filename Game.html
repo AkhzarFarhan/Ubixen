@@ -200,23 +200,24 @@
             const playStatus = document.getElementById("play_id");
             playStatus.innerHTML = window["user"]["name"] + " rolled: " + steps;
             let oldposition = window["user"]["position"];
-            window["user"]["position"] += steps;
-            if (window["user"]["position"] in SNAKES)
+            var newposition = oldposition + steps;
+            if (newposition in SNAKES)
             {
                 playStatus.innerHTML += ("</Br>" + window["user"]["name"] + " Snake Bites!");
-                window["user"]["position"] = SNAKES[window["user"]["position"]];
+                newposition = SNAKES[newposition];
             }
-            else if (position in LADDERS)
+            else if (newposition in LADDERS)
             {
                 playStatus.innerHTML += ("</Br>" + window["user"]["name"] + " Climbed Ladder!");
-                window["user"]["position"] = LADDERS[window["user"]["position"]];
+                newposition = LADDERS[newposition];
             }
 
-            if (window["user"]["position"] == BOARD_SIZE * BOARD_SIZE)
+            if (newposition == BOARD_SIZE * BOARD_SIZE)
             {
                 playStatus.innerHTML = window["user"]["name"] + " WON!";
                 return;
             }
+            window["user"]["position"] = newposition;
             updatePlayerindex(oldposition);
         }
 
