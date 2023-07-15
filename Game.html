@@ -280,8 +280,9 @@
             patch_game_state();
         }
 
-        function rollDice()
+        function rollDice()  
         {
+            get_game_state();
             if (window["user"]["position"] == BOARD_SIZE * BOARD_SIZE)
             {
                 PLAY_STATUS = "Game Already Over!</br>";
@@ -292,7 +293,6 @@
             {
                 if (PLAYED[0] == true)
                 {
-                    PLAYED[1] = false;
                     PLAY_STATUS = "Wait for your turn!</br>";
                     patch_game_state();
                     return;
@@ -302,7 +302,6 @@
             {
                 if (PLAYED[1] == true)
                 {
-                    PLAYED[0] = false;
                     PLAY_STATUS = "Wait for your turn!</br>";
                     patch_game_state();
                     return;
