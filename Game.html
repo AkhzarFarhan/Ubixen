@@ -15,8 +15,8 @@
         .cell
         {
             box-sizing: border-box;
-            width: 20%;
-            height: 20%;
+            width: 15%;
+            height: 15%;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -63,11 +63,11 @@
             const boardElement = document.getElementById("board");
             boardElement.innerHTML = "";
 
-            for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++)
+            for (let i = 1; i <= BOARD_SIZE * BOARD_SIZE; i++)
             {
                 const cell = document.createElement("div");
                 cell.classList.add("cell");
-                cell.innerText = i + 1;
+                cell.innerText = i;
                 boardElement.appendChild(cell);
             }
         }
