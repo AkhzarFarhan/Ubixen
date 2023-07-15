@@ -236,7 +236,7 @@
         function rollDice()
         {
             const playStatus = document.getElementById("play_id");
-            if (position == BOARD_SIZE * BOARD_SIZE)
+            if (window["user"]["position"] == BOARD_SIZE * BOARD_SIZE)
             {
                 playStatus.innerHTML = "Game Over!";
                 return;
