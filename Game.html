@@ -160,6 +160,12 @@
 
         function rollDice()
         {
+            if (position == BOARD_SIZE * BOARD_SIZE)
+            {
+                const playStatus = document.getElementById("play_id");
+                playStatus.innerHTML = "Game Over!";
+                return;
+            }
             const diceResult = Math.floor(Math.random() * 6) + 1;
             const playStatus = document.getElementById("play_id");
             playStatus.innerHTML = "Dice Result: " + diceResult;
