@@ -69,7 +69,7 @@
                 console.log(PLAY_STATUS);
                 console.log(POSITIONS);
                 console.log(PLAYED);
-                console.log(window["user"]["name"], window["user"]["password"], window["user"]["position"]);
+                console.log(window["user"]["name"], window["user"]["password"]);
                 drawBoard();
             })
             .catch(err => console.log(err));
@@ -105,7 +105,7 @@
                 console.log(PLAY_STATUS);
                 console.log(POSITIONS);
                 console.log(PLAYED);
-                console.log(window["user"]["name"], window["user"]["password"], window["user"]["position"]);
+                console.log(window["user"]["name"], window["user"]["password"]);
                 document.getElementById("play_id").innerHTML = PLAY_STATUS;
                 drawBoard();
             })
@@ -228,7 +228,15 @@
         function movePlayer(steps)
         {
             PLAY_STATUS = window["user"]["name"] + " rolled: " + steps + "</br>";
-            let oldposition = window["user"]["position"];
+            let oldposition;
+            if (window["user"]["name"] == "Akhzar")
+            {
+                oldposition = POSITIONS[0];
+            }
+            else
+            {
+                oldposition = POSITIONS[1];
+            }
             var newposition = oldposition + steps;
             if (newposition in SNAKES)
             {
