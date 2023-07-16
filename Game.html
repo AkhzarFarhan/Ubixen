@@ -285,24 +285,19 @@
         {
             get_game_state();
 
-            if (CURRENT_USER_INDEX == 0)
+            if (PLAYED[CURRENT_USER_INDEX] == true)
             {
-                if (PLAYED[0] == true)
-                {
-                    PLAY_STATUS = "Wait for your turn!</br>";
-                    patch_game_state();
-                    return;
-                }
+                PLAY_STATUS[CURRENT_USER_INDEX] = "Wait for your turn!</br>";
+                patch_game_state();
+                return;
             }
-            else
+            if(PLAYED[(CURRENT_USER_INDEX+1)%2] == true)
             {
-                if (PLAYED[1] == true)
-                {
-                    PLAY_STATUS = "Wait for your turn!</br>";
-                    patch_game_state();
-                    return;
-                }
+                PLAY_STATUS[(CURRENT_USER_INDEX+1)%2] = "Wait for your turn!</br>";
+                patch_game_state();
+                return;
             }
+
             const diceResult = Math.floor(Math.random() * 6) + 1;
             movePlayer(diceResult);
         }
