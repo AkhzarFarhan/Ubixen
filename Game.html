@@ -53,7 +53,7 @@
             })
             .then(res => res.json())
             .then(res => {
-                console.log('get_game_state: ', res);
+                //console.log('get_game_state: ', res);
                 SNAKES = res["snakes"];
                 LADDERS = res["ladders"];
                 VALUES = res["values"];
@@ -65,20 +65,21 @@
                 //document.getElementById("counter").innerHTML = window['count'];
             })
             .then(res => {
-                console.log(VALUES);
-                console.log(INDEXES);
-                console.log(SNAKES);
-                console.log(LADDERS);
-                console.log(PLAY_STATUS);
-                console.log(POSITIONS);
-                console.log(PLAYED);
-                console.log(CURRENT_USER_INDEX);
-                console.log(window["user"]["name"], window["user"]["password"]);
+                // console.log(VALUES);
+                // console.log(INDEXES);
+                // console.log(SNAKES);
+                // console.log(LADDERS);
+                // console.log(PLAY_STATUS);
+                // console.log(POSITIONS);
+                // console.log(PLAYED);
+                // console.log(CURRENT_USER_INDEX);
+                // console.log(window["user"]["name"], window["user"]["password"]);
                 document.getElementById("play_id_0").innerHTML = PLAY_STATUS[0];
                 document.getElementById("play_id_1").innerHTML = PLAY_STATUS[1];
                 drawBoard();
             })
             .catch(err => console.log(err));
+            console.log("get_game_state(): ", window["user"]["name"], window["user"]["password"], CURRENT_USER_INDEX, PLAYED[CURRENT_USER_INDEX]);
             
         }
 
@@ -102,18 +103,18 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log(data);
+                //console.log(data);
             })
             .then(res => {
-                console.log(VALUES);
-                console.log(INDEXES);
-                console.log(SNAKES);
-                console.log(LADDERS);
-                console.log(PLAY_STATUS);
-                console.log(POSITIONS);
-                console.log(PLAYED);
-                console.log(CURRENT_USER_INDEX);
-                console.log(window["user"]["name"], window["user"]["password"]);
+                // console.log(VALUES);
+                // console.log(INDEXES);
+                // console.log(SNAKES);
+                // console.log(LADDERS);
+                // console.log(PLAY_STATUS);
+                // console.log(POSITIONS);
+                // console.log(PLAYED);
+                // console.log(CURRENT_USER_INDEX);
+                // console.log(window["user"]["name"], window["user"]["password"]);
                 document.getElementById("play_id_0").innerHTML = PLAY_STATUS[0];
                 document.getElementById("play_id_1").innerHTML = PLAY_STATUS[1];
                 drawBoard();
@@ -194,6 +195,7 @@
 
         function isLadder(p)
         {
+            console.log("isLadder: ", window["user"]["name"], window["user"]["password"], CURRENT_USER_INDEX, PLAYED[CURRENT_USER_INDEX]);
             if (p in LADDERS)
             {
                 return true
@@ -203,6 +205,7 @@
 
         function isSnake(p)
         {
+            console.log("isSnake: ", window["user"]["name"], window["user"]["password"], CURRENT_USER_INDEX, PLAYED[CURRENT_USER_INDEX]);
             if (p in SNAKES)
             {
                 return true
@@ -232,6 +235,7 @@
                 gridItem.textContent = board_number;
                 document.body.querySelector(".board").appendChild(gridItem);
             }
+            console.log("drawBoard: ", window["user"]["name"], window["user"]["password"], CURRENT_USER_INDEX, PLAYED[CURRENT_USER_INDEX]);
         }
 
         function movePlayer(steps)
@@ -256,6 +260,7 @@
             {
                 PLAY_STATUS[CURRENT_USER_INDEX] = window["user"]["name"] + " WON!</br>";
             }
+            console.log("movePlayer: ", window["user"]["name"], window["user"]["password"], CURRENT_USER_INDEX, PLAYED[CURRENT_USER_INDEX]);
             updatePlayerindex(POSITIONS[CURRENT_USER_INDEX], newposition);
         }
 
@@ -284,13 +289,15 @@
                 PLAYED[1] = true;
                 PLAYED[0] = false;
             }
+            console.log("updatePlayerIndex: ", window["user"]["name"], window["user"]["password"], CURRENT_USER_INDEX, PLAYED[CURRENT_USER_INDEX]);
             patch_game_state();
         }
 
         function rollDice()  
         {
+            // call get_game_state() to get the latest game state then proceed
+            console.log("rollDice: ", window["user"]["name"], window["user"]["password"], CURRENT_USER_INDEX, PLAYED[CURRENT_USER_INDEX]);
             get_game_state();
-
             if (PLAYED[CURRENT_USER_INDEX] == true)
             {
                 PLAY_STATUS[CURRENT_USER_INDEX] = window["user"]["name"] + ", please wait for your turn!</br>";
