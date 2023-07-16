@@ -267,7 +267,7 @@
                 cells[INDEXES[oldposition]].classList.remove("active");
             }
             cells[INDEXES[newposition]].classList.add("active");
-            if ((CURRENT_USER_INDEX+1)%2 != 0)
+            if (POSITIONS[(CURRENT_USER_INDEX+1)%2] != 0)
             {
                 cells[INDEXES[POSITIONS[(CURRENT_USER_INDEX+1)%2]]].classList.add("active");
             }
