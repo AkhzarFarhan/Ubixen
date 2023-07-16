@@ -267,7 +267,10 @@
                 cells[INDEXES[oldposition]].classList.remove("active");
             }
             cells[INDEXES[newposition]].classList.add("active");
-            cells[INDEXES[POSITIONS[(CURRENT_USER_INDEX+1)%2]]].classList.add("active");
+            if ((CURRENT_USER_INDEX+1)%2 != 0)
+            {
+                cells[INDEXES[POSITIONS[(CURRENT_USER_INDEX+1)%2]]].classList.add("active");
+            }
             PLAY_STATUS[CURRENT_USER_INDEX] += " moved from " + oldposition + " to " + newposition + "</br>";
             if (CURRENT_USER_INDEX == 0) // keeping Akhzar as player 1
             {
