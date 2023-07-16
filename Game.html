@@ -262,7 +262,10 @@
         function updatePlayerindex(oldposition, newposition)
         {
             const cells = document.getElementsByClassName("cell");
-            cells[INDEXES[oldposition]].classList.remove("active");
+            if (oldposition != 0)
+            {
+                cells[INDEXES[oldposition]].classList.remove("active");
+            }
             cells[INDEXES[newposition]].classList.add("active");
             cells[INDEXES[POSITIONS[(CURRENT_USER_INDEX+1)%2]]].classList.add("active");
             PLAY_STATUS[CURRENT_USER_INDEX] += " moved from " + oldposition + " to " + newposition + "</br>";
