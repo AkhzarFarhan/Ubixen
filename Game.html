@@ -195,7 +195,7 @@
 
         function isLadder(p)
         {
-            console.log("isLadder: ", window["user"]["name"], window["user"]["password"], CURRENT_USER_INDEX, PLAYED[CURRENT_USER_INDEX]);
+            //console.log("isLadder: ", window["user"]["name"], window["user"]["password"], CURRENT_USER_INDEX, PLAYED[CURRENT_USER_INDEX]);
             if (p in LADDERS)
             {
                 return true
@@ -205,7 +205,7 @@
 
         function isSnake(p)
         {
-            console.log("isSnake: ", window["user"]["name"], window["user"]["password"], CURRENT_USER_INDEX, PLAYED[CURRENT_USER_INDEX]);
+            //console.log("isSnake: ", window["user"]["name"], window["user"]["password"], CURRENT_USER_INDEX, PLAYED[CURRENT_USER_INDEX]);
             if (p in SNAKES)
             {
                 return true
@@ -327,6 +327,7 @@
             {
                 CURRENT_USER_INDEX = 1;
             }
+            console.log("init: ", name, password, CURRENT_USER_INDEX);
             window["user"]["name"] = name;
             window["user"]["password"] = password;
             authorize();
