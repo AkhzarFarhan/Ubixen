@@ -10,7 +10,8 @@
     <h1>Snake and Ladder Game</h1>
     <div id="board" class="board"></div>
     <div class="button_div"><button class="button" onclick="rollDice()">Roll Dice</button></div>
-    <div class="play_status" id="play_id"></div>
+    <div class="play_status" id="play_id_0"></div>
+    <div class="play_status" id="play_id_1"></div>
 
     <script>
         const BOARD_SIZE = 10;
@@ -18,9 +19,10 @@
         let LADDERS = new Map();
         let VALUES = []; // index to value
         let INDEXES = []; // value to index
-        let PLAY_STATUS = ""; // game status global variable
+        let PLAY_STATUS = []; // array of both player current status
         let POSITIONS = [0, 0]; // [position of player 1, position of player 2]
         let PLAYED = [false, false]; // [player 1 played, player 2 played]
+        let CURRENT_USER_INDEX = 0; // 0 for player 1, 1 for player 2
         window["user"] = {
             "name": "UNKNOWN",
             "password": "UNKNOWN"
@@ -70,6 +72,8 @@
                 console.log(POSITIONS);
                 console.log(PLAYED);
                 console.log(window["user"]["name"], window["user"]["password"]);
+                document.getElementById("play_id_0").innerHTML = PLAY_STATUS[0];
+                document.getElementById("play_id_1").innerHTML = PLAY_STATUS[1];
                 drawBoard();
             })
             .catch(err => console.log(err));
@@ -106,7 +110,8 @@
                 console.log(POSITIONS);
                 console.log(PLAYED);
                 console.log(window["user"]["name"], window["user"]["password"]);
-                document.getElementById("play_id").innerHTML = PLAY_STATUS;
+                document.getElementById("play_id_0").innerHTML = PLAY_STATUS[0];
+                document.getElementById("play_id_1").innerHTML = PLAY_STATUS[1];
                 drawBoard();
             })
             .catch(error => console.error('Error:', error));
@@ -227,45 +232,37 @@
 
         function movePlayer(steps)
         {
-            PLAY_STATUS = window["user"]["name"] + " rolled: " + steps + "</br>";
-            let oldposition;
-            if (window["user"]["name"] == "Akhzar")
-            {
-                oldposition = POSITIONS[0];
-            }
-            else
-            {
-                oldposition = POSITIONS[1];
-            }
-            var newposition = oldposition + steps;
+            PLAY_STATUS[CURRENT_USER_INDEX] = window["user"]["name"] + " rolled: " + steps + "</br>";
+            let newposition;
+
+            newposition = POSITIONS[CURRENT_USER_INDEX] + steps;
+
             if (newposition in SNAKES)
             {
-                PLAY_STATUS += "Snake Bites!</br>";
+                PLAY_STATUS[CURRENT_USER_INDEX] += "Snake Bites!</br>";
                 newposition = SNAKES[newposition];
             }
             else if (newposition in LADDERS)
             {
-                PLAY_STATUS += "Climbed Ladder!</br>";
+                PLAY_STATUS[CURRENT_USER_INDEX] += "Climbed Ladder!</br>";
                 newposition = LADDERS[newposition];
             }
 
             if (newposition == BOARD_SIZE * BOARD_SIZE)
             {
-                PLAY_STATUS = window["user"]["name"] + " WON!</br>";
+                PLAY_STATUS[CURRENT_USER_INDEX] = window["user"]["name"] + " WON!</br>";
             }
-            updatePlayerindex(oldposition, newposition);
+            updatePlayerindex(POSITIONS[CURRENT_USER_INDEX], newposition);
         }
 
         function updatePlayerindex(oldposition, newposition)
         {
             const cells = document.getElementsByClassName("cell");
-            for (let cell of cells)
-            {
-                cell.classList.remove("active");
-            }
+            cells[INDEXES[oldposition]].classList.remove("active");
             cells[INDEXES[newposition]].classList.add("active");
-            PLAY_STATUS += " moved from " + oldposition + " to " + newposition + "</br>";
-            if (window["user"]["name"] == "Akhzar") // keeping Akhzar as player 1
+            cells[INDEXES[POSITIONS[(CURRENT_USER_INDEX+1)%2]]].classList.add("active");
+            PLAY_STATUS[CURRENT_USER_INDEX] += " moved from " + oldposition + " to " + newposition + "</br>";
+            if (CURRENT_USER_INDEX == 0) // keeping Akhzar as player 1
             {
                 POSITIONS[0] = newposition;
                 PLAYED[0] = true;
@@ -283,13 +280,8 @@
         function rollDice()  
         {
             get_game_state();
-            if (window["user"]["position"] == BOARD_SIZE * BOARD_SIZE)
-            {
-                PLAY_STATUS = "Game Already Over!</br>";
-                patch_game_state();
-                return;
-            }
-            if (window["user"]["name"] == "Akhzar")
+
+            if (CURRENT_USER_INDEX == 0)
             {
                 if (PLAYED[0] == true)
                 {
@@ -315,10 +307,19 @@
         {
             const name = window.prompt("Please Enter Username");
             const password = window.prompt("Please Enter Password");
+            if (name == "Akhzar")
+            {
+                CURRENT_USER_INDEX = 0;
+            }
+            else
+            {
+                CURRENT_USER_INDEX = 1;
+            }
             window["user"]["name"] = name;
             window["user"]["password"] = password;
             authorize();
-            if (window["user"]["name"] == "Akhzar")
+
+            if (CURRENT_USER_INDEX == 0)
             {
                 fill_value_to_index();
                 prepare_snakes();
