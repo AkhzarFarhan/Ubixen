@@ -287,13 +287,13 @@
 
             if (PLAYED[CURRENT_USER_INDEX] == true)
             {
-                PLAY_STATUS[CURRENT_USER_INDEX] = "Wait for your turn!</br>";
+                PLAY_STATUS[CURRENT_USER_INDEX] = window["user"]["name"] + ", please wait for your turn!</br>";
                 patch_game_state();
                 return;
             }
             if(PLAYED[(CURRENT_USER_INDEX+1)%2] == true)
             {
-                PLAY_STATUS[(CURRENT_USER_INDEX+1)%2] = "Wait for your turn!</br>";
+                PLAY_STATUS[(CURRENT_USER_INDEX+1)%2] = window["user"]["name"] + ", please wait for your turn!</br>";
                 patch_game_state();
                 return;
             }
