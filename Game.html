@@ -61,7 +61,7 @@
                 PLAY_STATUS = res["play_status"];
                 POSITIONS = res["positions"];
                 PLAYED = res["played"];
-                CURRENT_USER_INDEX = res["current_user_index"];
+                //CURRENT_USER_INDEX = res["current_user_index"];
                 //document.getElementById("counter").innerHTML = window['count'];
             })
             .then(res => {
@@ -97,8 +97,8 @@
                     "indexes": INDEXES,
                     "play_status": PLAY_STATUS,
                     "positions": POSITIONS,
-                    "played": PLAYED,
-                    "current_user_index": CURRENT_USER_INDEX
+                    "played": PLAYED/*,
+                    "current_user_index": CURRENT_USER_INDEX*/
                 })
             })
             .then(response => response.json())
