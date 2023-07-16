@@ -61,6 +61,7 @@
                 PLAY_STATUS = res["play_status"];
                 POSITIONS = res["positions"];
                 PLAYED = res["played"];
+                CURRENT_USER_INDEX = res["current_user_index"];
                 //document.getElementById("counter").innerHTML = window['count'];
             })
             .then(res => {
@@ -71,6 +72,7 @@
                 console.log(PLAY_STATUS);
                 console.log(POSITIONS);
                 console.log(PLAYED);
+                console.log(CURRENT_USER_INDEX);
                 console.log(window["user"]["name"], window["user"]["password"]);
                 document.getElementById("play_id_0").innerHTML = PLAY_STATUS[0];
                 document.getElementById("play_id_1").innerHTML = PLAY_STATUS[1];
@@ -94,7 +96,8 @@
                     "indexes": INDEXES,
                     "play_status": PLAY_STATUS,
                     "positions": POSITIONS,
-                    "played": PLAYED
+                    "played": PLAYED,
+                    "current_user_index": CURRENT_USER_INDEX
                 })
             })
             .then(response => response.json())
@@ -109,6 +112,7 @@
                 console.log(PLAY_STATUS);
                 console.log(POSITIONS);
                 console.log(PLAYED);
+                console.log(CURRENT_USER_INDEX);
                 console.log(window["user"]["name"], window["user"]["password"]);
                 document.getElementById("play_id_0").innerHTML = PLAY_STATUS[0];
                 document.getElementById("play_id_1").innerHTML = PLAY_STATUS[1];
