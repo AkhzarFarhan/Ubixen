@@ -304,12 +304,6 @@
                 patch_game_state();
                 return;
             }
-            if(PLAYED[(CURRENT_USER_INDEX+1)%2] == true)
-            {
-                PLAY_STATUS[(CURRENT_USER_INDEX+1)%2] = window["user"]["name"] + ", please wait for your turn!</br>";
-                patch_game_state();
-                return;
-            }
 
             const diceResult = Math.floor(Math.random() * 6) + 1;
             movePlayer(diceResult);
