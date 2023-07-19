@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<meta name="google-signin-scope" content="profile email">
+<meta name="google-signin-client_id" content="411415198630-ket55994ndtqrsd3a1nskp0s930a7pnv.apps.googleusercontent.com">
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+<head>
+	<meta charset="utf-8">
+	<title>Delivery Schedule</title>
+	<link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
+</head>
+<body>
+    <div class="top-banner">
+        <div class="top-banner-flex">
+            <div class="date" id="profile-name"></div>
+            <div class="date">Release Date: 24-Sep-2022 | v0.0.1</div>   <!--version format: years(started in 2021).month number.week number-->
+        </div>
+        <!-- <div class="profile-box">
+            <img src="" id="profile-picture" alt="Profile picture" width="60" height="60">
+            <p id="profile-name"></p>
+        </div> -->
+    </div>
+    <div id="wrap-input">
+		<div class="input-div">
+			<textarea type="text" id="getText" placeholder="Enter text"></textarea></br>
+            <div class="radio-wrap">
+				<p><input type="radio" id="10" value="Amazon" name="STORE" required="">Amazon</p>
+				<p><input type="radio" id="11" value="Flipkart" name="STORE" required="">Flipkart</p>
+				<p><input type="radio" id="12" value="Myntra" name="STORE" required="">Myntra</p>
+				<p><input type="radio" id="13" value="Cred" name="STORE" required="">Cred</p>
+				<p><input type="radio" id="14" value="Jio Mart" name="STORE" required="">Jio Mart</p>
+                <p><input type="radio" id="15" value="FreshToHome" name="STORE" required="">FreshToHome</p>
+                <p><input type="radio" id="16" value="Others" name="STORE" required="">Others</p>
+			</div>
+			Expected: <input class="datetime" type="datetime-local" id="datetime" name="datetime"></br>
+		</div>
+		</br>
+		<div class="flex-button">
+			<button OnClick="submitText()">Save</button>
+		</div>
+	</div>
+	<div id="wrap-showtexts"></div>
+	<div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
+	<div class="copyright">
+		&copy; 2022 Akhzar Farhan
+	</div>
+</body>
+<script>
+
+	window["priority_color"] = {
+		"Very Low": "green",
+		"Low": "yellow",
+		"Medium": "orange",
+		"High": "red",
+		"Very High": "darkred"
+	};
+	window["user_info"] = {
+		"ID": "INVALID",
+		"FullName": "INVALID",
+		"ImageURL": "INVALID",
+		"Email": "INVALID",
+		"username": "INVALID",
+		"password": "INVALID",
+		"token": "INVALID"
+	};
+	var map = [];
+	var todo_indexes = [];
+	var done_indexes = [];
+
+	function take_user_input_from_alert_window()
+	{
+		var username = prompt("Enter username");
+		var password = prompt("Enter password");
+		return {
+			"username": username,
+			"password": password
+		};
+	}
+
+	function set_cred_to_cache()
+	{
+		window.localStorage.setItem("user_info", JSON.stringify(window["user_info"]));
+	}
+
+	function get_cred_from_cache()
+	{
+		var cred = localStorage.getItem("user_info");
+		if(cred)
+		{
+			cred = JSON.parse(cred);
+			window["user_info"] = cred;
+			// console.log('get_cred_from_cache(): ', window["user_info"]);
+			return true;
+		}
+		else
+		{
+			user_input = take_user_input_from_alert_window();
+			window["user_info"]["username"] = user_input["username"];
+			window["user_info"]["password"] = user_input["password"];
+			set_cred_to_cache();
+			return true;
+		}
+		return false;
+	}
+
+	function get_firebase_token()
+	{
+		var cred = get_cred_from_cache();
+		if (!cred)
+		{
+			console.log("get_firebase_token(): cred is null");
+			return;
+		}
+		
+		var request_data = {
+			api_endpoint: 'Task',
+			method: 'GET_AUTH',
+			headers: window["user_info"]["username"],
+			body: window["user_info"]["password"],
+			username: window["user_info"]["username"],
+			password: window["user_info"]["password"]
+		}
+		var options = {
+			method: 'POST',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(request_data)
+		}
+		var gcp_functions_url = 'https://us-central1-github-284317.cloudfunctions.net/api-caller';
+		// console.log('request_body: ', options);
+		fetch(gcp_functions_url, options)
+		.then(res => res.json())
+		.then(res => {
+			//console.log("response_from_functions: ", res);
+			window['user_info']['token'] = res.FB_AUTH;
+			getText();
+		})
+		.catch(err => console.log(err));
+		// console.log("window: ", window['response_data']);
+	}
+
+	function onSignIn(googleUser)
+	{
+		var profile = googleUser.getBasicProfile();
+		window["user_info"] = {
+			"ID": profile.getId(),
+			"FullName": profile.getName(),
+			"ImageURL": profile.getImageUrl(),
+			"Email": profile.getEmail(),
+			"username": profile.getEmail().slice(0, -10)
+		}
+		if(window["user_info"]["username"]=="akhzarsam" || window["user_info"]["username"]=="atakhzar")
+		{
+			window["user_info"]["username"]="akhzarfarhan";
+		}
+		document.getElementById("profile-name").innerHTML = window["user_info"]["FullName"] + " | " + window["user_info"]["Email"];
+		get_firebase_token();
+	}
+	
+	function patch_it(key, senddata)
+	{
+		var patch_url = `https://texter-for-me.firebaseio.com/delivery/${window["user_info"]['username']}/${key}.json?auth=${window["user_info"]['token']}`;
+		axios.patch(patch_url, senddata).then(function(res){location.reload()});
+	}
+
+	function set_todo(key)
+	{
+		var senddata = {"done":false};
+		patch_it(key, senddata);
+	}
+
+	function set_done(key)
+	{
+		var senddata = {"done":true};
+		patch_it(key, senddata);
+	}
+
+	function sleep(ms)
+	{
+    	return new Promise(resolve => setTimeout(resolve, ms));
+	}
+
+	function get_datetime()
+	{
+		var datetime=datetime=Date().toString().slice(4, 24);
+		var element = document.getElementById("datetime");
+		if(element.value)
+		{
+			datetime=new Date(Date.parse(element.value)).toString().slice(4, 24);
+		}
+		//console.log(element.value);
+		return datetime;
+	}
+	
+	function get_priority()
+	{
+		var priority = "Medium";
+		/*for(i=0; i<5; i++)
+		{
+			var element = document.getElementById(i.toString());
+			if(element.checked)
+			{
+				priority = element.value;
+				element.checked = false;
+			}
+		}*/
+		return priority;
+	}
+
+    function get_store()
+	{
+		var store = "Others";
+		for(i=10; i<=16; i++)
+		{
+			var element = document.getElementById(i.toString());
+			if(element.checked)
+			{
+				store = element.value;
+				element.checked = false;
+			}
+		}
+		return store;
+	}
+	
+	async function submitText()
+	{
+        var text = document.getElementById('getText').value;
+		if(!text)
+		{
+			document.getElementById('wrap-showtexts').innerHTML = `Please add some text`;
+			await sleep(2000);
+			location.reload();
+		}
+		var priority = get_priority();
+		var datetime = get_datetime();
+        var store = get_store();
+		var done = false;
+		var senddata = {"text":text, "priority":priority, "store":store, "datetime":datetime, "done":done};
+		console.log("senddata: ", senddata);
+		var post_url = `https://texter-for-me.firebaseio.com/delivery/${window["user_info"]['username']}.json?auth=${window["user_info"]['token']}`;
+		
+        axios.post(post_url, senddata).then(function(res){
+			location.reload()
+		})
+	}
+
+	function prepare_box(i)
+	{
+		var e = document.createElement('div')
+		var e_date_priority = document.createElement('div')
+		var e_date = document.createElement('p')
+		var e_priority = document.createElement('p')
+        var e_store = document.createElement('p')
+		var e_text = document.createElement('p')
+		var e_todo_done = document.createElement('div')
+		var e_todo = document.createElement('button')
+		var e_done = document.createElement('button')
+
+		e.setAttribute('id', 'box'+i)
+		e.setAttribute('class', 'box')
+		
+		e_date_priority.setAttribute('class', 'date_priority')
+
+		e_date.innerText = map[i].datetime
+		if(map[i].done)
+		{
+			//e_priority.innerHTML = `<b class="priority_tag" style="color: grey">${map[i].priority}<b>`
+			e_text.setAttribute('style', 'color: grey')
+			e_date.setAttribute('style', 'color: grey')
+            e_store.setAttribute('style', 'color: grey; font-weight: bold')
+			e_date_priority.appendChild(e_date)
+			//e_date_priority.appendChild(e_priority)
+
+			
+			e_text.setAttribute('p', i)
+			e_text.innerHTML = map[i].text
+            e_store.setAttribute('p', i)
+            e_store.innerHTML = "#" + map[i].store
+
+			e_todo_done.setAttribute('class', 'todo_done')
+
+			e_todo.setAttribute('class', 'todo_done_button')
+			e_todo.setAttribute('style', 'color: grey')
+			e_todo.setAttribute('OnClick', `set_todo('${map[i].id}')`)
+			e_todo.innerText = 'To Do'
+
+			e_done.setAttribute('class', 'todo_done_button')
+			e_done.setAttribute('style', 'color: grey')
+		}
+		else
+		{
+			//e_priority.innerHTML = `<b class="priority_tag" style="color: ${window["priority_color"][map[i].priority]}">${map[i].priority}<b>`
+
+			e_date_priority.appendChild(e_date)
+			//e_date_priority.appendChild(e_priority)
+
+
+			e_text.setAttribute('p', i)
+            e_store.setAttribute('style', 'color: lightgreen; font-weight: bold')
+            e_store.setAttribute('p', i)
+			e_text.innerHTML = map[i].text
+            e_store.innerHTML = "#" + map[i].store
+
+			e_todo_done.setAttribute('class', 'todo_done')
+
+			e_todo.setAttribute('class', 'todo_done_button')
+			e_todo.setAttribute('style', 'color: red')
+			e_todo.setAttribute('OnClick', `set_todo('${map[i].id}')`)
+			e_todo.innerText = 'To Do'
+
+			e_done.setAttribute('class', 'todo_done_button')
+			e_done.setAttribute('style', 'color: lightgreen')
+		}
+		e_done.setAttribute('OnClick', `set_done('${map[i].id}')`)
+		e_done.innerText = 'Done'
+
+		e_todo_done.appendChild(e_todo)
+		e_todo_done.appendChild(e_done)
+
+		e.appendChild(e_date_priority)
+        e.appendChild(e_store)
+		e.appendChild(e_text)
+		e.appendChild(e_todo_done)
+
+		document.getElementById('wrap-showtexts').appendChild(e)
+	}
+
+	function getText(){
+		//console.log("getText->token: ", window["user_info"]['token']);
+		axios.get(`https://texter-for-me.firebaseio.com/delivery/${window["user_info"]['username']}.json?auth=${window["user_info"]['token']}`).then(function(res){
+			map = [];
+			var temp_data;
+			for(let key in res.data){
+				res.data.id=key;
+				temp_data = res.data[key];
+				temp_data.id = key;
+				map.push(temp_data);
+			}
+		}).then(function(){
+			map = map.reverse();
+			console.log("map: ", map);
+			for(let i=0; i<map.length; i++)
+			{
+				if(map[i].done)
+				{
+					done_indexes.push(i);
+				}
+				else
+				{
+					todo_indexes.push(i);
+				}
+			}
+
+			for(let i=0; i<todo_indexes.length; i++)
+			{
+				prepare_box(todo_indexes[i]);
+			}
+
+			for(let i=0; i<done_indexes.length; i++)
+			{
+				prepare_box(done_indexes[i]);
+			}
+		})
+	}
+</script>
+<style>
+	body {
+		background-color: black;
+		color: #d3d3d3;
+		font-family: 'Quicksand', sans-serif;
+	}
+	.todo_done_button {
+		background-color: #000000;
+		border-color: #353849;
+		border-width: thin;
+		padding: 5px 10px;
+	}
+	.todo_done {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+	}
+	.date_priority {
+		font-size: x-small;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+	}
+	.top-banner-flex {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+	}
+	.radio-wrap {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-evenly;
+		flex-wrap: wrap;
+		font-size: 12px;
+	}
+	.input-div {
+		text-align: center;
+	}
+	.datetime {
+		text-align: center;
+		background-color: #000000;
+		color: #FFFFFF;
+	}
+	.box{
+		display: inline-block;
+		text-decoration: none;
+		color: #FFFFFF;
+		width: 98%;
+		word-wrap: break-word;
+		white-space: pre-wrap;
+		padding:10px;
+		font-family: 'Quicksand', sans-serif;
+		margin: 5px 5px 5px 5px;
+		border: 1px solid #353849;
+		border-radius: 8px;
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+	}
+	.msgbox{
+		font-family: 'Quicksand', sans-serif;
+		color:green;
+		text-align:center;
+		
+	}
+	#wrap-showtexts,.msgbox,#wrap-input{
+		margin:0 auto;	
+		padding:10px 0;
+		width:70vw;
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		overflow: hidden;
+	}
+	@media only screen and (max-width:6in){
+		#wrap-showtexts,.msgbox,#wrap-input{
+			width:97vw;
+		}
+	}
+	#getText{
+		white-space: pre-wrap;
+		font-family: 'Quicksand', sans-serif;
+		width:95%;
+		border-radius:10px;
+		border-color: #353849;
+		padding:1%;
+		background-color: black;
+		color: white;
+		padding-top: 10px;
+		padding-bottom: 10px;
+	}
+	button{
+		padding-left: 30px;
+		padding-right: 30px;
+		padding-top: 10px;
+		padding-bottom: 10px;
+		background-color: #353849;
+		color: white;
+		border-radius: 8px;
+		font-family: 'Quicksand', sans-serif;
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+	}
+	.copyright {
+		font-family: 'Varela Round', sans-serif;
+		font-size: 5pt;
+		text-align-last: right;
+		padding-bottom: 10px;
+		color: #353849;
+	}
+	.date{
+		font-family: 'Quicksand', sans-serif;
+		font-size: 5pt;
+		text-align-last: right;
+		padding-bottom: 5px;
+		color: #d3d3d3;			
+	}
+	textarea {
+		white-space: pre-wrap;
+	}
+	.flex-button {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+	}
+</style>
+</html>
