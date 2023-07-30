@@ -34,7 +34,7 @@
                 .then(response => response.json())
                 .then(data => {
                     // Handle the data
-                    const new_link = JSON.stringify(data['yt_dl_link']);
+                    const new_link = data['yt_dl_link'];
                     console.log(new_link);
                     const container = document.getElementById("container");
                     const copyright_element = document.getElementById("copyright");
