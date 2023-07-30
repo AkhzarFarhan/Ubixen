@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>eDiary</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.2.7/purify.min.js"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand" rel="stylesheet">
+</head>
+<body>
+    <div class="top-banner">
+        <div class="top-banner-flex">
+            <div class="date">Release Date: 30-Jul-2023 | v5.7.5</div>   <!--version format: years(started in 2018).month number.week number-->
+        </div>
+    </div>
+	<div class="login">
+		<div class="login-container" id="form-cont">
+			<p><textarea class="credit" type="text" placeholder="Enter Text" style="font-family: 'Quicksand'; margin: 0px; width: 310px; height: 100px;" name="TEXT"></textarea></p>
+			<!-- <p><input class="credit" type="password" placeholder="Access Key" style="font-family: 'Quicksand';" name="ID"></p> -->
+			<!-- <p><input class="debit" type="password" placeholder="Auth Key" style="font-size:25px; font-family: 'Quicksand', monospace;" name="KEY"></p>
+			<p><input class="particulars" type="password" placeholder="Auth Salt" style="font-size:25px; font-family: 'Quicksand', monospace;" name="SALT"></p>
+			<p><input class="credit" type="password" placeholder="Prefix Key" style="font-size:25px; font-family: 'Quicksand', monospace;" name="PREFIX"></p> -->
+			<!-- <p><input type="submit" value="Enter" style="font-family: 'Quicksand', monospace; color:#000000;" onclick="SubmitForm()"></p> -->
+            <div class="flex-button">
+                <p><input type="submit" value="Read" style="font-family: 'Quicksand', monospace; color:#000000;" onclick="readDiary()"></p>
+                <p><input type="submit" value="Write" style="font-family: 'Quicksand', monospace; color:#000000;" onclick="writeDiary()"></p>
+            </div>
+
+		</div>
+        <div id="wrap-showtexts"></div></br>
+    <div class="date-center">Don't worry, your data is encrypted and safe.
+        Nobody can read your data not even the developer.
+        If you want to know how your data looks like in database you can click below button.
+        <p><input type="submit" value="here" style="font-family: 'Quicksand', monospace; color:#000000;" onclick="getRawText()"></p>
+    </div>
+    </br></br>
+    <div class="date">May Allah (SWT) protect us</div>
+    </div>
+    <div class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
+ 	<script>
+
+	    window["user_info_ediary"] = {
+                "FullName": "UNKNOWN",
+                "ImageURL": "UNKNOWN",
+                "Email": "UNKNOWN",
+                "Username": "UNKNOWN",
+                "ProjectID": "UNKNOWN"
+            }
+            
+        get_cred_from_cache();
+
+        function take_user_input_from_alert_window()
+        {
+            var username = prompt("Enter username");
+            var password = prompt("Enter ProjectID");
+            return {
+                "username": username,
+                "password": password
+            };
+        }
+
+        function set_cred_to_cache()
+        {
+            window.localStorage.setItem("user_info_ediary", JSON.stringify(window["user_info_ediary"]));
+        }
+
+        function get_cred_from_cache()
+        {
+            var cred = localStorage.getItem("user_info_ediary");
+            if(cred)
+            {
+                cred = JSON.parse(cred);
+                window["user_info_ediary"] = cred;
+                // console.log('get_cred_from_cache(): ', window["user_info_ediary"]);
+                return true;
+            }
+            else
+            {
+                user_input = take_user_input_from_alert_window();
+                window["user_info_ediary"]["Username"] = user_input["username"];
+                window["user_info_ediary"]["ProjectID"] = user_input["password"];
+                set_cred_to_cache();
+                return true;
+            }
+            return false;
+        }
+
+        function getDiary(datum) {
+            let allTexts = datum['data'].reverse()
+            for(let  i in allTexts){
+                var elem=document.createElement('p')
+                    elem.setAttribute('id','box'+i)
+                    elem.setAttribute('class','box')
+                    //elem.setAttribute('href', allTexts[i].text)
+                    elem.innerHTML=DOMPurify.sanitize(allTexts[i].text)
+                    document.getElementById('wrap-showtexts').appendChild(elem)
+                var elem2=document.createElement('div')
+                    elem2.setAttribute('id', 'date'+i)
+                    elem2.setAttribute('class','date')
+                    elem2.innerHTML='</br>' + allTexts[i].timestamp
+                    document.getElementById('wrap-showtexts').appendChild(elem2)					
+            }
+            //window.scrollTo(0,document.body.scrollHeight)
+	    }
+
+        function getDiaryWrite(data) {
+            //console.log(data)
+            var elem=document.createElement('p')
+            elem.setAttribute('id','box'+i)
+            elem.setAttribute('class','box')
+            elem.innerHTML = data.text + '</br>at: ' + data.timestamp
+            document.getElementById('wrap-showtexts').appendChild(elem)
+        }
+
+        function getRawText() {
+	 		container = document.getElementById('form-cont');
+	 		//auth_id = md5(String(container.querySelector('[name="ID"]').value));
+            username = md5(String(window["user_info_ediary"]["Username"]));
+            project_id = getProjectID();
+            //container.querySelector('[name="ID"]').value = "";
+            category = "";
+            request_body = {
+                username: username,
+                //auth_id: auth_id,
+                category: category,
+                view: true,
+                get_raw: true
+            }
+            var url = `https://us-central1-${project_id}.cloudfunctions.net/private`;
+            options = {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify(request_body)
+            }
+            //console.log('options', options)
+            fetch(url, options).then(response => response.json())
+		    .then(data => {
+                getDiary(data); //------------------------------TODO------------data to be handled
+                //console.log('Data from functions readDiary(): ', data);
+		    });
+        }
+
+        function readDiary() {
+	 		container = document.getElementById('form-cont');
+	 		//auth_id = md5(String(container.querySelector('[name="ID"]').value));
+            username = md5(String(window["user_info_ediary"]["Username"]));
+            project_id = getProjectID();
+            //container.querySelector('[name="ID"]').value = "";
+            category = "";
+            request_body = {
+                username: username,
+                //auth_id: auth_id,
+                category: category,
+                view: true,
+                get_raw: false
+            }
+            var url = `https://us-central1-${project_id}.cloudfunctions.net/private`;
+            options = {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify(request_body)
+            }
+            //console.log('options', options)
+            fetch(url, options).then(response => response.json())
+		    .then(data => {
+                getDiary(data); //------------------------------TODO------------data to be handled
+                //console.log('Data from functions readDiary(): ', data);
+		    });
+        }
+
+        function writeDiary() {
+	 		container = document.getElementById('form-cont');
+            username = md5(String(window["user_info_ediary"]["Username"]));
+            project_id = getProjectID();
+            text = container.querySelector('[name="TEXT"]').value;
+		container.querySelector('[name="TEXT"]').value = "";
+            category = "";
+            request_body = {
+                username: username,
+                category: category,
+                text: text,
+                view: false,
+                get_raw: false
+            }
+            var url = `https://us-central1-${project_id}.cloudfunctions.net/private`;
+            options = {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify(request_body)
+            }
+            //console.log('options', options)
+            fetch(url, options).then(response => response.json())
+		    .then(data => {
+                getDiaryWrite(data); //------------------------------TODO------------data to be handled
+                //console.log('Data from functions writeDiary(): ', data);
+		    });
+        }
+
+        function md5(d){return rstr2hex(binl2rstr(binl_md5(rstr2binl(d),8*d.length)))}function rstr2hex(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function rstr2binl(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function binl2rstr(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function binl_md5(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
+
+        function getProjectID()
+        {
+            return window["user_info_ediary"]["ProjectID"];
+        }
+
+
+ 	</script>
+ 	<style>
+			body {
+			  background-color: #000000;
+			  font-family: 'Quicksand', monospace;
+			}
+            .flex-button {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+            }
+            .profile-box {
+                color: grey;
+                text-align: center;
+            }
+            #profile-picture {
+                border-radius: 50%;
+            }
+            .top-banner-flex {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+			.radio-wrap {
+				display: flex;
+				flex-direction: row;
+				justify-content: space-around;
+				flex-wrap: wrap;
+                border-style: solid;
+                border-color: darkgray;
+                border-radius: 8px;
+                margin: 10px 5px 10px 5px;
+			}
+            .radio-wrap p {
+                margin: 7px;
+            }
+            .box{
+                display: inline-block;
+                text-decoration: none;
+                color: #FFFFFF;
+                width: 94%;
+                word-wrap: break-word;
+                white-space: pre-wrap;
+                padding:10px;
+                margin: 10px;
+                border: 1px solid #353849;
+                border-radius: 8px;
+                box-sizing: border-box;
+                -moz-box-sizing: border-box;
+            }
+            .date-center{
+                font-size: 5pt;
+                text-align-last: center;
+                padding-bottom: 5px;
+                color: #d3d3d3;
+                margin-right: 10px;			
+            }
+            .date{
+                font-size: 5pt;
+                text-align-last: right;
+                padding-bottom: 5px;
+                color: #d3d3d3;
+                margin-right: 10px;			
+            }
+            .copyright {
+                font-size: 10pt;
+                text-align: center;
+                padding: 10px;
+                color: #FFFFFF;
+                margin-right: 10px;
+                margin-top: 30px;
+            }
+            .copyright_link {
+                color: #3cc47a;
+                text-decoration: none;
+            }
+			.login {
+			  margin: auto;
+			  font-size: 16px;
+			}
+
+			/* Reset top and bottom margins from certain elements */
+			.login-header,
+			.login p {
+			  margin-top: 0;
+			  margin-bottom: 0;
+			}
+
+			.login-header {
+			  background: #28d;
+			  padding: 10px;
+			  font-size: 1.4em;
+			  font-weight: normal;
+			  text-align: center;
+			  text-transform: uppercase;
+			  color: #fff;
+			}
+
+			.login-container {
+			  background-color: #000000;
+			  padding: 6px;
+              border-radius: 8px;
+              color: gray;
+			}
+
+			/* Every row inside .login-container is defined with p tags */
+			.login p {
+			  padding: 6px;
+			}
+
+			.login input {
+			  box-sizing: border-box;
+			  /*display: block;*/
+			  width: 100%;
+			  border-width: 2px;
+			  border-style: solid;
+			  padding: 12px;
+			  outline: 0;
+			  font-size: 1.1em;
+              border-radius: 8px;
+			}
+            .credit {
+                /*background-color: #D1E231;*/
+                background-color: #82E0AA; 
+                border-color: green;
+                border-radius: 8px;
+            }
+            .debit {
+                background-color: #EC7063;
+                border-color: darkred;
+            }
+            .particulars {
+                background-color: #F7DC6F;
+                border-color: yellow;
+
+            }
+			.login input[type="submit"] {
+			  background-color: green;
+			  border-color: transparent;
+			  color: #fff;
+			  cursor: pointer;
+			}
+ 	</style>
+</body>
+</html>
