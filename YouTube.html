@@ -2,12 +2,13 @@
 <html>
 <head>
     <title>YouTube Downloader</title>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <div class="container">
         <h2>YouTube Downloader</h2>
-        <input type="text" class="textbox" placeholder="Type YouTube URL">
+        <input type="text" id="yt_link" class="textbox" placeholder="Type YouTube URL">
         <button class="button" onclick="fetchDataFromAPI()">Submit</button>
     </div>
 
@@ -15,12 +16,23 @@
         function fetchDataFromAPI()
         {
             const apiUrl = 'https://us-central1-github-284317.cloudfunctions.net/YouTubeDL'; // Replace with your API endpoint
+            const yt_link = document.getElementById("yt_link").value;
+            const payload = {
+                yt_link: yt_link
+            }
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            };
 
-            fetch(apiUrl)
+            fetch(apiUrl, options)
                 .then(response => response.json())
                 .then(data => {
                     // Handle the data
-                    console.log(JSON.stringify(data['yt_dl_link'], null, 2));
+                    console.log(JSON.stringify(data['yt_dl_link']));
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
