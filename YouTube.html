@@ -37,11 +37,13 @@
                     const new_link = JSON.stringify(data['yt_dl_link']);
                     console.log(new_link);
                     const container = document.getElementsByClassName("container");
+                    const copyright_element = document.getElementsByClassName("copyright");
                     const element = document.createElement("a");
                     element.textContent = "Download";
                     element.className = "button";
                     element.id = "button";
                     element.href = new_link;
+                    container.insertBefore(element, copyright_element);
 
                 })
                 .catch(error => {
