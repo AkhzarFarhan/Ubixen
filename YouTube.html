@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="container">
         <h2>YouTube Downloader</h2>
         <input type="text" id="yt_link" class="textbox" placeholder="Type YouTube URL">
         <button class="button" onclick="fetchDataFromAPI()">Submit</button>
         <!-- <a class="button" id="download" href="" download style="display: none">Download</a> -->
-        <div class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
+        <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
 
     <script>
@@ -36,8 +36,8 @@
                     // Handle the data
                     const new_link = JSON.stringify(data['yt_dl_link']);
                     console.log(new_link);
-                    const container = document.getElementsByClassName("container");
-                    const copyright_element = document.getElementsByClassName("copyright");
+                    const container = document.getElementById("container");
+                    const copyright_element = document.getElementById("copyright");
                     const element = document.createElement("a");
                     element.textContent = "Download";
                     element.className = "button";
