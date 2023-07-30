@@ -43,6 +43,7 @@
                     element.className = "button";
                     element.id = "button";
                     element.href = new_link;
+                    element.target = "_blank"
                     container.insertBefore(element, copyright_element);
 
                 })
@@ -62,6 +63,10 @@
             justify-content: center;
             align-items: center;
             height: 70vh;
+        }
+
+        a {
+            text-decoration: none;
         }
 
         .container {
