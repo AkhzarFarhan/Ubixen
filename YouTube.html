@@ -10,7 +10,7 @@
         <h2>YouTube Downloader</h2>
         <input type="text" id="yt_link" class="textbox" placeholder="Type YouTube URL">
         <button class="button" onclick="fetchDataFromAPI()">Submit</button>
-        <a class="button" id="download" href="" download style="display: none">Download</a>
+        <!-- <a class="button" id="download" href="" download style="display: none">Download</a> -->
         <div class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
 
@@ -36,9 +36,12 @@
                     // Handle the data
                     const new_link = JSON.stringify(data['yt_dl_link']);
                     console.log(new_link);
-                    var element = document.getElementById("download");
-                    element.style.display = true;
-                    element.style.href = new_link;
+                    const container = document.getElementsByClassName("container");
+                    const element = document.createElement("a");
+                    element.textContent = "Download";
+                    element.className = "button";
+                    element.id = "button";
+                    element.href = new_link;
 
                 })
                 .catch(error => {
