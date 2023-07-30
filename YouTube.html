@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouTube Downloader</title>
+
+</head>
+<body>
+    <div class="container">
+        <h2>YouTube Downloader</h2>
+        <input type="text" class="textbox" placeholder="Type YouTube URL">
+        <button class="button" onclick="fetchDataFromAPI()">Submit</button>
+    </div>
+
+    <script>
+        function fetchDataFromAPI()
+        {
+            const apiUrl = 'https://us-central1-github-284317.cloudfunctions.net/YouTubeDL'; // Replace with your API endpoint
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    // Handle the data
+                    console.log(JSON.stringify(data['yt_dl_link'], null, 2));
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 80%;
+        }
+
+        .textbox {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            margin-bottom: 10px;
+        }
+
+        .button {
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</body>
+</html>
