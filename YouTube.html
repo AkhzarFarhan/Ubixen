@@ -11,6 +11,7 @@
         <input type="text" id="yt_link" class="textbox" placeholder="Type YouTube URL">
         <button class="button" onclick="fetchDataFromAPI()">Submit</button>
     </div>
+    <div class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
 
     <script>
         function fetchDataFromAPI()
@@ -32,7 +33,9 @@
                 .then(response => response.json())
                 .then(data => {
                     // Handle the data
-                    console.log(JSON.stringify(data['yt_dl_link']));
+                    const new_link = JSON.stringify(data['yt_dl_link']);
+                    console.log(new_link);
+                    window.location.href = new_link;
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
@@ -68,7 +71,7 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             outline: none;
-            margin-bottom: 10px;
+            margin: 10px;
         }
 
         .button {
@@ -85,6 +88,19 @@
         .button:hover {
             background-color: #45a049;
         }
+
+        .copyright {
+                font-size: 10pt;
+                text-align: center;
+                padding: 10px;
+                color: #000000;
+                margin-right: 10px;
+                margin-top: 30px;
+            }
+        .copyright_link {
+                color: #45a049;
+                text-decoration: none;
+            }
     </style>
 </body>
 </html>
