@@ -82,7 +82,8 @@
             return false;
         }
 
-        function getDiary(datum) {
+        function getDiary(datum)
+        {
             let allTexts = datum['data'].reverse()
             for(let  i in allTexts){
                 var elem=document.createElement('p')
@@ -100,7 +101,8 @@
             //window.scrollTo(0,document.body.scrollHeight)
 	    }
 
-        function getDiaryWrite(data) {
+        function getDiaryWrite(data)
+        {
             //console.log(data)
             var elem=document.createElement('p')
             elem.setAttribute('id','box'+i)
@@ -109,7 +111,8 @@
             document.getElementById('wrap-showtexts').appendChild(elem)
         }
 
-        function getRawText() {
+        function getRawText()
+        {
 	 		container = document.getElementById('form-cont');
 	 		//auth_id = md5(String(container.querySelector('[name="ID"]').value));
             username = md5(String(window["user_info_ediary"]["Username"]));
@@ -140,7 +143,8 @@
 		    });
         }
 
-        function readDiary() {
+        function readDiary()
+        {
 	 		container = document.getElementById('form-cont');
 	 		//auth_id = md5(String(container.querySelector('[name="ID"]').value));
             username = md5(String(window["user_info_ediary"]["Username"]));
@@ -171,12 +175,13 @@
 		    });
         }
 
-        function writeDiary() {
+        function writeDiary()
+        {
 	 		container = document.getElementById('form-cont');
             username = md5(String(window["user_info_ediary"]["Username"]));
             project_id = getProjectID();
             text = container.querySelector('[name="TEXT"]').value;
-		container.querySelector('[name="TEXT"]').value = "";
+		    container.querySelector('[name="TEXT"]').value = "";
             category = "";
             request_body = {
                 username: username,
