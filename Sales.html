@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales</title>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <h1>Sales</h1>
+            <input type="number" class="text_box" id="printed_price" placeholder="Printed Price">
+            <input type="number" class="text_box" id="purchase_discount" placeholder="Purchase Discount">
+            <input type="number" class="text_box" id="minimum_discount" placeholder="Minumum Discount">
+            <input type="number" class="text_box" id="maximum_discount" placeholder="Maximum Discount">
+        </div>
+    </div>
+    <div id="error_message"></div>
+    <div id="get_price">
+        <div id="purchase_price"></div>
+        <div id="minimum_selling_price"></div>
+        <div id="maximum_selling_price"></div>
+    </div>
+    <button id="show_button" onclick="get_price()">Get Price</button>
+    <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
+
+    <script>
+        var error = "";
+        function is_sanitized(a, b, c, d)
+        {
+            a = parseInt(a);
+            b = parseInt(b);
+            c = parseInt(c);
+            d = parseInt(d);
+
+            if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d))
+            {
+                error = "Please enter all values!";
+                return false;
+            }
+            if (b > 100 || c > 100 || d > 100)
+            {
+                error = "Discount rate should be less than 100";
+                return false;
+            }
+            return true;
+        }
+
+        function get_price()
+        {
+            var purchase_price;
+            var minimum_selling_price;
+            var maximum_selling_price;
+            var printed_price = document.getElementById("printed_price").value;
+            var purchase_discount = document.getElementById("purchase_discount").value;
+            var minimum_discount = document.getElementById("minimum_discount").value;
+            var maximum_discount = document.getElementById("maximum_discount").value;
+
+            var ee = document.getElementById("error_message");
+            var re = document.getElementById("get_price");
+
+            if(!is_sanitized(printed_price, purchase_discount, minimum_discount, maximum_discount)) // un sanitized case
+            {
+                ee.innerText = error;
+                ee.setAttribute("style", "display: true");
+                return;
+            }
+            else
+            {
+                ee.setAttribute("style", "display: none");
+            }
+
+
+            purchase_price = Math.round(printed_price * (1 - (purchase_discount / 100)));
+            minimum_selling_price = Math.round(purchase_price * (1 + (minimum_discount / 100)));
+            maximum_selling_price = Math.round(purchase_price * (1 + (maximum_discount / 100)));
+
+            var pp = document.getElementById("purchase_price");
+            var minsp = document.getElementById("minimum_selling_price");
+            var maxsp = document.getElementById("maximum_selling_price");
+
+            pp.innerText = "Purchase Price: " + String(purchase_price);
+            minsp.innerText = "Minimum Selling Price: " + String(minimum_selling_price);
+            maxsp.innerText = "Maximum Selling Price: " + String(maximum_selling_price);
+
+        }
+    </script>
+    
+</body>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80%;
+        padding: 10px;
+    }
+
+    .text_box {
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin: 5px;
+    }
+
+    #show_button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    #get_price {
+        padding: 10px;
+        font-weight: bold;
+        border-radius: 4px;
+    }
+
+    .copyright {
+        font-size: 10pt;
+        text-align: center;
+        padding: 10px;
+        color: #000000;
+        margin-right: 10px;
+        margin-top: 30px;
+    }
+    .copyright_link {
+        color: #45a049;
+        text-decoration: none;
+    }
+</style>
+</html>
