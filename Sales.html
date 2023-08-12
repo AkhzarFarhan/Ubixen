@@ -15,22 +15,23 @@
             <input type="number" class="text_box" id="maximum_discount" placeholder="Maximum Discount">
         </div>
         <div id="error_message"></div>
-        <div id="get_price">
-            <div id="purchase_price"></div>
-            <div id="minimum_selling_price"></div>
-            <div id="maximum_selling_price"></div>
+        <div id="get_price" style="display: none;">
+            <table>
+                <tr>
+                    <th>Purchased</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                </tr>
+                <tr>
+                    <td id="purchase_price"></td>
+                    <td id="minimum_selling_price"></td>
+                    <td id="maximum_selling_price"></td>
+                </tr>
+            </table>
         </div>
         <button id="show_button" onclick="get_price()">Get Price</button>
         <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
-    <!-- <div id="error_message"></div>
-    <div id="get_price">
-        <div id="purchase_price"></div>
-        <div id="minimum_selling_price"></div>
-        <div id="maximum_selling_price"></div>
-    </div>
-    <button id="show_button" onclick="get_price()">Get Price</button>
-    <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div> -->
 
     <script>
         var error = "";
@@ -48,7 +49,7 @@
             }
             if (b > 100 || c > 100 || d > 100)
             {
-                error = "Discount rate should be less than 100";
+                error = "Discount rate should be less than or equal to 100";
                 return false;
             }
             return true;
@@ -71,13 +72,13 @@
             {
                 ee.innerText = error;
                 ee.setAttribute("style", "display: true");
-                rr.setAttribute("style", "display: none");
+                re.setAttribute("style", "display: none");
                 return;
             }
             else
             {
                 ee.setAttribute("style", "display: none");
-                rr.setAttribute("style", "display: true");
+                re.setAttribute("style", "display: true");
             }
 
 
@@ -89,9 +90,9 @@
             var minsp = document.getElementById("minimum_selling_price");
             var maxsp = document.getElementById("maximum_selling_price");
 
-            pp.innerText = "Purchase Price: " + String(purchase_price);
-            minsp.innerText = "Minimum Selling Price: " + String(minimum_selling_price);
-            maxsp.innerText = "Maximum Selling Price: " + String(maximum_selling_price);
+            pp.innerText    = purchase_price;
+            minsp.innerText = minimum_selling_price;
+            maxsp.innerText = maximum_selling_price;
 
         }
     </script>
@@ -136,10 +137,16 @@
         cursor: pointer;
     }
 
-    #get_price {
+    #error_message {
         padding: 10px;
+        margin: 10px;
         font-weight: bold;
-        border-radius: 4px;
+        color: red;
+    }
+
+    #get_price {
+        padding: 20px;
+        font-weight: bold;
     }
 
     .copyright {
@@ -153,6 +160,21 @@
     .copyright_link {
         color: #45a049;
         text-decoration: none;
+    }
+    table {
+        width: 60%;
+        margin: auto;
+        border-collapse: collapse;
+        text-align: center;
+    }
+    
+    th, td {
+        padding: 10px;
+        border: 1px solid #ccc;
+    }
+    
+    th {
+        background-color: #f2f2f2;
     }
 </style>
 </html>
