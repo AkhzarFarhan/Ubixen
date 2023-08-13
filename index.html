@@ -6,9 +6,9 @@
     <title>Ubixen</title>
 </head>
 <body>
+    <h1 class="heading">Ubixen: An Endless Possibility</h1>
     <div class="container">
         <div class="button-container">
-            <h1 class="heading">Ubixen: An Endless Possibility</h1>
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Ledger.html">Ledger</a>
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Finance.html">Finance</a>
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Delivery.html">Delivery</a>
@@ -78,17 +78,18 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f1f1f1;
-            margin: 0;
+            margin: 10px;
             padding: 0;
-            display: flex;
-            justify-content: center;
             align-items: center;
+            text-align: center;
             height: 70vh;
         }
         
-        /* .button-container {
-
-        } */
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
         
         .button {
             display: inline-block;
@@ -112,7 +113,7 @@
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 80%;
+            margin: 10px;
         }
 
         .a {
@@ -131,6 +132,10 @@
         .copyright_link {
             color: #45a049;
             text-decoration: none;
+        }
+
+        .heading {
+            font-weight: lighter;
         }
     </style>
 </body>
