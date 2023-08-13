@@ -15,12 +15,65 @@
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/eDiary.html">eDiary</a>
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/YouTube.html">YouTube</a>
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Construction.html">Construction</a>
-            <!-- <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Blog.html">Portfolio</a> -->
+            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Blog.html">Portfolio</a>
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Sales.html">Sales</a>
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Game.html">Game</a>
         </div>
         <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
+    <script>
+
+        window["user_info"] = {
+            "username":   "UNKNOWN",
+            "password":   "UNKNOWN",
+            "project":    "UNKNOWN",
+            "project_id": "UNKNOWN",
+            "otp":        "UNKNOWN"
+        }
+
+        function take_user_input_from_alert_window()
+        {
+            var username = prompt("Enter Username");
+            var password = prompt("Enter Password");
+            var project_id = prompt("Enter Project ID");
+
+            var user_info =  {
+                "username": username,
+                "password": password,
+                "project_id": project_id
+            }
+
+            return user_info;
+        }
+
+        function set_cred_to_cache()
+        {
+            window.localStorage.setItem("user_info", JSON.stringify(window["user_info"]));
+        }
+
+        function get_cred_from_cache()
+        {
+            var cred = localStorage.getItem("user_info");
+            if(cred)
+            {
+                cred = JSON.parse(cred);
+                window["user_info"] = cred;
+                // console.log('get_cred_from_cache(): ', window["user_info"]);
+            }
+            else
+            {
+                user_input = take_user_input_from_alert_window();
+                window["user_info"]["username"]   = user_input["username"];
+                window["user_info"]["password"]   = user_input["password"];
+                window["user_info"]["project_id"] = user_input["project_id"];
+ 
+                set_cred_to_cache();
+            }
+        }
+
+        get_cred_from_cache();
+
+    </script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -33,9 +86,9 @@
             height: 70vh;
         }
         
-        .button-container {
+        /* .button-container {
 
-        }
+        } */
         
         .button {
             display: inline-block;
@@ -74,7 +127,7 @@
             margin-right: 10px;
             margin-top: 30px;
         }
-        
+
         .copyright_link {
             color: #45a049;
             text-decoration: none;
