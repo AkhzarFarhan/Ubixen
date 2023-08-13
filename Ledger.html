@@ -42,20 +42,26 @@
 
         const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json;charset=utf-8' };
         var start_time;
+        const cred = JSON.parse(localStorage.getItem("user_info"));
 
         function get_username()
         {
-            return window["user_info"]["username"];
+            return cred["username"];
         }
 
         function get_password()
         {
-            return window["user_info"]["password"];
+            return cred["password"];
+        }
+
+        function get_project_id()
+        {
+            return cred["project_id"];
         }
 
         function get_url()
         {
-            const project_id = window["user_info"]["project_id"];
+            const project_id = get_project_id();
             const project = "ledger";
             const url = `https://us-central1-${project_id}.cloudfunctions.net/${project}`;
             return url;
