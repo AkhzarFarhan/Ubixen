@@ -59,10 +59,15 @@
             return cred["project_id"];
         }
 
+        function get_project()
+        {
+            return "ledger";
+        }
+
         function get_url()
         {
             const project_id = get_project_id();
-            const project = "ledger";
+            const project = get_project();
             const url = `https://us-central1-${project_id}.cloudfunctions.net/${project}`;
             return url;
         }
@@ -124,7 +129,7 @@
                 password: password
             }
 
-            loader.innerHTML="<p style='color: #3cc47a; text-align: center;'>Encrypting your data for security...</p>";
+            loader.innerHTML="<p style='text-align: center;'>Encrypting your data for security...</p>";
             options = {
                 method: 'POST',
                 headers: headers,
@@ -177,12 +182,12 @@
             if(try_again)
             {
                 del_button = document.getElementById('wrap-showtexts');
-                del_button.innerHTML = `<p><input type="submit" value="Delete it!" style="font-family: 'Share Tech Mono', monospace; background-color: red; color: black;" onclick="deleteInstance()"></p>`;
+                del_button.innerHTML = `<p><input type="submit" value="Delete it!" style="background-color: red; color: black;" onclick="deleteInstance()"></p>`;
             }
             else
             {
                 start_over_button = document.getElementById('wrap-showtexts');
-                start_over_button.innerHTML = `<p><input type="submit" value="Start Over" style="font-family: 'Share Tech Mono', monospace; background-color: #3cc47a; color: black;" onclick="location.reload()"></p>`;
+                start_over_button.innerHTML = `<p><input type="submit" value="Start Over" style="background-color: #3cc47a; color: black;" onclick="location.reload()"></p>`;
             }
         }
 
@@ -216,7 +221,8 @@
 		    });
         }
 
-        function getStatusHtml(d) {
+        function getStatusHtml(d)
+        {
             if(d['status'] == 200)
             {
                 status_message = "Successfully Added!"; status_color = "grey";
@@ -229,6 +235,7 @@
             {
                 status_message = `Failed!</br></br>${d['reason']}`; status_color = "red";
             }
+
             const timestamp      = d['timestamp'];
             const credit         = d['credit'];
             const debit          = d['debit'];
@@ -241,6 +248,7 @@
 
             element = document.getElementById('form-cont');
             element.setAttribute('class', 'box');
+            
             if (debit == 0)
             { // case of credit
                 element.innerHTML = `<p style='color: ${status_color};'><b>Transaction ${status_message}</b></br></br>Timestamp: ${timestamp}</br><b style="color: #3cc47a;">Credit: ${credit}</b></br>Debit: ${debit}</br>Details: ${details}</br>Mode: ${mode}</br>Cash Balance: ${cash_balance}</br>Bank Balance: ${bank_balance}</br></br><b>Total Balance: ${total_balance}</b></p></br></br></br><div class="date">Execution time ${time_taken} ms</div>`;
@@ -302,7 +310,8 @@
         .top-banner-flex {
             display: flex;
             flex-direction: row;
-            justify-content: space-between;
+            justify-content: space-evenly;
+            padding-top: 10px;
         }
         .radio-wrap {
             display: flex;
@@ -317,7 +326,6 @@
         .box{
             display: inline-block;
             text-decoration: none;
-            color: #FFFFFF;
             width: 94%;
             word-wrap: break-word;
             white-space: pre-wrap;
