@@ -3,30 +3,21 @@
 <head>
 	<title>Ledger</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.js"></script>
-    <meta name="google-signin-scope" content="profile email">
-    <meta name="google-signin-client_id" content="411415198630-ket55994ndtqrsd3a1nskp0s930a7pnv.apps.googleusercontent.com">
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
-<body>
+<body onload="main()">
     <div class="top-banner">
         <div class="top-banner-flex">
-            <!-- <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div> -->
             <div class="date" id="profile-name"></div>
             <div class="wake-status" id="wake-status" style="color: red;">&#10005;</div>
             <div class="date">Release Date: 09-Jul-2023</div>   <!--version format: years(started in 2018).month number.week number-->
         </div>
-        <!-- <div class="profile-box">
-            <img src="" id="profile-picture" alt="Profile picture" width="60" height="60">
-            <p id="profile-name"></p>
-        </div> -->
     </div>
 	<div class="login">
 		<div class="login-container" id="form-cont">
-			<p><input class="credit" type="number" placeholder="Credit &#128525;" style="font-size:25px; font-family: 'Share Tech Mono', monospace;" name="CREDIT"></p>
-			<p><input class="debit" type="number" placeholder="Debit &#128557;" style="font-size:25px; font-family: 'Share Tech Mono', monospace;" name="DEBIT"></p>
-			<p><input class="particulars" type="text" placeholder="Details &#128221;" style="font-size:25px; font-family: 'Share Tech Mono', monospace;" name="PARTICULARS"></p>
+			<input class="text_box" type="number" placeholder="Credit" id="credit">
+			<input class="text_box" type="number" placeholder="Debit" id="debit">
+			<input class="text_box" type="text" placeholder="Details" id="details">
+
 			<div class="radio-wrap">
 				<p><input type="radio" id="1" value="Cash" name="CHECK">Cash</p>
 				<p><input type="radio" id="2" value="PhonePe" name="CHECK">PhonePe</p>
@@ -37,98 +28,48 @@
                 <p><input type="radio" id="7" value="CashToBank" name="CHECK">Bank Deposit</p>
                 <p><input type="radio" id="8" value="BankToCash" name="CHECK">ATM Withdraw</p>
 			</div>
-			<!-- <p><input type="submit" value="Save" style="font-family: 'Share Tech Mono', monospace; color:#000000;" onclick="SubmitForm()"></p>
-			<p><input type="submit" value="Get Tabular Report" style="font-family: 'Share Tech Mono', monospace; color:#000000;" onclick="getHtmlOutput()"></p> -->
+
             <div class="flex-button">
-                <button OnClick="getHtmlOutput()">Table</button>
-                <button OnClick="SubmitForm()">Save</button>
+                <button class="button" onclick="getHtmlOutput()">Table</button>
+                <button class="button" onclick="SubmitForm()">Save</button>
             </div>
 		</div>
         <div id="wrap-showtexts"></div></br>
     <div class="date">May Allah (SWT) grant us Halal rizq</div>
     </div>
-    <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
     <div class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
  	<script>
-        window["user_info"] = {
-            "username": "INVALID",
-            "password": "INVALID",
-            "project_id": "INVALID"
-        };
-        function take_user_input_from_alert_window()
+
+        const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json;charset=utf-8' };
+        var start_time;
+
+        function get_username()
         {
-            var username = prompt("Enter username");
-            var password = prompt("Enter password");
-            var project_id = prompt("Enter project ID");
-            return {
-                "username": username,
-                "password": password,
-                "project_id": project_id
-            };
+            return window["user_info"]["username"];
         }
 
-        function set_cred_to_cache()
+        function get_password()
         {
-            window.localStorage.setItem("user_info", JSON.stringify(window["user_info"]));
+            return window["user_info"]["password"];
         }
 
-        function get_cred_from_cache()
+        function get_url()
         {
-            var cred = localStorage.getItem("user_info");
-            if(cred)
-            {
-                cred = JSON.parse(cred);
-                window["user_info"] = cred;
-                // console.log('get_cred_from_cache(): ', window["user_info"]);
-                return true;
-            }
-            else
-            {
-                user_input = take_user_input_from_alert_window();
-                window["user_info"]["username"] = user_input["username"];
-                window["user_info"]["password"] = user_input["password"];
-                window["user_info"]["project_id"] = user_input["project_id"];
-                set_cred_to_cache();
-                return true;
-            }
-            return false;
+            const project_id = window["user_info"]["project_id"];
+            const project = "ledger";
+            const url = `https://us-central1-${project_id}.cloudfunctions.net/${project}`;
+            return url;
         }
-
-        function getProjectID()
-        {
-            return window["user_info"]["project_id"];
-        }
-
-        function postToTelegram(tg_url)
-        {
-            options = {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json;charset=utf-8'
-                }
-            }
-            //console.log('options wake_up: ', options)
-            fetch(tg_url, options).then(response => response.json())
-		    .then(data => {
-                console.log('Response from Telegram: ', data);
-		    });
-        }
-
 
         function wakeUp()
         {
             request_body = {
                 run_cron: true
             }
-            project_id = getProjectID();
-            var url = `https://us-central1-${project_id}.cloudfunctions.net/ledger`;
+            const url = get_url();
             options = {
                 method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json;charset=utf-8'
-                },
+                headers: headers,
                 body: JSON.stringify(request_body)
             }
             fetch(url, options).then(response => response.json())
@@ -140,53 +81,32 @@
 		    });
         }
 
-        function onSignIn(googleUser)
+        function main()
         {
-            get_cred_from_cache(); // Getting cred from cache
-            var profile = googleUser.getBasicProfile();
-            window.data = {
-                "ID": profile.getId(),
-                "FullName": profile.getName(),
-                "ImageURL": profile.getImageUrl(),
-                "Email": profile.getEmail(),
-                "Username": window["user_info"]["username"],
-                "Password": window["user_info"]["password"],
-                "PrivateKey": profile.getEmail().slice(-10, -9),
-                "TimeStamp": Number(Date.now().toString().slice(4)),
-                "ShiftKey": (Math.floor(Math.random()*10) % 5) + 1,
-                "Project": "Ledger",
-                "StartTime": Date.now()
-            }
-            // document.getElementById("profile-picture").src = window.data["ImageURL"];
-            document.getElementById("profile-name").innerHTML = window.data["FullName"] + " | " + window.data["Email"];
+            document.getElementById("profile-name").innerHTML = window["user_info"]["username"];
             wakeUp();
         }
 
  		function SubmitForm()
         {
-            window.data["StartTime"] = Date.now();
-	 		container = document.getElementById('form-cont');
-	 		credit = container.querySelector('[name="CREDIT"]').value;
-	 		debit = container.querySelector('[name="DEBIT"]').value;
-	 		particulars = container.querySelector('[name="PARTICULARS"]').value;
-	 		check = getCheck();
-            project_id = getProjectID();
-            container.querySelector('[name="CREDIT"]').value = "";
-            container.querySelector('[name="DEBIT"]').value = "";
-            container.querySelector('[name="PARTICULARS"]').value = "";
+            //Getters
+            const url        = get_url();
+            start_time       = Date.now();
+	 		const credit     = document.getElementById("credit").value;
+	 		const debit      = document.getElementById("debit").value;
+	 		const details    = document.getElementById("details").value;
+	 		const mode       = getCheck();
+            const username   = get_username();
+            const password   = get_password();
+
+            //Restters
+            document.getElementById("credit").value = "";
+            document.getElementById("debit").value = "";
+            document.getElementById("details").value = "";
             loader = document.getElementById('form-cont');
             loader.setAttribute('class', 'box');
-            credit = getEncryptedNumber(credit, window.data["TimeStamp"]);
-            debit = getEncryptedNumber(debit, window.data["TimeStamp"]);
-            details = getEncryptedString(particulars);
-            mode = getEncryptedString(check);
-            email = getEncryptedString(window.data["Email"]);
-            username = getEncryptedString(window.data["Username"]);
-            password = getEncryptedString(window.data["Password"]);
-            token = md5(window.data["TimeStamp"].toString());
-            timestamp = window.data["TimeStamp"];
-            shiftkey = window.data["ShiftKey"];
-            request_body = {
+            
+            const request_body = {
                 run_cron: false,
                 get_html: false,
                 delete_instance: false,
@@ -194,21 +114,14 @@
                 debit: debit,
                 details: details,
                 mode: mode,
-                email: email,
                 username: username,
-                password: password,
-                timestamp: timestamp,
-                shiftkey: shiftkey,
-                token: token
+                password: password
             }
-            loader.innerHTML="<p style='color: #3cc47a; text-align: center;'>Encrypting your data for security...</br></br></br></br>We are writing down your transaction...</br></br></br> Please be patient!</p>";
-            var url = `https://us-central1-${project_id}.cloudfunctions.net/ledger`;
+
+            loader.innerHTML="<p style='color: #3cc47a; text-align: center;'>Encrypting your data for security...</p>";
             options = {
                 method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json;charset=utf-8'
-                },
+                headers: headers,
                 body: JSON.stringify(request_body)
             }
             //console.log('options', options)
@@ -236,50 +149,32 @@
 
         function getHtmlOutput()
         {
-            username = getEncryptedString(window.data["Username"]);
-            password = getEncryptedString(window.data["Password"]);
-            timestamp = window.data["TimeStamp"];
-            token = md5(timestamp.toString());
-            project_id = getProjectID();
-            shiftkey = window.data["ShiftKey"];
-            loader = document.getElementById('form-cont');
+            const username   = get_username();
+            const password   = get_password();
+            const project_id = get_project_id();
+            const project    = get_project();
+            var loader       = document.getElementById('form-cont');
             loader.setAttribute('class', 'box');
-            loader.innerHTML="<p style='color: #3cc47a; text-align: center;'>Encrypting your data for security...</br></br></br></br>We are preparing table for you...</br></br></br></br>Please be patient!</p>";
-            window.location = `https://us-central1-${project_id}.cloudfunctions.net/ledger?params=${username}SHA1024-/${password}SHA1024-/${shiftkey}SHA1024-/${token}SHA1024-/${timestamp}`;          
-        }
-
-        function md5(d){return rstr2hex(binl2rstr(binl_md5(rstr2binl(d),8*d.length)))}function rstr2hex(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function rstr2binl(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function binl2rstr(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function binl_md5(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
-
-        function getEncryptedString(plain_string)
-        {
-            var enc_string = "";
-            var len = plain_string.length;
-            for(var i = 0; i < len; i++) {
-                enc_string += String.fromCharCode(plain_string.charCodeAt(i) - window.data["ShiftKey"]);
-            }
-            return enc_string;
-        }        
-
-        function getEncryptedNumber(number, timestamp)
-        {
-            var encrypted = timestamp ^ number;
-            return encrypted;
+            loader.innerHTML = "<p style='color: #3cc47a; text-align: center;'>Encrypting your data for security...";
+            window.location  = `https://us-central1-${project_id}.cloudfunctions.net/${project}?params=${username}-${password}`;          
         }
 
         function getDeleteStatusHtml(d)
         {
-            time_taken = Date.now() - window.data["StartTime"];
+            var time_taken = Date.now() - start_time;
             if(d['status'] == 200) {status_message = "Successfully Deleted!"; status_color = "#3cc47a"; try_again = false;}
             else {status_message = `Deletion Failed!</br></br>${d['reason']}`; status_color = "red"; try_again = true;}
 
-            element = document.getElementById('form-cont');
+            const element = document.getElementById('form-cont');
             element.setAttribute('class', 'box');
             element.innerHTML = `<p style='color: ${status_color};'><b>Transaction ${status_message}<b></p></br></br></br></br><div class="date">Execution time ${time_taken} ms</div><div class="date">Execution token: ${token}</div>`;
-            if(try_again) {
+            if(try_again)
+            {
                 del_button = document.getElementById('wrap-showtexts');
                 del_button.innerHTML = `<p><input type="submit" value="Delete it!" style="font-family: 'Share Tech Mono', monospace; background-color: red; color: black;" onclick="deleteInstance()"></p>`;
             }
-            else {
+            else
+            {
                 start_over_button = document.getElementById('wrap-showtexts');
                 start_over_button.innerHTML = `<p><input type="submit" value="Start Over" style="font-family: 'Share Tech Mono', monospace; background-color: #3cc47a; color: black;" onclick="location.reload()"></p>`;
             }
@@ -287,34 +182,26 @@
 
         function deleteInstance()
         {
-            window.data["StartTime"] = Date.now();
-            project_id = getProjectID();
-            username  = getEncryptedString(window.data["Username"]);
-            password = getEncryptedString(window.data["Password"]);
-            email = getEncryptedString(window.data["Email"]);
-            timestamp = window.data["TimeStamp"];
-            shiftkey = window.data["ShiftKey"];
-            token = md5(timestamp.toString());
+            start_time = Date.now();
+            const project_id = get_project_id();
+            const project = get_project();
+            const username  = get_username();
+            const password = get_password();
+
             request_body = {
                 run_cron: false,
                 get_html: false,
                 delete_instance: true,
-                email: email,
                 username: username,
-                password: password,
-                timestamp: timestamp,
-                shiftkey: shiftkey,
-                token: token
+                password: password
             }
+
             options = {
                 method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json;charset=utf-8'
-                },
+                headers: headers,
                 body: JSON.stringify(request_body)
             }
-            del_url = `https://us-central1-${project_id}.cloudfunctions.net/ledger`;
+            del_url = get_url();
             
             fetch(del_url, options).then(response => response.json())
 		    .then(data => {
@@ -332,186 +219,174 @@
                     postToTelegram(d['tg_dict']['tg_url']);
                 }
             }
-            else{status_message = `Failed!</br></br>${d['reason']}`; status_color = "red";}
-            timestamp = d['timestamp']
-            credit = d['credit']
-            debit = d['debit']
-            details = d['details']
-            mode = d['mode']
-            cash_balance = d['cash_balance']
-            bank_balance = d['bank_balance']
-            total_balance  = d['total_balance']
-            time_taken = Date.now() - window.data["StartTime"]
-            token = d['token']
+            else
+            {
+                status_message = `Failed!</br></br>${d['reason']}`; status_color = "red";
+            }
+            const timestamp      = d['timestamp'];
+            const credit         = d['credit'];
+            const debit          = d['debit'];
+            const details        = d['details'];
+            const mode           = d['mode'];
+            const cash_balance   = d['cash_balance'];
+            const bank_balance   = d['bank_balance'];
+            const total_balance  = d['total_balance'];
+            const time_taken     = Date.now() - start_time;
 
             element = document.getElementById('form-cont');
             element.setAttribute('class', 'box');
-            if (debit == 0) { // case of credit
-                element.innerHTML = `<p style='color: ${status_color};'><b>Transaction ${status_message}</b></br></br>Timestamp: ${timestamp}</br><b style="color: #3cc47a;">Credit: ${credit}</b></br>Debit: ${debit}</br>Details: ${details}</br>Mode: ${mode}</br>Cash Balance: ${cash_balance}</br>Bank Balance: ${bank_balance}</br></br><b>Total Balance: ${total_balance}</b></p></br></br></br><div class="date">Execution time ${time_taken} ms</div><div class="date">Execution token: ${token}</div>`;
+            if (debit == 0)
+            { // case of credit
+                element.innerHTML = `<p style='color: ${status_color};'><b>Transaction ${status_message}</b></br></br>Timestamp: ${timestamp}</br><b style="color: #3cc47a;">Credit: ${credit}</b></br>Debit: ${debit}</br>Details: ${details}</br>Mode: ${mode}</br>Cash Balance: ${cash_balance}</br>Bank Balance: ${bank_balance}</br></br><b>Total Balance: ${total_balance}</b></p></br></br></br><div class="date">Execution time ${time_taken} ms</div>`;
             }
-            else {
-                element.innerHTML = `<p style='color: ${status_color};'><b>Transaction ${status_message}</b></br></br>Timestamp: ${timestamp}</br>Credit: ${credit}</br><b style="color: red;">Debit: ${debit}</b></br>Details: ${details}</br>Mode: ${mode}</br>Cash Balance: ${cash_balance}</br>Bank Balance: ${bank_balance}</br></br><b>Total Balance: ${total_balance}</b></p></br></br></br><div class="date">Execution time ${time_taken} ms</div><div class="date">Execution token: ${token}</div>`;
+            else
+            {
+                element.innerHTML = `<p style='color: ${status_color};'><b>Transaction ${status_message}</b></br></br>Timestamp: ${timestamp}</br>Credit: ${credit}</br><b style="color: red;">Debit: ${debit}</b></br>Details: ${details}</br>Mode: ${mode}</br>Cash Balance: ${cash_balance}</br>Bank Balance: ${bank_balance}</br></br><b>Total Balance: ${total_balance}</b></p></br></br></br><div class="date">Execution time ${time_taken} ms</div>`;
             }
-            if(d['status'] == 200) {
+
+            if(d['status'] == 200)
+            {
                 del_button = document.getElementById('wrap-showtexts');
-                del_button.innerHTML = `<p><input type="submit" value="Start Over" style="font-family: 'Share Tech Mono', monospace; background-color: #3cc47a; color: black;" onclick="location.reload()"></p>`;
-                del_button.innerHTML += `</br></br></br></br><p><input type="submit" value="Delete it!" style="font-family: 'Share Tech Mono', monospace; background-color: red; color: black;" onclick="deleteInstance()"></p>`;
+                del_button.innerHTML = `<p><input type="submit" value="Start Over" onclick="location.reload()"></p>`;
+                del_button.innerHTML += `</br></br></br></br><p><input type="submit" value="Delete it!" onclick="deleteInstance()"></p>`;
             }
-            else {
+            else
+            {
                 start_over_button = document.getElementById('wrap-showtexts');
-                start_over_button.innerHTML = `<p><input type="submit" value="Start Over" style="font-family: 'Share Tech Mono', monospace; background-color: #3cc47a; color: black;" onclick="location.reload()"></p>`;
+                start_over_button.innerHTML = `<p><input type="submit" value="Start Over" onclick="location.reload()"></p>`;
             }
         }
 
-
  	</script>
  	<style>
-			body {
-			  background-color: #000000;
-			  font-family: 'Share Tech Mono', monospace;
-			}
-            .flex-button {
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+            margin: 10px;
+            padding: 0;
+            align-items: center;
+            text-align: center;
+            height: 70vh;
+        }
+        .flex-button {
             display: flex;
             flex-direction: row;
             justify-content: space-around;
-            }
+            margin-top: 30px;
+        }
 
-            button {
-            padding-left: 30px;
-            padding-right: 30px;
-            padding-top: 10px;
-            padding-bottom: 10px;
-            background-color: green;
-            color: black;
-            font-family: 'Share Tech Mono', monospace;
+        .button {
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .profile-box {
+            color: grey;
+            text-align: center;
+        }
+        #profile-picture {
+            border-radius: 50%;
+        }
+        .top-banner-flex {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        .radio-wrap {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin: 10px;
+        }
+
+        .box{
+            display: inline-block;
+            text-decoration: none;
+            color: #FFFFFF;
+            width: 94%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            padding:10px;
+            margin: 10px;
+            border: 1px solid #353849;
             border-radius: 8px;
             box-sizing: border-box;
             -moz-box-sizing: border-box;
-            }
+        }
+        .date{
+            font-size: 5pt;
+            text-align-last: right;
+            padding-bottom: 5px;
+            margin-right: 10px;			
+        }
+        .copyright {
+            font-size: 10pt;
+            text-align: center;
+            padding: 10px;
+            margin-right: 10px;
+            margin-top: 30px;
+        }
+        .copyright_link {
+            color: #3cc47a;
+            text-decoration: none;
+        }
+        .login {
+            margin: auto;
+            font-size: 16px;
+        }
 
-            .profile-box {
-                color: grey;
-                text-align: center;
-            }
-            #profile-picture {
-                border-radius: 50%;
-            }
-            .top-banner-flex {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-            }
-			.radio-wrap {
-				display: flex;
-				flex-direction: row;
-				justify-content: space-around;
-				flex-wrap: wrap;
-                border-style: solid;
-                border-color: darkgray;
-                border-radius: 8px;
-                margin: 10px 5px 10px 5px;
-			}
-            .radio-wrap p {
-                margin: 7px;
-            }
-            .box{
-                display: inline-block;
-                text-decoration: none;
-                color: #FFFFFF;
-                width: 94%;
-                word-wrap: break-word;
-                white-space: pre-wrap;
-                padding:10px;
-                margin: 10px;
-                border: 1px solid #353849;
-                border-radius: 8px;
-                box-sizing: border-box;
-                -moz-box-sizing: border-box;
-            }
-            .date{
-                font-size: 5pt;
-                text-align-last: right;
-                padding-bottom: 5px;
-                color: #d3d3d3;
-                margin-right: 10px;			
-            }
-            .copyright {
-                font-size: 10pt;
-                text-align: center;
-                padding: 10px;
-                color: #FFFFFF;
-                margin-right: 10px;
-                margin-top: 30px;
-            }
-            .copyright_link {
-                color: #3cc47a;
-                text-decoration: none;
-            }
-			.login {
-			  margin: auto;
-			  font-size: 16px;
-			}
+        .login-container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+        }
 
-			/* Reset top and bottom margins from certain elements */
-			.login-header,
-			.login p {
-			  margin-top: 0;
-			  margin-bottom: 0;
-			}
+        /* Every row inside .login-container is defined with p tags */
+        .login p {
+            padding: 6px;
+        }
 
-			.login-header {
-			  background: #28d;
-			  padding: 10px;
-			  font-size: 1.4em;
-			  font-weight: normal;
-			  text-align: center;
-			  text-transform: uppercase;
-			  color: #fff;
-			}
+        .text_box {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            margin: 5px;
+            width: 85%;
+        }
+        .credit {
+            /*background-color: #D1E231;*/
+            background-color: #82E0AA; 
+            border-color: green;
+        }
+        .debit {
+            background-color: #EC7063;
+            border-color: darkred;
+        }
+        .particulars {
+            background-color: #F7DC6F;
+            border-color: yellow;
 
-			.login-container {
-			  background-color: #000000;
-			  padding: 6px;
-              border-radius: 8px;
-              color: gray;
-			}
-
-			/* Every row inside .login-container is defined with p tags */
-			.login p {
-			  padding: 6px;
-			}
-
-			.login input {
-			  box-sizing: border-box;
-			  /*display: block;*/
-			  width: 100%;
-			  border-width: 2px;
-			  border-style: solid;
-			  padding: 12px;
-			  outline: 0;
-			  font-size: 1.1em;
-              border-radius: 8px;
-			}
-            .credit {
-                /*background-color: #D1E231;*/
-                background-color: #82E0AA; 
-                border-color: green;
-            }
-            .debit {
-                background-color: #EC7063;
-                border-color: darkred;
-            }
-            .particulars {
-                background-color: #F7DC6F;
-                border-color: yellow;
-
-            }
-			.login input[type="submit"] {
-			  background-color: green;
-			  border-color: transparent;
-			  color: #fff;
-			  cursor: pointer;
-			}
+        }
+        .login input[type="submit"] {
+            background-color: green;
+            border-color: transparent;
+            color: #fff;
+            cursor: pointer;
+        }
  	</style>
 </body>
 </html>
