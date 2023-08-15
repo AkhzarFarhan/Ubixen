@@ -7,7 +7,6 @@
 </head>
 <body>
     <div class="container">
-        <h1>Sales</h1>
         <div class="container">
             <input type="number" class="text_box" id="printed_price" placeholder="Printed Price">
             <input type="number" class="text_box" id="purchase_discount" placeholder="Purchase Discount">
@@ -165,7 +164,7 @@
                 re.setAttribute("style", "display: true");
             }
 
-            percentage_change = (((new_price - old_price) * 100) / old_price);
+            percentage_change = parseFloat((((new_price - old_price) * 100) / old_price).toFixed(2));
 
             var op = document.getElementById("old_price_");
             var np = document.getElementById("new_price_");
