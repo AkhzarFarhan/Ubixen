@@ -7,6 +7,7 @@
 </head>
 <body>
     <div class="container">
+        <h1>LMD Aqua Flow</h1>
         <div class="container">
             <input type="number" class="text_box" id="printed_price" placeholder="Printed Price">
             <input type="number" class="text_box" id="purchase_discount" placeholder="Purchase Discount">
@@ -63,9 +64,25 @@
             c = parseInt(c);
             d = parseInt(d);
 
-            if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d))
+            if (isNaN(a))
             {
-                error = "Please enter all values!";
+                a = 0;
+            }
+            if (isNaN(b))
+            {
+                b = 0;
+            }
+            if (isNaN(c))
+            {
+                c = 0;
+            }
+            if (isNaN(d))
+            {
+                d = 0;
+            }
+            if (c > d) // min percentage is greater than max percentage
+            {
+                error = "Minimum Discount should not be greater than Maximum Discount";
                 return false;
             }
             if (b > 100 || c > 100 || d > 100)
@@ -75,7 +92,7 @@
             }
             if (a < 0 || b < 0 || c < 0 || d < 0)
             {
-                error = "Inputs should not be negative";
+                error = "Inputs values should be positive";
                 return false;
             }
             return true;
@@ -125,6 +142,15 @@
             purchase_price = Math.ceil(printed_price * (1 - (purchase_discount / 100)));
             minimum_selling_price = Math.ceil(purchase_price * (1 + (minimum_discount / 100)));
             maximum_selling_price = Math.ceil(purchase_price * (1 + (maximum_discount / 100)));
+
+            if (minimum_selling_price > printed_price) // if new selling price is more than printed price
+            {
+                minimum_selling_price = printed_price;
+                maximum_selling_price = printed_price;
+                var max_d = Math.floor(((printed_price - purchase_price) * 100 ) / purchase_price);
+                ee.innerText = `You can take max profit of ${max_d}%`;
+                ee.setAttribute("style", "display: true");
+            }
 
             var pp = document.getElementById("purchase_price");
             var minsp = document.getElementById("minimum_selling_price");
@@ -213,6 +239,10 @@
         justify-content: center;
         align-items: center;
         /* height: 70vh; */
+    }
+    h1 {
+        font-size: 25px;
+        /* font-weight: lighter; */
     }
 
     .container {
