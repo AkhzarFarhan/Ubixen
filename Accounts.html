@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounts</title>
+</head>
+<body>
+    <div class="container">
+        <h2>Accounts</h2>
+        <form>
+            <input type="text" id="person" placeholder="Person" required>
+            <input type="text" id="amount" placeholder="Amount" required>
+            <button type="button" id="recordButton">Record</button>
+        </form>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        const recordButton = document.getElementById('recordButton');
+        const personInput = document.getElementById('person');
+        const amountInput = document.getElementById('amount');
+        const outputDiv = document.getElementById('output');
+
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            width: 87%;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</body>
+</html>
