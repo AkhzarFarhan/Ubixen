@@ -27,6 +27,7 @@
                     </tr>
                 </table>
             </div>
+            <button id="show_button_clear" onclick="clear_price()">Clear</button>
             <button id="show_button" onclick="get_price()">Get Price</button>
         </div>
         <div class="container">
@@ -47,6 +48,7 @@
                     </tr>
                 </table>
             </div>
+            <button id="show_button_clear" onclick="clear_price_change()">Clear</button>
             <button id="show_button" onclick="get_price_change()">Get Price Change</button>
         </div>
         <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
@@ -77,6 +79,20 @@
                 return false;
             }
             return true;
+        }
+
+        function clear_price()
+        {
+            document.getElementById("printed_price").value = "";
+            document.getElementById("purchase_discount").value = "";
+            document.getElementById("minimum_discount").value = "";
+            document.getElementById("maximum_discount").value = "";
+        }
+
+        function clear_price_change()
+        {
+            document.getElementById("old_price").value = "";
+            document.getElementById("new_price").value = "";
         }
 
         function get_price()
@@ -212,15 +228,33 @@
     .text_box {
         padding: 10px;
         font-size: 16px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+        border: none;
+        border-radius: 5px;
+        outline: none;
+        box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
+        width: 87%;
+        transition: box-shadow 0.3s ease;
         margin: 5px;
+    }
+
+    .text_box:focus {
+        box-shadow: 0px 3px 20px rgba(0, 123, 255, 0.4);
     }
 
     #show_button {
         padding: 10px 20px;
         font-size: 16px;
-        background-color: #007bff;
+        background-color: #2ECC71;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    #show_button_clear {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #E74C3C;
         color: white;
         border: none;
         border-radius: 4px;
