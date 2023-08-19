@@ -9,14 +9,19 @@
     <div class="container" id="container">
         <h2>YouTube Downloader</h2>
         <input type="text" id="yt_link" class="textbox" placeholder="Type YouTube URL">
-        <button class="button" onclick="fetchDataFromAPI()">Submit</button>
-        <!-- <a class="button" id="download" href="" download style="display: none">Download</a> -->
+        <button class="button" id="submit-button" onclick="fetchDataFromAPI()">Submit</button>
+        <p id="loader" style="display: none;">Fetching from servers...</p>
+        <div class="button-container" id="button-container" style="display: none;">
+            <a class="button" id="vdownload">Video</a>
+            <a class="button" id="adownload">Audio</a>
+        </div>
         <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
 
     <script>
         function fetchDataFromAPI()
         {
+            document.getElementById("loader").setAttribute("style", "display: true");
             const apiUrl = 'https://us-central1-github-284317.cloudfunctions.net/YouTubeDL'; // Replace with your API endpoint
             const yt_link = document.getElementById("yt_link").value;
             const payload = {
@@ -37,21 +42,15 @@
                     const video_link = data['video'];
                     const audio_link = data['audio'];
                     console.log('response_from_gcp_functions: ', data);
-                    const container = document.getElementById("container");
-                    const copyright_element = document.getElementById("copyright");
-                    const velement = document.createElement("a");
-                    const aelement = document.createElement("a");
-                    velement.textContent = "Download Video";
-                    aelement.textContent = "Download Audio";
-                    velement.className = "button";
-                    aelement.className = "button";
-                    velement.id = "button";
-                    aelement.id = "button";
-                    velement.href = video_link;
-                    aelement.href = audio_link;
-                    // element.target = "_blank"
-                    container.insertBefore(velement, copyright_element);
-                    container.insertBefore(aelement, copyright_element);
+                    var container = document.getElementById("button-container");
+                    var velement = document.getElementById("vdownload");
+                    var aelement = document.getElementById("adownload");
+                    velement.setAttribute("href", video_link);
+                    aelement.setAttribute("href", audio_link);
+                    document.getElementById("loader").setAttribute("style", "display: none");
+                    document.getElementById("submit-button").setAttribute("style", "display: none");
+                    container.setAttribute("style", "display: true");
+                    
 
                 })
                 .catch(error => {
@@ -85,6 +84,16 @@
             max-width: 80%;
         }
 
+        .button-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+        }
+
+        #submit-button {
+            background-color: #4285f4;
+        }
+
         .textbox {
             /* width: 100%; */
             padding: 10px;
@@ -115,7 +124,6 @@
             text-align: center;
             padding: 10px;
             color: #000000;
-            margin-right: 10px;
             margin-top: 30px;
         }
         .copyright_link {
