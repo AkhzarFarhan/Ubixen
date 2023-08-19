@@ -34,17 +34,24 @@
                 .then(response => response.json())
                 .then(data => {
                     // Handle the data
-                    const new_link = data['yt_dl_link'];
-                    console.log(new_link);
+                    const video_link = data['video'];
+                    const audio_link = data['audio'];
+                    console.log('response_from_gcp_functions: ', data);
                     const container = document.getElementById("container");
                     const copyright_element = document.getElementById("copyright");
-                    const element = document.createElement("a");
-                    element.textContent = "Download";
-                    element.className = "button";
-                    element.id = "button";
-                    element.href = new_link;
+                    const velement = document.createElement("a");
+                    const aelement = document.createElement("a");
+                    velement.textContent = "Download Video";
+                    aelement.textContent = "Download Audio";
+                    velement.className = "button";
+                    aelement.className = "button";
+                    velement.id = "button";
+                    aelement.id = "button";
+                    velement.href = video_link;
+                    aelement.href = audio_link;
                     // element.target = "_blank"
-                    container.insertBefore(element, copyright_element);
+                    container.insertBefore(velement, copyright_element);
+                    container.insertBefore(aelement, copyright_element);
 
                 })
                 .catch(error => {
