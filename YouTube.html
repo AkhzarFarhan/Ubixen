@@ -22,6 +22,12 @@
         function fetchDataFromAPI()
         {
             document.getElementById("loader").setAttribute("style", "display: true");
+            if(document.getElementById("yt_link").value == "")
+            {
+                document.getElementById("loader").innerText = "Please enter YouTube video URL";
+                return;
+            }
+            
             const apiUrl = 'https://us-central1-github-284317.cloudfunctions.net/YouTubeDL'; // Replace with your API endpoint
             const yt_link = document.getElementById("yt_link").value;
             const payload = {
