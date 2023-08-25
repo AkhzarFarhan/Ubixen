@@ -9,63 +9,93 @@
     <div class="container">
         <h2>Accounts</h2>
         <form>
-            <input type="text" id="person" placeholder="Person" required>
-            <input type="text" id="amount" placeholder="Amount" required>
-            <button type="button" id="recordButton">Record</button>
+            <input type="text" class="text_box" id="person" placeholder="Person" required>
+            <input type="number" class="text_box" id="in_amount" placeholder="In Amount" required>
+            <input type="number" class="text_box" id="out_amount" placeholder="Out Amount" required>
+            <button type="button" class="text_box" id="save_button" onclick="save()">Save</button>
         </form>
         <div id="output"></div>
+        <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
 
     <script>
-        const recordButton = document.getElementById('recordButton');
-        const personInput = document.getElementById('person');
-        const amountInput = document.getElementById('amount');
-        const outputDiv = document.getElementById('output');
+        var save_button = document.getElementById('save_button');
+        var person_input = document.getElementById('person');
+        var in_amount_input = document.getElementById('in_amount');
+        var out_amount_input = document.getElementById('out_amount');
+        var output_div = document.getElementById('output');
+
+        function save()
+        {
+            const person = person_input.value;
+            const in_amount = in_amount_input.value;
+            const out_amount = out_amount_input.value;
+
+            console.log('inputs: ', person, in_amount, out_amount);
+        }
 
     </script>
 
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
             margin: 0;
             padding: 0;
-            background-color: #f0f0f0;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 70vh;
+        }
+
+        .text_box {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
+            width: 87%;
+            transition: box-shadow 0.3s ease;
+            margin: 5px;
         }
 
         .container {
-            background-color: white;
+            text-align: center;
             padding: 20px;
+            background-color: #fff;
             border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-            width: 87%;
-        }
-
-        label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 80%;
         }
 
         button {
             padding: 10px 20px;
-            background-color: #007bff;
+            background-color: #2ECC71;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
+
+        .text_box:focus {
+            box-shadow: 0px 3px 20px rgba(0, 123, 255, 0.4);
+        }
+
+        .copyright {
+            font-size: 10pt;
+            text-align: center;
+            padding: 10px;
+            color: #000000;
+            margin-right: 10px;
+            margin-top: 30px;
+        }
+
+        .copyright_link {
+            color: #45a049;
+            text-decoration: none;
+        }
+
     </style>
 </body>
 </html>
