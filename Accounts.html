@@ -25,13 +25,72 @@
         var out_amount_input = document.getElementById('out_amount');
         var output_div = document.getElementById('output');
 
+        const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json;charset=utf-8' };
+        const cred = JSON.parse(localStorage.getItem("user_info"));
+
+        function get_username()
+        {
+            return cred["username"];
+        }
+
+        function get_password()
+        {
+            return cred["password"];
+        }
+
+        function get_project_id()
+        {
+            return cred["project_id"];
+        }
+
+        function get_project()
+        {
+            return "accounts";
+        }
+
+        function get_url()
+        {
+            const project_id = get_project_id();
+            const url = `https://us-central1-${project_id}.cloudfunctions.net/unified`;
+            return url;
+        }
+
         function save()
         {
             const person = person_input.value;
-            const in_amount = in_amount_input.value;
-            const out_amount = out_amount_input.value;
+            const in_amount = parseInt(in_amount_input.value);
+            const out_amount = parseInt(out_amount_input.value);
+            const project = get_project();
+            const url = get_url();
+            const username = get_username();
+            const password = get_password();
+            
+            const request_data = {
+                project: project,
+                person: person,
+                in_amount: in_amount,
+                out_amount: out_amount,
+                api_endpoint: "",
+                method: "GET_AUTH",
+                headers: "",
+                body: "",
+                username: username,
+                password: password
+            }
 
-            console.log('inputs: ', person, in_amount, out_amount);
+            const options = {
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify(request_data)
+            }
+
+            console.log('request: ', request_data);
+
+            fetch(url, options)
+            .then(response => response.json())
+            .then(data => {
+                console.log('response: ', data);
+            });
         }
 
     </script>
