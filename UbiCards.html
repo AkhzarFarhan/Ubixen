@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UbiCards</title>
+</head>
+<body onload="main()">
+    <div class="container">
+        <h2 class="card-name">Name</h2>
+        <p class="card-features">Features</p>
+    </div>
+        <!-- Add more cards as needed -->
+
+    <script>
+        const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json;charset=utf-8' };
+        const cred = JSON.parse(localStorage.getItem("user_info"));
+
+        function get_username()
+        {
+            return cred["username"];
+        }
+
+        function get_password()
+        {
+            return cred["password"];
+        }
+
+        function get_project_id()
+        {
+            return cred["project_id"];
+        }
+
+        function get_project()
+        {
+            return "ubicards";
+        }
+
+        function get_url()
+        {
+            const project_id = get_project_id();
+            const project = get_project();
+            const url = `https://us-central1-${project_id}.cloudfunctions.net/${project}`;
+            return url;
+        }
+        
+        function main()
+        {
+            document.getElementById("profile-name").innerHTML = get_username();
+        }
+    </script>
+
+    <style>
+        body
+        {
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container
+        {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 80%;
+            margin: 20px;
+        }
+
+        .card-name
+        {
+            text-align: left;
+        }
+
+        .card-features
+        {
+            text-align: left;
+        }
+    </style>
+</body>
+</html>
