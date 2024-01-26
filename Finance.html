@@ -8,9 +8,37 @@
     <body onload="getData()">
         <div id="myDiv"><!-- Plotly chart will be drawn inside this DIV --></div>
         <div class="loading-spinner" id="loading-spinner"></div>
+        <table id="dynamicTable">
+            <thead>
+                <tr>
+                    <th>Percentage</th>
+                    <th>Company</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table body will be dynamically filled using JavaScript -->
+            </tbody>
+        </table>
         <script>
-            // Fetch data from Google Cloud Function
-            function getData() {
+
+            function fillTable(data)
+            {
+                var tableBody = document.getElementById("dynamicTable").getElementsByTagName('tbody')[0];
+
+                for (var i = 0; i < data.percentage.length; i++)
+                {
+                    var row = tableBody.insertRow(i);
+
+                    var cell1 = row.insertCell(0);
+                    cell1.innerHTML = data.percentage[i];
+
+                    var cell2 = row.insertCell(1);
+                    cell2.innerHTML = data.company[i];
+                }
+            }
+
+            function getData()
+            {
                 var url = 'https://us-central1-github-284317.cloudfunctions.net/finance';
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', url, true);
@@ -118,6 +146,7 @@
                         Plotly.newPlot('mp2', mptrace_2, layout);
                     }
                 }
+                fillTable(response['holdings']);
             }
         </script>
         <style>
@@ -141,6 +170,22 @@
                 100% {
                     transform: rotate(360deg);
                 }
+            }
+
+            table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            }
+
+            th, td {
+                border: 1px solid #dddddd;
+                text-align: left;
+                padding: 8px;
+            }
+
+            th {
+                background-color: #f2f2f2;
             }
     
         </style>
