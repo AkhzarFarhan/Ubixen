@@ -20,8 +20,8 @@
             </tbody>
         </table>
         <script>
-
-            function fillTable(data)
+            var data;
+            function fillTable()
             {
                 var tableBody = document.getElementById("dynamicTable").getElementsByTagName('tbody')[0];
 
@@ -48,6 +48,7 @@
                     if (xhr.readyState == 4 && xhr.status == 200) {
                         var response = JSON.parse(xhr.responseText);
                         console.log('response: ', response);
+                        data = response['holdings'];
                         var keys = Object.keys(response);
                         var key_length = response['size']; // number of tickers
                         var data = [];
@@ -146,7 +147,7 @@
                         Plotly.newPlot('mp2', mptrace_2, layout);
                     }
                 }
-                fillTable(response['holdings']);
+                fillTable();
             }
         </script>
         <style>
@@ -186,6 +187,12 @@
 
             th {
                 background-color: #f2f2f2;
+            }
+
+            /* Make the Percentage column thinner */
+            th:nth-child(1),
+            td:nth-child(1) {
+                width: 50px; /* Adjust the width as needed */
             }
     
         </style>
