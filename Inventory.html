@@ -60,7 +60,7 @@
                 // });
 
                 // Check internet connectivity and sync data if available
-                checkInternetConnectivity();
+                //checkInternetConnectivity();
             }
             else
             {
@@ -108,6 +108,10 @@
             else
             {
                 itemId = document.getElementById("itemId").value;
+                if(itemId === '')
+                {
+                    itemId = savedItems.length + 1;
+                }
             }
             var itemName = document.getElementById("itemName").value;
             var price = document.getElementById("price").value;
@@ -119,17 +123,39 @@
             var existingItemIndexById = findItemIndexById(savedItems, itemId);
             if (existingItemIndex !== -1 || existingItemIndexById !== -1)
             {
+                var updateIndex;
+                if(existingItemIndex)
+                {
+                    updateIndex = existingItemIndex;
+                }
+                if(existingItemIndexById)
+                {
+                    updateIndex = existingItemIndexById;
+                }
                 // Item already exists, update its details
-                savedItems[existingItemIndex].price = price;
-                savedItems[existingItemIndex].stocksLeft = stocksLeft;
+                if(itemName !== '')
+                {
+                    savedItems[updateIndex].itemName = itemName;
+                }
+                if(price !== '')
+                {
+                    savedItems[updateIndex].price = price;
+                }
+                if(stocksLeft !== '')
+                {
+                    savedItems[updateIndex].stocksLeft = stocksLeft;
+                }
                 status.innerText = "Item updated successfully!";
             }
             else
             {
                 // Item does not exist, add a new item
-                savedItems.push({ itemName: itemName, price: price, stocksLeft: stocksLeft });
+                savedItems.push({itemId: itemId, itemName: itemName, price: price, stocksLeft: stocksLeft });
                 status.innerText = "Item added successfully!";
             }
+
+            // Save items to local storage
+            localStorage.setItem("savedItems", JSON.stringify(savedItems));
 
             // Reset the textboxes
             document.getElementById("itemName").value = '';
@@ -140,7 +166,7 @@
 
             // Sync data if internet connectivity is available
             checkInternetConnectivity();
-            // loadDataFromLocalStorage();
+            loadDataFromLocalStorage();
         }
 
         function loadDataFromLocalStorage()
