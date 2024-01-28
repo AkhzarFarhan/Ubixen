@@ -73,7 +73,7 @@
             // Helper function to find the index of an item by name
             for (var i = 0; i < items.length; i++)
             {
-                if (items[i].itemId === itemId)
+                if (items[i].itemId == itemId)
                 {
                     return i;
                 }
@@ -150,6 +150,21 @@
             else
             {
                 // Item does not exist, add a new item
+                if(itemName === '')
+                {
+                    status.innerText = "Fill Item Name!";
+                    return;
+                }
+                if(price === '')
+                {
+                    status.innerText = "Fill Price!";
+                    return;
+                }
+                if(stocksLeft === '')
+                {
+                    status.innerText = "Fill Stocks!";
+                    return;
+                }
                 savedItems.push({itemId: itemId, itemName: itemName, price: price, stocksLeft: stocksLeft });
                 status.innerText = "Item added successfully!";
             }
