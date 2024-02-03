@@ -11,8 +11,8 @@
 
     <input type="number" id="itemId" placeholder="Item ID">
     <input type="text" id="itemName" placeholder="Item Name">
-    <input type="number" id="price" placeholder="Price">
-    <input type="number" id="stocksLeft" placeholder="Stocks Left">
+    <input type="number" id="purchasePrice" placeholder="Purchase Price">
+    <input type="number" id="salePrice" placeholder="Sale Price">
 
     <div id="button-div">
         <button id="saveButton">Save</button>
@@ -116,8 +116,8 @@
                 }
             }
             var itemName = document.getElementById("itemName").value;
-            var price = document.getElementById("price").value;
-            var stocksLeft = document.getElementById("stocksLeft").value;
+            var purchasePrice = document.getElementById("purchasePrice").value;
+            var salePrice = document.getElementById("salePrice").value;
             var status = document.getElementById("status");
 
             // Check if item already exists or not
@@ -139,13 +139,13 @@
                 {
                     savedItems[updateIndex].itemName = itemName;
                 }
-                if(price !== '')
+                if(purchasePrice !== '')
                 {
-                    savedItems[updateIndex].price = price;
+                    savedItems[updateIndex].purchasePrice = purchasePrice;
                 }
-                if(stocksLeft !== '')
+                if(salePrice !== '')
                 {
-                    savedItems[updateIndex].stocksLeft = stocksLeft;
+                    savedItems[updateIndex].salePrice = salePrice;
                 }
                 status.innerText = "Item updated successfully!";
             }
@@ -157,17 +157,17 @@
                     status.innerText = "Fill Item Name!";
                     return;
                 }
-                if(price === '')
+                if(purchasePrice === '')
                 {
-                    status.innerText = "Fill Price!";
+                    status.innerText = "Fill Purchase Price!";
                     return;
                 }
-                if(stocksLeft === '')
+                if(salePrice === '')
                 {
-                    status.innerText = "Fill Stocks!";
+                    status.innerText = "Fill Sale Price!";
                     return;
                 }
-                savedItems.push({itemId: itemId, itemName: itemName, price: price, stocksLeft: stocksLeft });
+                savedItems.push({itemId: itemId, itemName: itemName, purchasePrice: purchasePrice, salePrice: salePrice });
                 status.innerText = "Item added successfully!";
             }
 
@@ -177,8 +177,8 @@
             // Reset the textboxes
             document.getElementById("itemId").value = '';
             document.getElementById("itemName").value = '';
-            document.getElementById("price").value = '';
-            document.getElementById("stocksLeft").value = '';
+            document.getElementById("purchasePrice").value = '';
+            document.getElementById("salePrice").value = '';
 
             //alert("Data saved successfully!");
 
@@ -206,8 +206,8 @@
 
             // Clear the input fields on the page
             document.getElementById("itemName").value = "";
-            document.getElementById("price").value = "";
-            document.getElementById("stocksLeft").value = "";
+            document.getElementById("purchasePrice").value = "";
+            document.getElementById("salePrice").value = "";
 
             alert("Data cleared successfully!");
         }
@@ -264,7 +264,7 @@
 
             // Insert rows into the thead
             var theadRow = recommendationsTable.insertRow(0);
-            var headers = ["#", "Item Name", "Price", "Stock"];
+            var headers = ["ID", "Item Name", "Buy", "Sale"];
             for (var i = 0; i < headers.length; i++)
             {
                 var th = document.createElement("th");
@@ -299,10 +299,10 @@
             cell2.innerHTML = item.itemName;
 
             var cell3 = row.insertCell(2);
-            cell3.innerHTML = item.price;
+            cell3.innerHTML = item.purchasePrice;
 
             var cell4 = row.insertCell(3);
-            cell4.innerHTML = item.stocksLeft;
+            cell4.innerHTML = item.salePrice;
         }
 
     </script>
