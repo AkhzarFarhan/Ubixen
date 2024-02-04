@@ -9,7 +9,7 @@
 
     <h2 style="text-align: center;">Inventory Management System</h2>
 
-    <input type="number" id="itemId" placeholder="Item ID (required only when new item is added)">
+    <input type="number" id="itemId" oninput="performContinuousSearch('id')" placeholder="Item ID (required only when new item is added)">
     <input type="text" id="itemName" placeholder="Item Name">
     <input type="number" id="purchasePrice" placeholder="Purchase Price">
     <input type="number" id="salePrice" placeholder="Sale Price">
@@ -23,7 +23,7 @@
 
     <!-- Search Input -->
     <label for="searchInput"></label>
-    <input type="text" id="searchInput" oninput="performContinuousSearch()" placeholder="Search">
+    <input type="text" id="searchInput" oninput="performContinuousSearch('name')" placeholder="Search">
 
     <!-- Search Results Container -->
     <h3 style="text-align: center;">Searched Results</h3>
@@ -232,7 +232,7 @@
         }
 
         // Function to search items based on name
-        function searchItemsByName(searchName)
+        function searchItemsByName(searchName, type)
         {
             // Load existing items from localStorage
             var savedItems = JSON.parse(localStorage.getItem("savedItems")) || [];
@@ -240,44 +240,78 @@
             // Filter items based on the searchName
             var searchResults = savedItems.filter(function(item)
             {
-                return item.itemName.toLowerCase().includes(searchName.toLowerCase());
+                if(type === 'name')
+                {
+                    return item.itemName.toLowerCase().includes(searchName.toLowerCase());
+                }
+
+                return String(item.itemId).includes(searchName);
             });
 
             return searchResults;
         }
 
         // Function to perform continuous search
-        function performContinuousSearch()
+        function performContinuousSearch(type)
         {
-            var searchInput = document.getElementById("searchInput").value;
-
-            // Call the search function
-            var searchResults = searchItemsByName(searchInput);
-
-            // Display search results (you can modify this part based on your UI)
-            displaySearchResults(searchResults);
-        }
-
-        // Function to display search results
-        function displaySearchResults(results)
-        {
-            // Clear previous search results (you can modify this part based on your UI)
-            document.getElementById("searchResults").innerHTML = "";
-
-            // Display new search results (you can modify this part based on your UI)
-            var resultsContainer = document.getElementById("searchResults");
-            if (results.length === 0)
+            var searchInput;
+            var searchResults;
+            if (type === 'name')
             {
-                resultsContainer.innerHTML = "No results found.";
+                searchInput = document.getElementById("searchInput").value;
+                searchResults = searchItemsByName(searchInput, type);
             }
             else
             {
-                // for (var i = 0; i < results.length; i++)
-                // {
-                //     resultsContainer.innerHTML += `<p>${results[i].itemName} - ${results[i].purchasePrice} - ${results[i].salePrice}</p>`;
-                // }
-                displaySearchItem(results);
+                searchInput = document.getElementById("itemId").value;
+                searchResults = searchItemsByName(searchInput, type);
             }
+
+            // Display search results (you can modify this part based on your UI)
+            displaySearchResults(searchResults, type);
+        }
+
+        // Function to display search results
+        function displaySearchResults(results, type)
+        {
+            // Clear previous search results (you can modify this part based on your UI)
+            if (type === 'name')
+            {
+                document.getElementById("searchResults").innerHTML = "";
+
+                // Display new search results (you can modify this part based on your UI)
+                var resultsContainer = document.getElementById("searchResults");
+                if (results.length === 0)
+                {
+                    resultsContainer.innerHTML = "No results found.";
+                }
+                else
+                {
+                    displaySearchItem(results);
+                }
+            }
+            else
+            {
+                var name_container = document.getElementById("itemName");
+                var purchase_price_container = document.getElementById("purchasePrice");
+                var sale_price_container = document.getElementById("salePrice");
+
+                name_container.value = "";
+                purchase_price_container.value = "";
+                sale_price_container.value = "";
+
+                if (results.length === 0)
+                {
+                    name_container.value = "No results found.";
+                }
+                else
+                {
+                    name_container.value = results[0]['itemName'];
+                    purchase_price_container.value = results[0]['purchasePrice'];
+                    sale_price_container.value = results[0]['salePrice'];
+                }
+            }
+
         }
 
         function checkInternetConnectivity()
