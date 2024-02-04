@@ -21,6 +21,13 @@
 
     <p id="status" class="status"></p>
 
+    <!-- Search Input -->
+    <label for="searchInput"></label>
+    <input type="text" id="searchInput" oninput="performContinuousSearch()" placeholder="Search">
+
+    <!-- Search Results Container -->
+    <div id="searchResults"></div>
+
     <h3>Saved Items:</h3>
     <!-- Add this table structure to your HTML -->
     <table id="recommendationsTable">
@@ -35,6 +42,10 @@
 
     <!-- SCRIPT START -->
     <script>
+
+        // Firebase Realtime Database URL
+        const firebaseDatabaseURL = "https://perpule-data.firebaseio.com/public/inventory.json";
+
         document.addEventListener("DOMContentLoaded", function ()
         {
             // Check if browser supports localStorage
@@ -212,6 +223,54 @@
             alert("Data cleared successfully!");
         }
 
+        // Function to search items based on name
+        function searchItemsByName(searchName)
+        {
+            // Load existing items from localStorage
+            var savedItems = JSON.parse(localStorage.getItem("savedItems")) || [];
+
+            // Filter items based on the searchName
+            var searchResults = savedItems.filter(function(item)
+            {
+                return item.itemName.toLowerCase().includes(searchName.toLowerCase());
+            });
+
+            return searchResults;
+        }
+
+        // Function to perform continuous search
+        function performContinuousSearch()
+        {
+            var searchInput = document.getElementById("searchInput").value;
+
+            // Call the search function
+            var searchResults = searchItemsByName(searchInput);
+
+            // Display search results (you can modify this part based on your UI)
+            displaySearchResults(searchResults);
+        }
+
+        // Function to display search results
+        function displaySearchResults(results)
+        {
+            // Clear previous search results (you can modify this part based on your UI)
+            document.getElementById("searchResults").innerHTML = "";
+
+            // Display new search results (you can modify this part based on your UI)
+            var resultsContainer = document.getElementById("searchResults");
+            if (results.length === 0)
+            {
+                resultsContainer.innerHTML = "No results found.";
+            }
+            else
+            {
+                for (var i = 0; i < results.length; i++)
+                {
+                    resultsContainer.innerHTML += `<p>${results[i].itemName} - ${results[i].purchasePrice} - ${results[i].salePrice}</p>`;
+                }
+            }
+        }
+
         function checkInternetConnectivity()
         {
             // Check internet connectivity (placeholder - replace with actual logic)
@@ -225,13 +284,45 @@
             }
         }
 
+        // Function to update Firebase Realtime Database using HTTP POST request
+        function updateDataWithPostRequest(data)
+        {
+            return fetch(firebaseDatabaseURL,
+            {
+                method: "POST",
+                headers:
+                {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response =>
+            {
+                if (!response.ok)
+                {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(responseData =>
+            {
+                console.log("Data updated successfully:", responseData);
+            })
+            .catch(error =>
+            {
+                console.error("Error updating data:", error);
+            });
+        }
+
         function syncDataWithAPI(data)
         {
             // Placeholder for API sync logic
             // Replace the following line with actual API endpoint and HTTP request
+            updateDataWithPostRequest(data);
             console.log("Syncing data with API:", data);
             // For simplicity, we are just logging the data to the console here.
         }
+
         function displayItem(item)
         {
             // Load existing items from localStorage
