@@ -9,7 +9,7 @@
 
     <h2 style="text-align: center;">Inventory Management System</h2>
 
-    <input type="number" id="itemId" placeholder="Item ID">
+    <input type="number" id="itemId" placeholder="Item ID (required only when new item is added)">
     <input type="text" id="itemName" placeholder="Item Name">
     <input type="number" id="purchasePrice" placeholder="Purchase Price">
     <input type="number" id="salePrice" placeholder="Sale Price">
@@ -364,7 +364,7 @@
 
             // Insert rows into the thead
             var theadRow = recommendationsTable.insertRow(0);
-            var headers = ["ID", "Item Name", "Buy", "Sale"];
+            var headers = ["ID", "Item Name", "1", "2"];
             for (var i = 0; i < headers.length; i++)
             {
                 var th = document.createElement("th");
@@ -416,7 +416,7 @@
 
             // Insert rows into the thead
             var theadRow = searchTable.insertRow(0);
-            var headers = ["ID", "Item Name", "Buy", "Sale"];
+            var headers = ["ID", "Item Name", "1", "2"];
             for (var i = 0; i < headers.length; i++)
             {
                 var th = document.createElement("th");
@@ -444,7 +444,7 @@
             cell2.innerHTML = item.itemName;
 
             var cell3 = row.insertCell(2);
-            cell3.innerHTML = item.purchasePrice;
+            cell3.innerHTML = "8" + item.purchasePrice + "6";
 
             var cell4 = row.insertCell(3);
             cell4.innerHTML = item.salePrice;
