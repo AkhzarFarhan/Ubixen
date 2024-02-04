@@ -26,9 +26,17 @@
     <input type="text" id="searchInput" oninput="performContinuousSearch()" placeholder="Search">
 
     <!-- Search Results Container -->
-    <div id="searchResults"></div>
+    <h3 style="text-align: center;">Searched Results</h3>
+    <table id="searchResults">
+        <thead>
+            
+        </thead>
+        <tbody>
+            <!-- Table body will be dynamically filled using JavaScript -->
+        </tbody>
+    </table>
 
-    <h3>Saved Items:</h3>
+    <h3 style="text-align: center;">All Items</h3>
     <!-- Add this table structure to your HTML -->
     <table id="recommendationsTable">
         <thead>
@@ -264,10 +272,11 @@
             }
             else
             {
-                for (var i = 0; i < results.length; i++)
-                {
-                    resultsContainer.innerHTML += `<p>${results[i].itemName} - ${results[i].purchasePrice} - ${results[i].salePrice}</p>`;
-                }
+                // for (var i = 0; i < results.length; i++)
+                // {
+                //     resultsContainer.innerHTML += `<p>${results[i].itemName} - ${results[i].purchasePrice} - ${results[i].salePrice}</p>`;
+                // }
+                displaySearchItem(results);
             }
         }
 
@@ -376,6 +385,51 @@
             // Clear the recommendations table
             var recommendationsTable = document.getElementById("recommendationsTable");
             recommendationsTable.innerHTML = "";
+        }
+
+        function displaySearchItem(searchItems)
+        {
+            // Load existing items from localStorage
+            // var savedItems = JSON.parse(localStorage.getItem("savedItems")) || [];
+
+            // Add the new item to the array
+            //savedItems.push(item);
+
+            // Sort the items alphabetically by itemName
+            // savedItems.sort(function(a, b)
+            // {
+            //     var itemNameA = a.itemName.toUpperCase();
+            //     var itemNameB = b.itemName.toUpperCase();
+            //     if (itemNameA < itemNameB)
+            //     {
+            //         return -1;
+            //     }
+            //     if (itemNameA > itemNameB)
+            //     {
+            //         return 1;
+            //     }
+            //     return 0;
+            // });
+
+            // Display the sorted items in a table
+            var searchTable = document.getElementById("searchResults");
+
+            // Insert rows into the thead
+            var theadRow = searchTable.insertRow(0);
+            var headers = ["ID", "Item Name", "Buy", "Sale"];
+            for (var i = 0; i < headers.length; i++)
+            {
+                var th = document.createElement("th");
+                th.textContent = headers[i];
+                theadRow.appendChild(th);
+            }
+
+            // Insert rows into the tbody
+            var tbody = searchTable.createTBody();
+            for (var i = 0; i < searchItems.length; i++)
+            {
+                displaySingleItemInTable(searchItems[i], tbody);
+            }
         }
 
         function displaySingleItemInTable(item, table)
