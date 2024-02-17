@@ -17,6 +17,7 @@
     <div id="button-div">
         <button id="saveButton">Save</button>
         <button id="updateButton">Update</button>
+        <button id="deleteButton">Delete</button>
     </div>
 
     <p id="status" class="status"></p>
@@ -46,6 +47,7 @@
             <!-- Table body will be dynamically filled using JavaScript -->
         </tbody>
     </table>
+    <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
 
 
     <!-- SCRIPT START -->
@@ -73,6 +75,13 @@
                 {
                     saveDataToLocalStorage(false);
                 });
+
+                // Delete button
+                document.getElementById("deleteButton").addEventListener("click", function ()
+                {
+                    deleteItem();
+                });
+
 
                 // Clear data from localStorage when the user clicks the "Clear" button
                 // document.getElementById("clearButton").addEventListener("click", function ()
@@ -115,23 +124,67 @@
             return -1; // Item not found
         }
 
+        function deleteItem()
+        {
+            var itemId = document.getElementById("itemId").value;
+            var status = document.getElementById("status");
+            var savedItems = JSON.parse(localStorage.getItem("savedItems")) || [];
+            var itemIndex;
+            if(itemId === '')
+            {
+                status.innerText = "Please enter an item ID";
+                return;
+            }
+            itemIndex = findItemIndexById(savedItems, itemId);
+            if(itemIndex === -1)
+            {
+                status.innerText = "Item not found, please enter a valid item ID";
+                return;
+            }
+
+            savedItems.splice(itemIndex, 1);
+            // Save items to local storage
+            localStorage.setItem("savedItems", JSON.stringify(savedItems));
+
+            // Reset the textboxes
+            document.getElementById("itemId").value = '';
+            document.getElementById("itemName").value = '';
+            document.getElementById("purchasePrice").value = '';
+            document.getElementById("salePrice").value = '';
+
+            status.innerText = `Item ID: "${itemId}" deleted successfully!`;
+
+            // Sync data if internet connectivity is available
+            checkInternetConnectivity();
+            loadDataFromLocalStorage();
+            
+        }
 
         function saveDataToLocalStorage(isSave)
         {
             var itemId;
             // Save data to localStorage
             var savedItems = JSON.parse(localStorage.getItem("savedItems")) || [];
+            var savedItemsCount = localStorage.getItem("savedItemsCount");
+            if(isNaN(savedItemsCount))
+            {
+                savedItemsCount = savedItems.length + 1;
+            }
+            else
+            {
+                savedItemsCount = parseInt(savedItemsCount);
+            }
 
             if(isSave)
             {
-                itemId = savedItems.length + 1;
+                itemId = savedItemsCount;
             }
             else
             {
                 itemId = document.getElementById("itemId").value;
                 if(itemId === '')
                 {
-                    itemId = savedItems.length + 1;
+                    itemId = savedItemsCount;
                 }
             }
             var itemName = document.getElementById("itemName").value;
@@ -192,6 +245,7 @@
 
             // Save items to local storage
             localStorage.setItem("savedItems", JSON.stringify(savedItems));
+            localStorage.setItem("savedItemsCount", (savedItemsCount + 1).toString());
 
             // Reset the textboxes
             document.getElementById("itemId").value = '';
@@ -506,6 +560,10 @@
             background-color: #3498db;
         }
 
+        #deleteButton {
+            background-color: #FF0000;
+        }
+
         h2 {
             color: #333;
         }
@@ -568,6 +626,24 @@
         th {
             background-color: #4caf50;
             color: white;
+        }
+
+        .a {
+            text-decoration: none;
+        }
+
+        .copyright {
+            font-size: 10pt;
+            text-align: center;
+            padding: 10px;
+            color: #000000;
+            margin-right: 10px;
+            margin-top: 30px;
+        }
+
+        .copyright_link {
+            color: #45a049;
+            text-decoration: none;
         }
 
 
