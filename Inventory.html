@@ -37,7 +37,7 @@
         </tbody>
     </table>
 
-    <h3 style="text-align: center;">All Items</h3>
+    <h3 style="text-align: center;" id="AllItems"></h3>
     <!-- Add this table structure to your HTML -->
     <table id="recommendationsTable">
         <thead>
@@ -264,6 +264,7 @@
         {
             // Load data from localStorage
             var savedItems = JSON.parse(localStorage.getItem("savedItems")) || [];
+            document.getElementById("AllItems").innerText = `Total Items: ${savedItems.length}`;
 
             // Display the loaded data on the page
             for (var i = 0; i < savedItems.length; i++)
