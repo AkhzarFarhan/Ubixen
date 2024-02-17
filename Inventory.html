@@ -127,15 +127,23 @@
         function deleteItem()
         {
             var itemId = document.getElementById("itemId").value;
+            var itemName = document.getElementById("itemId").value;
             var status = document.getElementById("status");
             var savedItems = JSON.parse(localStorage.getItem("savedItems")) || [];
             var itemIndex;
             if(itemId === '')
             {
-                status.innerText = "Please enter an item ID";
-                return;
+                if(itemName === '')
+                {
+                    status.innerText = "Please enter an item ID";
+                    return;
+                }
+                itemIndex = findItemIndexByName(savedItems, itemName);
             }
-            itemIndex = findItemIndexById(savedItems, itemId);
+            else
+            {
+                itemIndex = findItemIndexById(savedItems, itemId);
+            }
             if(itemIndex === -1)
             {
                 status.innerText = "Item not found, please enter a valid item ID";
@@ -165,15 +173,7 @@
             var itemId;
             // Save data to localStorage
             var savedItems = JSON.parse(localStorage.getItem("savedItems")) || [];
-            var savedItemsCount = localStorage.getItem("savedItemsCount");
-            if(isNaN(savedItemsCount))
-            {
-                savedItemsCount = savedItems.length + 1;
-            }
-            else
-            {
-                savedItemsCount = parseInt(savedItemsCount);
-            }
+            var savedItemsCount = parseInt(localStorage.getItem("savedItemsCount")) || (savedItems.length + 1);
 
             if(isSave)
             {
@@ -277,6 +277,7 @@
         {
             // Clear data from localStorage
             localStorage.removeItem("savedItems");
+            localStorage.removeItem("savedItemsCount");
 
             // Clear the input fields on the page
             document.getElementById("itemName").value = "";
