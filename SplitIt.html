@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split It</title>
+</head>
+<body>
+
+    <h2>Split It</h2>
+
+    <input type="number" id="numberOfFriends" min="1" placeholder="Number of Friends" required>
+    
+    <br><br>
+
+    <div id="friendsInput">
+        <!-- Friends' payments and owed amounts will be dynamically added here -->
+    </div>
+
+    <br>
+
+    <button onclick="addFriendsInputFields()">Add Friends</button>
+    <button onclick="calculateSettlement()">Calculate Settlement</button>
+    
+    <br><br>
+
+    <div id="result"></div>
+
+    <br><br>
+
+    <input type="text" id="display" disabled>
+
+    <br>
+
+    <input type="button" value="7" onclick="appendToDisplay('7')">
+    <input type="button" value="8" onclick="appendToDisplay('8')">
+    <input type="button" value="9" onclick="appendToDisplay('9')">
+    <input type="button" value="/" onclick="appendToDisplay('/')">
+
+    <br>
+
+    <input type="button" value="4" onclick="appendToDisplay('4')">
+    <input type="button" value="5" onclick="appendToDisplay('5')">
+    <input type="button" value="6" onclick="appendToDisplay('6')">
+    <input type="button" value="-" onclick="appendToDisplay('-')">
+
+    <br>
+
+    <input type="button" value="1" onclick="appendToDisplay('1')">
+    <input type="button" value="2" onclick="appendToDisplay('2')">
+    <input type="button" value="3" onclick="appendToDisplay('3')">
+    <input type="button" value="+" onclick="appendToDisplay('+')">
+
+    <br>
+
+    <input type="button" value="0" onclick="appendToDisplay('0')">
+    <input type="button" value="." onclick="appendToDisplay('.')">
+    <input type="button" value="=" onclick="calculate()">
+    <input type="button" value="C" onclick="clearDisplay()">
+
+    <script>
+        function addFriendsInputFields()
+        {
+            var numberOfFriends = parseInt(document.getElementById("numberOfFriends").value);
+            var friendsInput = document.getElementById("friendsInput");
+            friendsInput.innerHTML = ""; // Clear previous inputs
+
+            for (var i = 1; i <= numberOfFriends; i++)
+            {
+                friendsInput.innerHTML += 
+                    `<input type='number' class='amountPaid' id='amountPaid_${i}' min='0' step='0.01' placeholder='Friend ${i} paid' required> \t` +
+                    `<input type='number' class='amountOwed' id='amountOwed_${i}' min='0' step='0.01' placeholder='Friend ${i} owes' required><br><br>`;
+            }
+        }
+
+        function calculateSettlement()
+        {
+            var numberOfFriends = parseInt(document.getElementById("numberOfFriends").value);
+            var amountPaid = document.getElementsByClassName("amountPaid");
+            var amountOwed = document.getElementsByClassName("amountOwed");
+
+            // Validate input
+            for (var i = 0; i < numberOfFriends; i++)
+            {
+                if (isNaN(parseFloat(amountPaid[i].value)) || isNaN(parseFloat(amountOwed[i].value)))
+                {
+                    alert("Please enter valid values for payments and owed amounts.");
+                    return;
+                }
+            }
+
+            // Calculate total paid and owed amounts
+            var totalPaid = 0;
+            var totalOwed = 0;
+
+            for (var i = 0; i < numberOfFriends; i++)
+            {
+                totalPaid += parseFloat(amountPaid[i].value);
+                totalOwed += parseFloat(amountOwed[i].value);
+            }
+
+            // Calculate the settlement amount
+            var settlementAmount = totalPaid - totalOwed;
+
+            if(settlementAmount != 0)
+            {
+                alert("Total payments are not equal to total owed.");
+                return;
+            }
+
+            // Determine who owes whom and how much
+            var transactions = [];
+
+            for (var i = 0; i < numberOfFriends; i++)
+            {
+                var friendSettlement = parseFloat(amountPaid[i].value) - parseFloat(amountOwed[i].value);
+
+                // If the friend owes money
+                if (friendSettlement > 0)
+                {
+                    for (var j = 0; j < numberOfFriends; j++)
+                    {
+                        // If the other friend is owed money
+                        if (i !== j && parseFloat(amountOwed[j].value) - parseFloat(amountPaid[j].value) > 0)
+                        {
+                            var transactionAmount = Math.min(friendSettlement, parseFloat(amountOwed[j].value) - parseFloat(amountPaid[j].value));
+                            transactions.push({
+                                from: "Friend " + (i + 1),
+                                to: "Friend " + (j + 1),
+                                amount: transactionAmount
+                            });
+                            friendSettlement -= transactionAmount;
+                        }
+                    }
+                }
+            }
+
+            // Display the result
+            var resultHTML = ""; //"<p>Total Settlement Amount: $" + settlementAmount.toFixed(2) + "</p>";
+            if (transactions.length > 0)
+            {
+                resultHTML += "<p>Settlement Details:</p>";
+                transactions.forEach(transaction =>
+                {
+                    resultHTML += "<p>" + transaction.to + " should pay " + transaction.from + ": " + transaction.amount.toFixed(2) + "</p>";
+                });
+            }
+            
+            document.getElementById("result").innerHTML = resultHTML;
+        }
+
+        // ==============CALCULATOR=================
+        function appendToDisplay(value)
+        {
+            document.getElementById("display").value += value;
+        }
+
+        function calculate()
+        {
+            try
+            {
+                var result = eval(document.getElementById("display").value);
+                document.getElementById("display").value = result;
+            }
+            catch (error)
+            {
+                document.getElementById("display").value = "Error";
+            }
+        }
+
+        function clearDisplay()
+        {
+            document.getElementById("display").value = "";
+        }
+        // ========================================= 
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        input[type="text"] {
+            width: 200px;
+            padding: 10px;
+            font-size: 18px;
+            text-align: right;
+        }
+
+        input[type="button"] {
+            width: 50px;
+            height: 50px;
+            font-size: 18px;
+            margin: 5px;
+        }
+    </style>
+
+</body>
+</html>
