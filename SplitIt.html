@@ -7,56 +7,45 @@
 </head>
 <body>
 
-    <h2>Split It</h2>
+    <div class="container" id="container">
+        <br><br>
+        <h2>Split It</h2>
+        <input type="number" class="textbox" id="numberOfFriends" min="1" placeholder="Enter Number of Friends" required>
+        <br><br>
+        <div id="friendsInput">
+            <!-- Friends' payments and owed amounts will be dynamically added here -->
+        </div>
+        <br>
 
-    <input type="number" id="numberOfFriends" min="1" placeholder="Number of Friends" required>
-    
-    <br><br>
-
-    <div id="friendsInput">
-        <!-- Friends' payments and owed amounts will be dynamically added here -->
+        <button class="button" id="submit-button" onclick="addFriendsInputFields()">Add Friends</button>
+        <button class="button" id="submit-button"  onclick="calculateSettlement()">Settle It</button>
+        <br><br>
+        <div id="result"></div>
+        <br><br>
+        <input type="text" class="textbox" id="display">
+        <br><br>
+        <input type="button" value="7" onclick="appendToDisplay('7')">
+        <input type="button" value="8" onclick="appendToDisplay('8')">
+        <input type="button" value="9" onclick="appendToDisplay('9')">
+        <input type="button" value="/" onclick="appendToDisplay('/')">
+        <br>
+        <input type="button" value="4" onclick="appendToDisplay('4')">
+        <input type="button" value="5" onclick="appendToDisplay('5')">
+        <input type="button" value="6" onclick="appendToDisplay('6')">
+        <input type="button" value="-" onclick="appendToDisplay('-')">
+        <br>
+        <input type="button" value="1" onclick="appendToDisplay('1')">
+        <input type="button" value="2" onclick="appendToDisplay('2')">
+        <input type="button" value="3" onclick="appendToDisplay('3')">
+        <input type="button" value="+" onclick="appendToDisplay('+')">
+        <br>
+        <input type="button" value="0" onclick="appendToDisplay('0')">
+        <input type="button" value="C" onclick="clearDisplay()">
+        <input type="button" value="=" onclick="calculate()">
+        <input type="button" value="*" onclick="appendToDisplay('*')">
+        <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
-
-    <br>
-
-    <button onclick="addFriendsInputFields()">Add Friends</button>
-    <button onclick="calculateSettlement()">Calculate Settlement</button>
     
-    <br><br>
-
-    <div id="result"></div>
-
-    <br><br>
-
-    <input type="text" id="display" disabled>
-
-    <br>
-
-    <input type="button" value="7" onclick="appendToDisplay('7')">
-    <input type="button" value="8" onclick="appendToDisplay('8')">
-    <input type="button" value="9" onclick="appendToDisplay('9')">
-    <input type="button" value="/" onclick="appendToDisplay('/')">
-
-    <br>
-
-    <input type="button" value="4" onclick="appendToDisplay('4')">
-    <input type="button" value="5" onclick="appendToDisplay('5')">
-    <input type="button" value="6" onclick="appendToDisplay('6')">
-    <input type="button" value="-" onclick="appendToDisplay('-')">
-
-    <br>
-
-    <input type="button" value="1" onclick="appendToDisplay('1')">
-    <input type="button" value="2" onclick="appendToDisplay('2')">
-    <input type="button" value="3" onclick="appendToDisplay('3')">
-    <input type="button" value="+" onclick="appendToDisplay('+')">
-
-    <br>
-
-    <input type="button" value="0" onclick="appendToDisplay('0')">
-    <input type="button" value="." onclick="appendToDisplay('.')">
-    <input type="button" value="=" onclick="calculate()">
-    <input type="button" value="C" onclick="clearDisplay()">
 
     <script>
         function addFriendsInputFields()
@@ -68,25 +57,29 @@
             for (var i = 1; i <= numberOfFriends; i++)
             {
                 friendsInput.innerHTML += 
-                    `<input type='number' class='amountPaid' id='amountPaid_${i}' min='0' step='0.01' placeholder='Friend ${i} paid' required> \t` +
-                    `<input type='number' class='amountOwed' id='amountOwed_${i}' min='0' step='0.01' placeholder='Friend ${i} owes' required><br><br>`;
+                    `<input type='number' class='amountPaid textbox2' id='amountPaid_${i}' min='0' step='0.01' placeholder='Friend ${i} paid' required> \t` +
+                    `<input type='number' class='amountOwed textbox2' id='amountOwed_${i}' min='0' step='0.01' placeholder='Friend ${i} owes' required><br><br>`;
             }
         }
 
         function calculateSettlement()
         {
             var numberOfFriends = parseInt(document.getElementById("numberOfFriends").value);
-            var amountPaid = document.getElementsByClassName("amountPaid");
-            var amountOwed = document.getElementsByClassName("amountOwed");
+            var amountPaidHTML = document.getElementsByClassName("amountPaid");
+            var amountOwedHTML = document.getElementsByClassName("amountOwed");
+            var amountPaid = [];
+            var amountOwed = [];
 
             // Validate input
             for (var i = 0; i < numberOfFriends; i++)
             {
-                if (isNaN(parseFloat(amountPaid[i].value)) || isNaN(parseFloat(amountOwed[i].value)))
+                if (isNaN(parseFloat(amountPaidHTML[i].value)) || isNaN(parseFloat(amountOwedHTML[i].value)))
                 {
                     alert("Please enter valid values for payments and owed amounts.");
                     return;
                 }
+                amountPaid[i] = parseInt(amountPaidHTML[i].value);
+                amountOwed[i] = parseInt(amountOwedHTML[i].value);
             }
 
             // Calculate total paid and owed amounts
@@ -95,12 +88,14 @@
 
             for (var i = 0; i < numberOfFriends; i++)
             {
-                totalPaid += parseFloat(amountPaid[i].value);
-                totalOwed += parseFloat(amountOwed[i].value);
+                totalPaid += amountPaid[i];
+                totalOwed += amountOwed[i];
             }
 
             // Calculate the settlement amount
             var settlementAmount = totalPaid - totalOwed;
+            console.log(totalPaid);
+            console.log(totalOwed);
 
             if(settlementAmount != 0)
             {
@@ -113,36 +108,47 @@
 
             for (var i = 0; i < numberOfFriends; i++)
             {
-                var friendSettlement = parseFloat(amountPaid[i].value) - parseFloat(amountOwed[i].value);
+                var friendSettlement = amountPaid[i] - amountOwed[i];
 
-                // If the friend owes money
-                if (friendSettlement > 0)
+                // If the friend owes money (should get amount from others)
+
+                for (var j = 0; (j < numberOfFriends && friendSettlement > 0); j++)
                 {
-                    for (var j = 0; j < numberOfFriends; j++)
+                    if(j === i)
                     {
-                        // If the other friend is owed money
-                        if (i !== j && parseFloat(amountOwed[j].value) - parseFloat(amountPaid[j].value) > 0)
+                        continue;
+                    }
+
+                    if(amountOwed[j] > amountPaid[j])
+                    {
+                        var heCanGive = amountOwed[j] - amountPaid[j];
+                        if(friendSettlement >= heCanGive)
                         {
-                            var transactionAmount = Math.min(friendSettlement, parseFloat(amountOwed[j].value) - parseFloat(amountPaid[j].value));
-                            transactions.push({
-                                from: "Friend " + (i + 1),
-                                to: "Friend " + (j + 1),
-                                amount: transactionAmount
-                            });
-                            friendSettlement -= transactionAmount;
+                            friendSettlement -= heCanGive;
+                            amountPaid[j] += heCanGive;
+                            amountOwed[j] -= heCanGive;
+                            transactions.push({from: `Friend ${j+1}`, to: `Friend ${i+1}`, amount: heCanGive});
+                        }
+                        else
+                        {
+                            var actualGiven = friendSettlement;
+                            amountPaid[j] += friendSettlement;
+                            amountOwed[j] -= friendSettlement;
+                            friendSettlement = 0;
+                            transactions.push({from: `Friend ${j+1}`, to: `Friend ${i+1}`, amount: actualGiven});
                         }
                     }
                 }
             }
 
             // Display the result
-            var resultHTML = ""; //"<p>Total Settlement Amount: $" + settlementAmount.toFixed(2) + "</p>";
+            var resultHTML = "";
             if (transactions.length > 0)
             {
                 resultHTML += "<p>Settlement Details:</p>";
                 transactions.forEach(transaction =>
                 {
-                    resultHTML += "<p>" + transaction.to + " should pay " + transaction.from + ": " + transaction.amount.toFixed(2) + "</p>";
+                    resultHTML += "<p>" + transaction.from + " should pay " + transaction.to + ": " + transaction.amount + "</p>";
                 });
             }
             
@@ -176,11 +182,6 @@
     </script>
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
-        }
 
         input[type="text"] {
             width: 200px;
@@ -194,6 +195,84 @@
             height: 50px;
             font-size: 18px;
             margin: 5px;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* height: 70vh; */
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 40px;
+            /* max-width: 80%; */
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+        }
+
+        .textbox {
+            /* width: 100%; */
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            margin: 10px;
+        }
+
+        .textbox2 {
+            /* width: 100%; */
+            padding: 7px;
+            /* font-size: 16px; */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            /* margin: 5px; */
+        }
+
+        .button {
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+
+        .copyright {
+            font-size: 10pt;
+            text-align: center;
+            padding: 10px;
+            color: #000000;
+            margin-top: 30px;
+        }
+        .copyright_link {
+            color: #45a049;
+            text-decoration: none;
         }
     </style>
 
