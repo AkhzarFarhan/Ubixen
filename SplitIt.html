@@ -125,14 +125,14 @@
                         if(friendSettlement >= heCanGive)
                         {
                             friendSettlement -= heCanGive;
-                            amountPaid[j] += heCanGive;
+                            //amountPaid[j] += heCanGive;
                             amountOwed[j] -= heCanGive;
                             transactions.push({from: `Friend ${j+1}`, to: `Friend ${i+1}`, amount: heCanGive});
                         }
                         else
                         {
                             var actualGiven = friendSettlement;
-                            amountPaid[j] += friendSettlement;
+                            //amountPaid[j] += friendSettlement;
                             amountOwed[j] -= friendSettlement;
                             friendSettlement = 0;
                             transactions.push({from: `Friend ${j+1}`, to: `Friend ${i+1}`, amount: actualGiven});
