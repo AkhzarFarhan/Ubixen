@@ -73,11 +73,20 @@
             // Validate input
             for (var i = 0; i < numberOfFriends; i++)
             {
-                if (isNaN(parseFloat(amountPaidHTML[i].value)) || isNaN(parseFloat(amountOwedHTML[i].value)))
+                // if (isNaN(parseFloat(amountPaidHTML[i].value)) || isNaN(parseFloat(amountOwedHTML[i].value)))
+                // {
+                //     alert("Please enter valid values for payments and owed amounts.");
+                //     return;
+                // }
+                if(isNaN(parseFloat(amountPaidHTML[i].value)))
                 {
-                    alert("Please enter valid values for payments and owed amounts.");
-                    return;
+                    amountPaidHTML[i].value = 0;
                 }
+                if(isNaN(parseFloat(amountOwedHTML[i].value)))
+                {
+                    amountOwedHTML[i].value = 0;
+                }
+
                 amountPaid[i] = parseInt(amountPaidHTML[i].value);
                 amountOwed[i] = parseInt(amountOwedHTML[i].value);
             }
