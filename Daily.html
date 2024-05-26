@@ -38,7 +38,7 @@
 
 
     <script>
-        const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json;charset=utf-8' };
+        const headers = { 'Content-Type': 'application/json' };
         var start_time;
         const cred = JSON.parse(localStorage.getItem("user_info"));
 
@@ -65,20 +65,19 @@
         function get_url()
         {
             const project_id = get_project_id();
-            const project = get_project();
-            const url = `https://us-central1-${project_id}.cloudfunctions.net/${project}`;
+            const url = `https://us-central1-${project_id}.cloudfunctions.net/unified`;
             return url;
         }
 
         function save()
         {
-            const url = get_url();
-            const message = document.getElementById("textbox").value;
-            const rating = document.querySelector('input[name="rating"]:checked').value;
-            const username = get_username();
-            const password = get_password();
+            var url = get_url();
+            var message = document.getElementById("textbox").value;
+            var rating = document.querySelector('input[name="rating"]:checked').value;
+            var username = get_username();
+            var password = get_password();
 
-            const request_body = {
+            var request_body = {
                 message: message,
                 rating: rating,
                 username: username,
@@ -93,10 +92,15 @@
 
             console.log(request_body);
 
-            fetch(url, options).then(response => response.json())
+            fetch(url, options)
+            .then(response => response.json())
 		    .then(data => {
+                console.log(data);
                 show(data);
-		    });
+		    })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
 
         }
 
