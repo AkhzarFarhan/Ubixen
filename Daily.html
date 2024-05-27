@@ -107,7 +107,22 @@
 
         function show(data)
         {
-            console.log(data);
+            if (!data['response'])
+            {
+                console.log('Error: ', data);
+                return;
+            }
+            d = data['message'];
+            map = [];
+            for(let key in d)
+            {
+                map.push(d[key]);
+            }
+            map = map.reverse();
+            for (let key in map)
+            {
+                
+            }
         }
     </script>
 
