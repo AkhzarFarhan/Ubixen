@@ -9,7 +9,7 @@
 
     <div class="body-container">
         <div class="form-container">
-            <form id="sampleForm">
+            <div id="sampleForm">
                 <div class="form-group">
                     <input type="text" id="textbox" name="textbox" placeholder="Message for the day" required>
                 </div>
@@ -28,9 +28,9 @@
                     </div>
                 </div>
                 <div class="flex-button">
-                    <button OnClick="save()">Save</button>
+                    <button onclick="save()">Save</button>
                 </div>
-            </form>
+            </div>
         </div>
         <div class="result-container" id="result-list">
         </div>
@@ -38,7 +38,7 @@
 
 
     <script>
-        const headers = { 'Content-Type': 'application/json' };
+        const headers = { "Content-Type": "application/json; charset=UTF-8" };
         var start_time;
         const cred = JSON.parse(localStorage.getItem("user_info"));
 
@@ -81,20 +81,21 @@
                 message: message,
                 rating: rating,
                 username: username,
-                password: password
+                password: password,
+                project: get_project()
             }
 
             options = {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(request_body)
+                method: "POST",
+                body: JSON.stringify(request_body),
+                headers: headers
             }
 
             console.log(request_body);
 
             fetch(url, options)
-            .then(response => response.json())
-		    .then(data => {
+            .then((response) => response.json())
+		    .then((data) => {
                 console.log(data);
                 show(data);
 		    })
