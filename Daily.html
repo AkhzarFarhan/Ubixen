@@ -7,7 +7,7 @@
 </head>
 <body>
 
-    <div class="body-container" id="body-container-id">
+    <div class="body-container">
         <div class="form-container">
             <div id="sampleForm">
                 <div class="form-group">
@@ -28,12 +28,14 @@
                     </div>
                 </div>
                 <div class="flex-button">
-                    <button onclick="save(true)">Save</button>
+                    <button class="button" onclick="save(true)">Save</button>
                 </div>
             </div>
         </div>
-        <div class="result-container" id="result-list">
+        <div class="result-container" id="result-container-id">
+            <div class="result-div" id="result-div-id"></div>
         </div>
+        <div class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
 
 
@@ -189,9 +191,9 @@
             {
                 var e = document.createElement('div');
                 //e.setAttribute('id','result-list');
-                e.setAttribute('class','result-container');
+                e.setAttribute('class','result-div');
                 e.innerText=map[key].message;
-                document.getElementById('body-container-id').appendChild(e);
+                document.getElementById('result-container-id').appendChild(e);
             }
         }
         // send_request("No", false);
@@ -206,27 +208,33 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            height: 80%;
+            margin: 3%;
         }
 
-        .body-container {
-            display: flex;
-            flex-direction: column;
-        }
-
-        button {
-            padding-left: 30px;
-            padding-right: 30px;
-            padding-top: 10px;
-            padding-bottom: 10px;
-            background-color: #353849;
-            color: white;
-            border-radius: 8px;
-            font-family: 'Quicksand', sans-serif;
-            box-sizing: border-box;
-            -moz-box-sizing: border-box;
+        .button {
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
 	    }
+
+        .flex-button {
+            text-align: center;
+        }
+
+        .result-div {
+            width: 95%;
+            background-color: #fff;
+            padding: 8px;
+            border-radius: 10px;
+            margin-top: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
 
         .result-container {
             width: 300px;
@@ -291,6 +299,20 @@
 
         .form-group input[type="submit"]:hover {
             background-color: #45a049;
+        }
+
+        .copyright {
+            font-size: 10pt;
+            text-align: center;
+            padding: 10px;
+            color: #000000;
+            margin-right: 10px;
+            margin-top: 30px;
+        }
+
+        .copyright_link {
+            color: #45a049;
+            text-decoration: none;
         }
     </style>
 </body>
