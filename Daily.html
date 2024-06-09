@@ -29,6 +29,7 @@
                         <label><input type="radio" name="rating" value="10">10</label>
                     </div>
                 </div>
+                <div class="alert-div" id="alert-div-id"></div>
                 <div class="flex-button">
                     <button class="button" onclick="save(true)">Save</button>
                 </div>
@@ -87,8 +88,12 @@
 
             if(isPOST)
             {
-                message = document.getElementById("textbox").value;
-                rating = document.querySelector('input[name="rating"]:checked').value;
+                e_message = document.getElementById("textbox");
+                e_rating = document.querySelector('input[name="rating"]:checked');
+                message = e_message.value;
+                rating = e_rating.value;
+                e_message.value = "";
+                e_rating.checked = false;
                 const request_body = {
                     method: "POST",
                     message: message,
@@ -103,6 +108,7 @@
                     headers: headers,
                     body: JSON.stringify(request_body)
                 }
+                document.getElementById('alert-div-id').innerText = 'Message is being saved...';
             }
             else
             {
@@ -119,6 +125,10 @@
             .then((response) => response.json())
 		    .then((data) => {
                 console.log(data);
+                if(isPOST)
+                {
+                    document.getElementById('alert-div-id').innerText = 'Message saved';
+                }
                 show(data);
 		    })
             .catch((error) => {
@@ -236,6 +246,10 @@
             align-items: center;
             height: 80%;
             margin: 3%;
+        }
+        .alert-div {
+            margin: 10px;
+            text-align: center;
         }
 
         .button {
