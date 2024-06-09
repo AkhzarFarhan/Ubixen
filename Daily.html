@@ -7,7 +7,7 @@
 </head>
 <body>
 
-    <div class="body-container">
+    <div class="body-container" id="body-container-id">
         <div class="form-container">
             <div id="sampleForm">
                 <div class="form-group">
@@ -28,7 +28,7 @@
                     </div>
                 </div>
                 <div class="flex-button">
-                    <button onclick="save()">Save</button>
+                    <button onclick="save(true)">Save</button>
                 </div>
             </div>
         </div>
@@ -38,9 +38,9 @@
 
 
     <script>
-        const headers = { "Content-Type": "application/json; charset=UTF-8" };
         var start_time;
         const cred = JSON.parse(localStorage.getItem("user_info"));
+        const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json;charset=utf-8' };
 
         function get_username()
         {
@@ -69,29 +69,44 @@
             return url;
         }
 
-        function save()
+        function save(isPOST)
         {
+            var message = "";
+            var rating = "";
             var url = get_url();
-            var message = document.getElementById("textbox").value;
-            var rating = document.querySelector('input[name="rating"]:checked').value;
             var username = get_username();
             var password = get_password();
+            var project  = get_project();
 
-            var request_body = {
-                message: message,
-                rating: rating,
-                username: username,
-                password: password,
-                project: get_project()
+            if(isPOST)
+            {
+                message = document.getElementById("textbox").value;
+                rating = document.querySelector('input[name="rating"]:checked').value;
+                const request_body = {
+                    method: "POST",
+                    message: message,
+                    rating: rating,
+                    username: username,
+                    password: password,
+                    project: project
+                }
+
+                options = {
+                    method: "POST",
+                    headers: headers,
+                    body: JSON.stringify(request_body)
+                }
+            }
+            else
+            {
+                url = url + `?params=${username}-${password}-${project}`;
+                options = {
+                    method: "GET",
+                    headers: headers
+                }
             }
 
-            options = {
-                method: "POST",
-                body: JSON.stringify(request_body),
-                headers: headers
-            }
-
-            console.log(request_body);
+            console.log("options: ", options);
 
             fetch(url, options)
             .then((response) => response.json())
@@ -103,7 +118,58 @@
                 console.log('Error: ', error);
             });
 
+            // send_request(request_body, true);
         }
+
+        // function send_request(body, isPOST)
+        // {
+        //     const xhr = new XMLHttpRequest();
+        //     const url = get_url();
+        //     const data = JSON.stringify(body);
+
+        //     if (isPOST)
+        //     {
+        //         xhr.open("POST", url, true);
+        //     }
+        //     else
+        //     {
+        //         xhr.open("GET", url, true);
+        //     }
+            
+        //     xhr.setRequestHeader('Content-Type', 'application/json');
+        //     xhr.onreadystatechange = function ()
+        //     {
+        //         if(xhr.readyState === 4)
+        //         {
+        //             if(xhr.status === 200)
+        //             {
+        //                 var response = JSON.parse(xhr.responseText);
+        //                 //console.log("response: ", response);
+        //                 if(!isPOST)
+        //                 {
+        //                     show(response);
+        //                 } 
+        //             }
+        //             else
+        //             {
+        //                 console.log("xhr.status != 200");
+        //             }
+        //         }
+        //         else
+        //         {
+        //             console.log("xhr.readyState != 4");
+        //         }
+        //     };
+
+        //     if(isPOST)
+        //     {
+        //         xhr.send(data);
+        //     }
+        //     else
+        //     {
+        //         xhr.send();
+        //     }
+        // }
 
         function show(data)
         {
@@ -121,9 +187,15 @@
             map = map.reverse();
             for (let key in map)
             {
-                
+                var e = document.createElement('div');
+                //e.setAttribute('id','result-list');
+                e.setAttribute('class','result-container');
+                e.innerText=map[key].message;
+                document.getElementById('body-container-id').appendChild(e);
             }
         }
+        // send_request("No", false);
+        save(false);
     </script>
 
 
