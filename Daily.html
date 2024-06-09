@@ -11,7 +11,7 @@
         <div class="form-container">
             <div id="sampleForm">
                 <div class="form-group">
-                    <input type="text" id="textbox" name="textbox" placeholder="Message for the day" required>
+                    <textarea type="text" id="textbox" name="textbox" placeholder="Message for the day" required></textarea>
                 </div>
                 <div class="form-group">
                     <div class="radio-group">
@@ -247,6 +247,15 @@
             height: 80%;
             margin: 3%;
         }
+        /* textarea {
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.5;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: vertical; /* Allows vertical resizing */
+        } */
+
         .alert-div {
             margin: 10px;
             text-align: center;
@@ -331,13 +340,7 @@
             margin-bottom: 15px;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-        }
-
-        .form-group input[type="text"],
+        .form-group textarea[type="text"],
         .form-group input[type="radio"] {
             width: 100%;
             padding: 10px;
