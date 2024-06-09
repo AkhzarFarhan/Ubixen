@@ -266,10 +266,11 @@
         .message-div {
             width: 270px;
             text-align: left;
-            white-space: normal;
+            white-space: pre-wrap;
             word-wrap: break-word;
             overflow-wrap: break-word;
             overflow: hidden;
+            resize: vertical;
             margin: 10px;
         }
 
@@ -334,6 +335,7 @@
 
         .form-group textarea[type="text"],
         .form-group input[type="radio"] {
+            font-family: 'Arial', sans-serif;
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
