@@ -42,7 +42,7 @@
         <div class="user-flex" id="user-flex-id">
             <div>Hello</div><div id="username-id"></div>
         </div>
-        <div id="signout-id" onclick="signout()">Logout</div>
+        <div class="signout-class" id="signout-id" onclick="signout()">Logout</div>
         <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
     <script>
@@ -116,8 +116,16 @@
         }
 
         #signout-id {
-            color: red;
             margin-left: 5px;
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 5px;
+            background-color: red;
+            color: #fff;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 13px;
+            transition: background-color 0.3s ease;
         }
 
         .user-flex {
