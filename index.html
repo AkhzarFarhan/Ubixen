@@ -73,9 +73,9 @@
             if(cred)
             {
                 document.getElementById("button-container-id").style.display = true;
-                document.getElementById("user-flex-id").style.display = true;
-                document.getElementById("signout-id").style.display = true;
-                document.getElementById("popupForm").style.display = 'none';
+                document.getElementById("user-flex-id").style.display        = true;
+                document.getElementById("signout-id").style.display          = true;
+                document.getElementById("popupForm").style.display           = 'none';
                 cred = JSON.parse(cred);
                 window["user_info"] = cred;
                 document.getElementById("username-id").innerText = `${window["user_info"]["username"]}`;
