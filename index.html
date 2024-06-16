@@ -8,7 +8,7 @@
 <body>
     <h1 class="heading">Ubixen: An Endless Possibility</h1>
     <div class="container">
-        <div class="button-container">
+        <div class="button-container" id="button-container-id">
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Ledger.html">Ledger</a>
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Daily.html">Daily</a>
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/UbiCards.html">UbiCards</a>
@@ -26,8 +26,22 @@
             <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Game.html">Game</a>
             <a class="button" href="https://akhzarfarhan.github.io/al-Quran/">Al-Quran</a>
             <a class="button" href="https://akhzarfarhan.github.io/sahih-bukhari/">Al-Bukhari</a>
-
         </div>
+        <div id="popupForm" class="popup-form">
+            <div class="form-container">
+                <h2 class="heading">Introduce Yourself</h2>
+                <div id="registerForm">
+                    <input class="text_box" type="text" id="username" name="username" placeholder="Enter Username" required>
+                    <input class="text_box" type="password" id="password" name="password" placeholder="Enter Password" required>
+                    <input class="text_box" type="text" id="project_id" name="project_id" placeholder="Enter Project ID" required>
+                    <button class="button" type="submit" onclick="take_user_input_from_alert_window()">Save</button>
+                </div>
+            </div>
+        </div>
+        <div class="user-flex" id="user-flex-id">
+            <div>Hello</div><div id="username-id"></div>
+        </div>
+        <div id="signout-id" onclick="signout()">Logout</div>
         <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
     <script>
@@ -42,42 +56,43 @@
 
         function take_user_input_from_alert_window()
         {
-            var username = prompt("Enter Username");
-            var password = prompt("Enter Password");
-            var project_id = prompt("Enter Project ID");
-
-            var user_info =  {
-                "username": username,
-                "password": password,
-                "project_id": project_id
-            }
-
-            return user_info;
-        }
-
-        function set_cred_to_cache()
-        {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const project_id = document.getElementById("project_id").value;
+            window["user_info"]["username"]   = username;
+            window["user_info"]["password"]   = password;
+            window["user_info"]["project_id"] = project_id;
             window.localStorage.setItem("user_info", JSON.stringify(window["user_info"]));
+            location.reload();
         }
 
         function get_cred_from_cache()
         {
             var cred = localStorage.getItem("user_info");
+            console.log(cred);
             if(cred)
             {
+                document.getElementById("button-container-id").style.display = true;
+                document.getElementById("user-flex-id").style.display = true;
+                document.getElementById("signout-id").style.display = true;
+                document.getElementById("popupForm").style.display = 'none';
                 cred = JSON.parse(cred);
                 window["user_info"] = cred;
-                // console.log('get_cred_from_cache(): ', window["user_info"]);
+                document.getElementById("username-id").innerText = `${window["user_info"]["username"]}`;
             }
             else
             {
-                user_input = take_user_input_from_alert_window();
-                window["user_info"]["username"]   = user_input["username"];
-                window["user_info"]["password"]   = user_input["password"];
-                window["user_info"]["project_id"] = user_input["project_id"];
- 
-                set_cred_to_cache();
+                document.getElementById("button-container-id").style.display = 'none';
+                document.getElementById("user-flex-id").style.display = 'none';
+                document.getElementById("signout-id").style.display = 'none';
+                document.getElementById("popupForm").style.display = true;
             }
+        }
+
+        function signout()
+        {
+            window.localStorage.removeItem("user_info");
+            location.reload();
         }
 
         get_cred_from_cache();
@@ -92,6 +107,38 @@
             align-items: center;
             text-align: center;
             height: 70vh;
+        }
+
+        #username-id {
+            color: #45a049;
+            margin-left: 5px;
+        }
+
+        #signout-id {
+            color: red;
+            margin-left: 5px;
+        }
+
+        .user-flex {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        .text_box {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
+            width: 87%;
+            transition: box-shadow 0.3s ease;
+            margin: 5px;
+        }
+
+        .text_box:focus {
+            box-shadow: 0px 3px 20px rgba(0, 123, 255, 0.4);
         }
         
         .button-container {
