@@ -10,7 +10,7 @@
         <h2>YouTube Downloader</h2>
         <input type="text" id="yt_link" class="textbox" placeholder="Type YouTube URL">
         <button class="button" id="submit-button" onclick="fetchDataFromAPI()">Submit</button>
-        <p id="loader" style="display: none;">Fetching from servers, it may take around 20 seconds.</p>
+        <p id="loader" style="display: none;">Fetching from YouTube servers.</br>It may take around 20 seconds.</p>
         <div class="button-container" id="button-container" style="display: none;">
             <a class="button" id="vdownload">Video</a>
             <a class="button" id="adownload">Audio</a>
@@ -52,7 +52,8 @@
 
         function fetchDataFromAPI()
         {
-            document.getElementById("loader").setAttribute("style", "display: true");
+            var loader = document.getElementById("loader");
+            loader.setAttribute("style", "display: true");
 
             if(document.getElementById("yt_link").value == "")
             {
@@ -87,6 +88,7 @@
                     if(!data['success'])
                     {
                         console.log('Response failed: ', data['message']);
+                        loader.innerText = data['message'];
                         return;
                     }
                     const d = data['message']
