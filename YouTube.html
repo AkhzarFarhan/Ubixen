@@ -10,7 +10,7 @@
         <h2>YouTube Downloader</h2>
         <input type="text" id="yt_link" class="textbox" placeholder="Type YouTube URL">
         <button class="button" id="submit-button" onclick="fetchDataFromAPI()">Submit</button>
-        <p id="loader" style="display: none;">Fetching from servers...</p>
+        <p id="loader" style="display: none;">Fetching from servers, it may take around 20 seconds.</p>
         <div class="button-container" id="button-container" style="display: none;">
             <a class="button" id="vdownload">Video</a>
             <a class="button" id="adownload">Audio</a>
@@ -19,35 +19,80 @@
     </div>
 
     <script>
+
+        const cred = JSON.parse(localStorage.getItem("user_info"));
+        const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json;charset=utf-8' };
+
+        function get_username()
+        {
+            return cred["username"];
+        }
+
+        function get_password()
+        {
+            return cred["password"];
+        }
+
+        function get_project_id()
+        {
+            return cred["project_id"];
+        }
+
+        function get_project()
+        {
+            return "youtube";
+        }
+
+        function get_url()
+        {
+            const project_id = get_project_id();
+            const url = `https://us-central1-${project_id}.cloudfunctions.net/unified`;
+            return url;
+        }
+
         function fetchDataFromAPI()
         {
             document.getElementById("loader").setAttribute("style", "display: true");
+
             if(document.getElementById("yt_link").value == "")
             {
                 document.getElementById("loader").innerText = "Please enter YouTube video URL";
                 return;
             }
             
-            const apiUrl = 'https://us-central1-github-284317.cloudfunctions.net/YouTubeDL'; // Replace with your API endpoint
-            const yt_link = document.getElementById("yt_link").value;
-            const payload = {
-                yt_link: yt_link
+            var yt_link = document.getElementById("yt_link").value;
+            var url      = get_url();
+            var username = get_username();
+            var password = get_password();
+            var project  = get_project();
+
+            const request_body = {
+                method: "POST",
+                message: yt_link,
+                username: username,
+                password: password,
+                project: project
             }
+            console.log('request_body: ', request_body);
             const options = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify(request_body)
             };
 
-            fetch(apiUrl, options)
+            fetch(url, options)
                 .then(response => response.json())
                 .then(data => {
                     // Handle the data
-                    const video_link = data['video'];
-                    const audio_link = data['audio'];
-                    console.log('response_from_gcp_functions: ', data);
+                    if(!data['success'])
+                    {
+                        console.log('Response failed: ', data['message']);
+                        return;
+                    }
+                    const d = data['message']
+                    const video_link = d['video'];
+                    const audio_link = d['audio'];
+                    console.log('response_from_gcp_functions: ', d);
                     var container = document.getElementById("button-container");
                     var velement = document.getElementById("vdownload");
                     var aelement = document.getElementById("adownload");
