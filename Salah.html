@@ -57,6 +57,7 @@
                     <td class="now" style="display: none;" id="isha_n"></td>
                 </tr>
             </table>
+            <div class="last_updated" style="display: none;" id="last_updated_id"></div>
         </div>
         <div class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
@@ -66,6 +67,7 @@
         var start_time;
         var show_now = false;
         const farz_rakah = [2, 4, 4, 3, 4];
+        const salah_name = ['Fajr', 'Zohar', 'Asr', 'Maghrib', 'Isha'];
         const cred = JSON.parse(localStorage.getItem("user_info"));
         const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json;charset=utf-8' };
 
@@ -100,6 +102,9 @@
         {
             const textareas = document.querySelectorAll('input');
             var values = [];
+            var count = 0;
+            var date = new Date();
+            var str = '';
             for(let i=0; i<textareas.length; i++)
             {
                 if(textareas[i].value === '')
@@ -109,9 +114,20 @@
                 else
                 {
                     values.push(parseInt(textareas[i].value));
+                    if(count === 0)
+                    {
+                        str += `${salah_name[i]}: ${textareas[i].value}`;
+                    }
+                    else
+                    {
+                        str += `, ${salah_name[i]}: ${textareas[i].value}`;
+                    }
+                    count += 1;
                 }
                 textareas[i].value = '';
             }
+            str += 'NEW_LINEUpdated at ' + String(date).slice(4,24);
+            values.push(str);
 
             return values;
         }
@@ -141,7 +157,7 @@
                     headers: headers,
                     body: JSON.stringify(request_body)
                 }
-                document.getElementById('alert-div-id').innerText = `[${message}] is being saved...`;
+                document.getElementById('alert-div-id').innerText = `[${message.slice(0,5)}] is being saved...`;
             }
             else
             {
@@ -161,7 +177,7 @@
                 console.log(data);
                 if(isPOST)
                 {
-                    document.getElementById('alert-div-id').innerText = `[${message}] saved`;
+                    document.getElementById('alert-div-id').innerText = `[${message.slice(0,5)}] saved`;
                 }
                 show(data);
 		    })
@@ -200,6 +216,8 @@
                     elements[i].innerText = d[i];
                 }
             }
+            document.getElementById('last_updated_id').innerHTML = `${d[5].replace('NEW_LINE', '</br>')}`;
+            document.getElementById('last_updated_id').setAttribute("style", "display: true");
         }
 
         save(false);
@@ -244,6 +262,10 @@
 
         .text_box:focus {
             box-shadow: 0px 3px 20px rgba(0, 123, 255, 0.4);
+        }
+
+        .last_updated {
+            padding: 10%;
         }
 
         .body-container {
