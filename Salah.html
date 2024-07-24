@@ -126,14 +126,32 @@
                 }
                 textareas[i].value = '';
             }
-            str += 'NEW_LINEUpdated at ' + String(date).slice(4,24);
+            str += 'Updated at ' + String(date).slice(4,24);
             values.push(str);
 
             return values;
         }
 
+        function is_all_filled()
+        {
+            const textareas = document.querySelectorAll('input');
+            for(let i=0; i<textareas.length; i++)
+            {
+                if(textareas[i].value !== '')
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         function save(isPOST)
         {
+            if(!is_all_filled())
+            {
+                document.getElementById('alert-div-id').innerText = `At least one Salah should be entered`;
+                return;
+            }
             var message  = "";
             var url      = get_url();
             var username = get_username();
@@ -216,7 +234,7 @@
                     elements[i].innerText = d[i];
                 }
             }
-            document.getElementById('last_updated_id').innerHTML = `${d[5].replace('NEW_LINE', '</br>')}`;
+            document.getElementById('last_updated_id').innerHTML = `${d[5].replace('Updated', '</br>Updated')}`;
             document.getElementById('last_updated_id').setAttribute("style", "display: true");
         }
 
