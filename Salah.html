@@ -147,11 +147,6 @@
 
         function save(isPOST)
         {
-            if(!is_all_filled())
-            {
-                document.getElementById('alert-div-id').innerText = `At least one Salah should be entered`;
-                return;
-            }
             var message  = "";
             var url      = get_url();
             var username = get_username();
@@ -160,6 +155,11 @@
 
             if(isPOST)
             {
+                if(!is_all_filled())
+                {
+                    document.getElementById('alert-div-id').innerText = `At least one Salah should be entered`;
+                    return;
+                }
                 show_now = true;
                 message = get_filled_value();
                 const request_body = {
