@@ -29,41 +29,36 @@
                 <tr>
                     <th>Salah</th>
                     <th>Days</th>
-                    <th>Past</th>
-                    <th class="now" style="display: none;">Now</th>
+                    <th>Rakah</th>
                 </tr>
                 <tr>
                     <th>Fajr</th>
                     <td class="days_left" id="fajr_dl"></td>
-                    <td class="past" id="fajr_p"></td>
-                    <td class="now" style="display: none;" id="fajr_n"></td>
+                    <td class="raka_left" id="fajr_p"></td>
                 </tr>
                 <tr>
                     <th>Zohar</th>
                     <td class="days_left" id="zohar_dl"></td>
-                    <td class="past" id="zohar_p"></td>
-                    <td class="now" style="display: none;" id="zohar_n"></td>
+                    <td class="raka_left" id="zohar_p"></td>
                 </tr>
                 <tr>
                     <th>Asr</th>
                     <td class="days_left" id="asr_dl"></td>
-                    <td class="past" id="asr_p"></td>
-                    <td class="now" style="display: none;" id="asr_n"></td>
+                    <td class="raka_left" id="asr_p"></td>
                 </tr>
                 <tr>
                     <th>Maghrib</th>
                     <td class="days_left" id="maghrib_dl"></td>
-                    <td class="past" id="maghrib_p"></td>
-                    <td class="now" style="display: none;" id="maghrib_n"></td>
+                    <td class="raka_left" id="maghrib_p"></td>
                 </tr>
                 <tr>
                     <th>Isha</th>
                     <td class="days_left" id="isha_dl"></td>
-                    <td class="past" id="isha_p"></td>
-                    <td class="now" style="display: none;" id="isha_n"></td>
+                    <td class="raka_left" id="isha_p"></td>
                 </tr>
             </table>
             <div class="last_updated" style="display: none;" id="last_updated_id"></div>
+            <div class="last_updated" style="display: none;" id="table_id"></div>
         </div>
         <div class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
@@ -115,14 +110,27 @@
 
         function get_current_datetime()
         {
+            var ampm;
+            var hours;
             const now = new Date();
             const day = now.getDate().toString().padStart(2, '0');
             const month = (now.getMonth() + 1).toString().padStart(2, '0');
             const year = now.getFullYear();
-            const hours = now.getHours().toString().padStart(2, '0');
+            if (now.getHours() >= 12)
+            {
+                ampm = 'PM';
+                if (now.getHours() > 12)
+                {
+                    hours = (now.getHours()-12).toString().padStart(2, '0');
+                }
+            }
+            else
+            {
+                ampm = 'AM';
+                hours = now.getHours().toString().padStart(2, '0');
+            }
             const minutes = now.getMinutes().toString().padStart(2, '0');
             const seconds = now.getSeconds().toString().padStart(2, '0');
-            const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
 
             return `${day}-${month}-${year} ${hours}:${minutes}:${seconds} ${ampm}`;
         }
@@ -161,6 +169,11 @@
             return values;
         }
 
+        function beautify_last_update(s)
+        {
+            return s.replace('Update', '</br>Update');
+        }
+
         function is_all_filled()
         {
             const textareas = document.querySelectorAll('input');
@@ -172,6 +185,29 @@
                 }
             }
             return false;
+        }
+
+        function get_last_rows_from_dataframe(numRows)
+        {
+            const table = document.querySelector('.dataframe');
+            const rows = table.querySelectorAll('tr');
+
+            if (rows.length < numRows) 
+            {
+                console.error('The table has fewer than', numRows, 'rows.');
+                return [];
+            }
+
+            const lastRow = rows[rows.length - 1];
+            const cells = lastRow.querySelectorAll('td');
+            const cellText = [];
+
+            for (const cell of cells)
+            {
+                cellText.push(parseInt(cell.textContent.trim()));
+            }
+
+            return cellText;
         }
 
         function save(isPOST)
@@ -237,62 +273,23 @@
         function show(data)
         {
             console.log("data: ", data);
-            document.getElementById('result-container-id').setAttribute("style", "display: true");
-            document.getElementById('last_updated_id').innerHTML = data['message'];
+            document.getElementById('result-container-id').setAttribute("style", "display: true"); 
+            document.getElementById('table_id').innerHTML = data['message'][0];
+            document.getElementById('last_updated_id').innerHTML = beautify_last_update(data['message'][1]);
+            document.getElementById('table_id').setAttribute("style", "display: true");
             document.getElementById('last_updated_id').setAttribute("style", "display: true");
+            
+            const d = get_last_rows_from_dataframe(1);
+            //Showing Days Left and Rakah Left
+            var dl_elements = document.getElementsByClassName('days_left');
+            var rl_elements = document.getElementsByClassName('raka_left');
+            for(let i=0; i<dl_elements.length; i++)
+            {
+                dl_elements[i].innerText = get_remaining(d[i], i);
+                rl_elements[i].innerText = d[i];
+            }
         }
 
-        // function show(data)
-        // {
-        //     if (!data['success'])
-        //     {
-        //         console.log('Error: ', data);
-        //         document.getElementById('alert-div-id').innerText = `OOPS :( Something went wrong at the server.`;
-        //         return;
-        //     }
-        //     //console.log("data: ", data);
-        //     d = data['message']['message'];
-        //     keys = Object.keys(d);
-        //     if (Object.keys(d).length == 0)
-        //     {
-        //         document.getElementById('alert-div-id').innerText = `No data found at the server.`;
-        //         return;
-        //     }
-
-        //     console.log("d: ", d[Object.keys(d)[0]]);
-        //     document.getElementById('result-container-id').setAttribute("style", "display: true");
-
-        //     // Showing Days Left
-        //     var dl_elements = document.getElementsByClassName('days_left');
-        //     for(let i=0; i<dl_elements.length; i++)
-        //     {
-        //         dl_elements[i].innerText = get_remaining(d[i], i);
-        //     }
-
-        //     if(show_now)
-        //     {
-        //         //Showing now
-        //         var elements = document.getElementsByClassName('now');
-        //         elements[0].setAttribute("style", "display: true");
-        //         for(let i=1; i<elements.length; i++)
-        //         {
-        //             elements[i].innerText = d[i-1];
-        //             dl_elements[i-1].innerText = get_remaining(d[i-1], i-1);
-        //             elements[i].setAttribute("style", "display: true");
-        //         }
-        //     }
-        //     else
-        //     {
-        //         // Showing past
-        //         var elements = document.getElementsByClassName('past');
-        //         for(let i=0; i<elements.length; i++)
-        //         {
-        //             elements[i].innerText = d[i];
-        //         }
-        //     }
-        //     document.getElementById('last_updated_id').innerHTML = `${d[5].replace('Updated', '</br>Updated')}`;
-        //     document.getElementById('last_updated_id').setAttribute("style", "display: true");
-        //}
 
         save(false);
     </script>
