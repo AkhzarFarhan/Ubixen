@@ -28,32 +28,38 @@
             <table>
                 <tr>
                     <th>Salah</th>
-                    <th>Days</th>
+                    <th>Actual</th>
+                    <th>Predicted</th>
                     <th>Rakah</th>
                 </tr>
                 <tr>
                     <th>Fajr</th>
-                    <td class="days_left" id="fajr_dl"></td>
+                    <td class="actual_days_left" id="fajr_dl"></td>
+                    <td class="predicted_days_left" id="fajr_pl"></td>
                     <td class="raka_left" id="fajr_p"></td>
                 </tr>
                 <tr>
                     <th>Zohar</th>
-                    <td class="days_left" id="zohar_dl"></td>
+                    <td class="actual_days_left" id="zohar_dl"></td>
+                    <td class="predicted_days_left" id="zohar_pl"></td>
                     <td class="raka_left" id="zohar_p"></td>
                 </tr>
                 <tr>
                     <th>Asr</th>
-                    <td class="days_left" id="asr_dl"></td>
+                    <td class="actual_days_left" id="asr_dl"></td>
+                    <td class="predicted_days_left" id="asr_pl"></td>
                     <td class="raka_left" id="asr_p"></td>
                 </tr>
                 <tr>
                     <th>Maghrib</th>
-                    <td class="days_left" id="maghrib_dl"></td>
+                    <td class="actual_days_left" id="maghrib_dl"></td>
+                    <td class="predicted_days_left" id="maghrib_pl"></td>
                     <td class="raka_left" id="maghrib_p"></td>
                 </tr>
                 <tr>
                     <th>Isha</th>
-                    <td class="days_left" id="isha_dl"></td>
+                    <td class="actual_days_left" id="isha_dl"></td>
+                    <td class="predicted_days_left" id="isha_pl"></td>
                     <td class="raka_left" id="isha_p"></td>
                 </tr>
             </table>
@@ -281,11 +287,13 @@
             
             const d = get_last_rows_from_dataframe(1);
             //Showing Days Left and Rakah Left
-            var dl_elements = document.getElementsByClassName('days_left');
+            var dl_elements = document.getElementsByClassName('actual_days_left');
+            var pl_elements = document.getElementsByClassName('predicted_days_left');
             var rl_elements = document.getElementsByClassName('raka_left');
             for(let i=0; i<dl_elements.length; i++)
             {
                 dl_elements[i].innerText = get_remaining(d[i], i);
+                pl_elements[i].innerText = data['message'][2][i];
                 rl_elements[i].innerText = d[i];
             }
         }
