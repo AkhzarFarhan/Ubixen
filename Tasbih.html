@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasbih</title>
+
+</head>
+<body>
+    <div class="body-container">
+        <div class="form-container">
+            <div id="sampleForm">
+                <div class="form-group">
+                    <input type="number" class="text_box" id="0" name="0" placeholder="Enter your target">
+                </div>
+                <div class="form-group">
+                <div class="alert-div" id="alert-div-id"></div>
+                <div class="flex-button">
+                    <button class="button" style="background-color: #FF0000;" onclick="reset()">Reset</button>
+                    <button class="button" onclick="set()">Set</button>
+                </div>
+                <div class="touch-panel-class" id="touch-panel-id"></div>
+            </div>
+        </div>
+        <div class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
+    </div>
+
+
+    <script>
+
+        const cred = JSON.parse(localStorage.getItem("user_info"));
+        const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json;charset=utf-8' };
+
+        function get_username()
+        {
+            return cred["username"];
+        }
+
+        function get_password()
+        {
+            return cred["password"];
+        }
+
+        function get_project_id()
+        {
+            return cred["project_id"];
+        }
+
+        function get_project()
+        {
+            return "tasbih";
+        }
+
+        function get_url()
+        {
+            const project_id = get_project_id();
+            const url = `https://us-central1-${project_id}.cloudfunctions.net/unified`;
+            return url;
+        }
+
+        function get_last_update_from_database()
+        {
+            var url = get_url();
+            const username = get_username();
+            const password = get_password();
+            const project = get_project();
+            url = url + `?params=${username}-${password}-${project}`;
+            const options = { method: "GET", headers: headers}
+            fetch(url, options)
+                .then(response => response.json())
+                .then(data => {
+                    //document.getElementById("touch-panel-id").innerText = data["count"];
+                    console.log('get_last_update_from_database: ', data);
+                });
+        }
+
+        function set()
+        {
+            const url = get_url();
+            const username = get_username();
+            const password = get_password();
+            const project = get_project();
+            const target = document.getElementById("0").value;
+            const data = { "username": username, "password": password, "project": project, "action": "set", "target": target };
+            fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(data) })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("touch-panel-id").innerText = data["count"];
+                });
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+
+        .touch-panel-class {
+            font-size: 200%;
+            font-weight: bolder;
+            color: #3cc47a;
+            width: 100%;
+            height: 450px;
+            text-align: center;
+            padding:15px;
+            margin: 10px;
+            box-sizing: border-box;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+            -moz-box-sizing: border-box;
+        }
+
+        table {
+            width: 60%;
+            margin: auto;
+            border-collapse: collapse;
+            text-align: center;
+        }
+        
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .text_box {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
+            width: 87%;
+            transition: box-shadow 0.3s ease;
+            margin: 5px;
+        }
+
+        .text_box:focus {
+            box-shadow: 0px 3px 20px rgba(0, 123, 255, 0.4);
+        }
+
+        .last_updated {
+            padding-top: 10%;
+        }
+
+        .body-container {
+            width: 97%;
+        }
+
+        .date-div {
+            font-size: 7pt;
+            text-align-last: right;
+            padding-bottom: 5px;
+            color: #45a049;
+            margin-right: 10px;
+        }
+
+        .alert-div {
+            margin: 10px;
+            text-align: center;
+        }
+
+        .button {
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+	    }
+        .message-div {
+            width: 97%;
+            text-align: left;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            overflow: hidden;
+            resize: vertical;
+            margin: 10px;
+            padding-top: 3px;
+            padding-bottom: 3px;
+        }
+
+        .flex-button {
+            text-align: center;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .result-div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 97%;
+            background-color: #fff;
+            padding: 5px;
+            border-radius: 10px;
+            margin-top: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-container {
+            text-align: center;
+        }
+
+        .rating {
+            width: 20%;
+            height: 20%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: lighter;
+            color: white;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .review-text {
+            flex: 1;
+        }
+
+        .form-container {
+            background-color: #fff;
+            text-align: center;
+        }
+
+        .form-container h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group input[type="radio"] {
+            font-family: 'Arial', sans-serif;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            white-space: pre-wrap;
+        }
+
+        .form-group input[type="radio"] {
+            width: auto;
+            margin-right: 5px;
+        }
+
+        .radio-group {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .form-group input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .form-group input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .copyright {
+            font-size: 10pt;
+            text-align: center;
+            padding: 10px;
+            color: #000000;
+            margin-right: 10px;
+            margin-top: 30px;
+        }
+
+        .copyright_link {
+            color: #45a049;
+            text-decoration: none;
+        }
+    </style>
+</body>
+</html>
