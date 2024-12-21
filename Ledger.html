@@ -30,8 +30,8 @@
 			</div>
 
             <div class="flex-button">
-                <button class="button" onclick="getHtmlOutput()">Table</button>
-                <button class="button" onclick="SubmitForm()">Save</button>
+                <button class="button" onclick="SubmitForm(false)">Table</button>
+                <button class="button" onclick="SubmitForm(true)">Save</button>
             </div>
             <div class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
 		</div>
@@ -68,47 +68,32 @@
         {
             const project_id = get_project_id();
             const project = get_project();
-            const url = `https://us-central1-${project_id}.cloudfunctions.net/${project}`;
+            const url = `https://us-central1-${project_id}.cloudfunctions.net/unified`;
             return url;
-        }
-
-        function wakeUp()
-        {
-            request_body = {
-                run_cron: true
-            }
-            const url = get_url();
-            options = {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(request_body)
-            }
-            fetch(url, options).then(response => response.json())
-		    .then(data => {
-                console.log('Invoke for wakeup: ', data);
-                var wake_element = document.getElementById("wake-status");
-                wake_element.innerHTML = "&#10003;";
-                wake_element.setAttribute("style", "color: green;");
-		    });
         }
 
         function main()
         {
             document.getElementById("profile-name").innerHTML = get_username();
-            wakeUp();
         }
 
- 		function SubmitForm()
+ 		function SubmitForm(is_save)
         {
             //Getters
             const url        = get_url();
             start_time       = Date.now();
-	 		const credit     = document.getElementById("credit").value;
-	 		const debit      = document.getElementById("debit").value;
-	 		const details    = document.getElementById("details").value;
-	 		const mode       = getCheck();
+            let credit     = parseInt(document.getElementById("credit").value, 10);
+            let debit      = parseInt(document.getElementById("debit").value, 10);
+	 		let details    = document.getElementById("details").value;
+	 		let mode       = getCheck();
             const username   = get_username();
             const password   = get_password();
+            const project    = get_project();
+
+            //Validation
+            if(isNaN(credit) || credit == "") {credit = 0;}
+            if(debit == "" || isNaN(debit)) {debit = 0;}
+            if(details == "") {details = "No details provided";}
 
             //Restters
             document.getElementById("credit").value = "";
@@ -116,17 +101,27 @@
             document.getElementById("details").value = "";
             loader = document.getElementById('form-cont');
             loader.setAttribute('class', 'box');
-            
-            const request_body = {
-                run_cron: false,
-                get_html: false,
-                delete_instance: false,
-                credit: credit,
-                debit: debit,
-                details: details,
-                mode: mode,
-                username: username,
-                password: password
+            var request_body;
+
+            if(is_save)
+            {
+                request_body = {
+                    method: 'POST',
+                    message: {credit: credit, debit: debit, details: details, mode: mode},
+                    username: username,
+                    password: password,
+                    project: project
+                }
+            }
+            else
+            {
+                request_body = {
+                    method: 'GET',
+                    message: {credit: credit, debit: debit, details: details, mode: mode},
+                    username: username,
+                    password: password,
+                    project: project
+                }
             }
 
             loader.innerHTML="<p style='text-align: center;'>Encrypting your data for security...</p>";
@@ -223,18 +218,27 @@
 
         function getStatusHtml(d)
         {
-            if(d['status'] == 200)
+
+            if(d['success'])
             {
                 status_message = "Successfully Added!"; status_color = "grey";
-                if (d['tg_dict']['status'])
-                {
-                    postToTelegram(d['tg_dict']['tg_url']);
-                }
             }
             else
             {
-                status_message = `Failed!</br></br>${d['reason']}`; status_color = "red";
+                status_message = `Failed!</br></br>${d['message']}`; status_color = "red";
             }
+            if (typeof d['message']['message'] === 'undefined')
+            {
+                d = d['message'];
+                var login_container = document.getElementById('form-cont');
+                login_container.innerHTML = d;
+                return;
+            }
+            else
+            {
+                d = d['message']['message'];
+            }
+
 
             const timestamp      = d['timestamp'];
             const credit         = d['credit'];
