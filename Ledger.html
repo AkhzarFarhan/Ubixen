@@ -232,7 +232,7 @@
                 document.body.innerHTML = '';
                 var container = document.createElement('div');
                 container.style.overflowX = 'auto';
-                container.style.width = '100%';
+                container.style.maxWidth = '100%';
                 container.innerHTML = d;
                 document.body.appendChild(container);
                 return;
@@ -283,11 +283,12 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f1f1f1;
-            margin: 10px;
+            margin: 0;
             padding: 0;
             align-items: center;
             text-align: center;
             height: 70vh;
+            overflow-x: hidden;
         }
         .flex-button {
             display: flex;
