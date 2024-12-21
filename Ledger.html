@@ -8,8 +8,7 @@
     <div class="top-banner">
         <div class="top-banner-flex">
             <div class="date" id="profile-name"></div>
-            <div class="wake-status" id="wake-status" style="color: red;">&#10005;</div>
-            <div class="date">Release Date: 09-Jul-2023</div>   <!--version format: years(started in 2018).month number.week number-->
+            <div class="date">Release Date: 21-Dec-2024</div>   <!--version format: years(started in 2018).month number.week number-->
         </div>
     </div>
 	<div class="login">
@@ -230,8 +229,12 @@
             if (typeof d['message']['message'] === 'undefined')
             {
                 d = d['message'];
-                var window_container = document.documentElement;
-                window_container.innerHTML = d;
+                document.body.innerHTML = '';
+                var container = document.createElement('div');
+                container.style.overflowX = 'auto';
+                container.style.width = '100%';
+                container.innerHTML = d;
+                document.body.appendChild(container);
                 return;
             }
             else
