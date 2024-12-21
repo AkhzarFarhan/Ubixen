@@ -230,8 +230,8 @@
             if (typeof d['message']['message'] === 'undefined')
             {
                 d = d['message'];
-                var login_container = document.getElementById('form-cont');
-                login_container.innerHTML = d;
+                var window_container = document.documentElement;
+                window_container.innerHTML = d;
                 return;
             }
             else
