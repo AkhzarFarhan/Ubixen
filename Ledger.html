@@ -238,11 +238,18 @@
                 const ths = table.querySelectorAll('th');
                 const tds = table.querySelectorAll('td');
 
-                const allCells = [...ths, ...tds]
+                const allHeadCells = [...ths]
+                allHeadCells.forEach(cell => {
+                    cell.style.border = '1px solid #ddd';
+                    cell.style.padding = '1px';
+                    cell.style.textAlign = 'right';
+                })
+
+                const allCells = [...tds]
                 allCells.forEach(cell => {
                     cell.style.border = '1px solid #ddd';
-                    cell.style.padding = '8px';
-                    cell.style.textAlign = 'right';
+                    cell.style.padding = '1px';
+                    cell.style.textAlign = 'left';
                 })
 
                 ths.forEach(th => {
@@ -342,8 +349,8 @@
         .dataframe th,
         .dataframe td {
             border: 1px solid #ddd;
-            padding: 8px;
-            text-align: right;
+            padding: 1px;
+            text-align: left;
         }
 
         .dataframe th {
