@@ -215,6 +215,44 @@
 		    });
         }
 
+        function fixTableBorders(html)
+        {
+            // Create a temporary DOM element to parse the HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            // Select all tables with the class "dataframe"
+            const tables = tempDiv.querySelectorAll('table.dataframe');
+
+            tables.forEach(table => {
+                // Remove the old border attribute
+                table.removeAttribute('border');
+
+                // Add CSS styles directly to the table
+                table.style.borderCollapse = 'collapse';
+                table.style.width = '100%';
+                table.style.maxWidth = '100%';
+                table.style.marginBottom = '20px';
+
+                // Style table headers and cells
+                const ths = table.querySelectorAll('th');
+                const tds = table.querySelectorAll('td');
+
+                const allCells = [...ths, ...tds]
+                allCells.forEach(cell => {
+                    cell.style.border = '1px solid #ddd';
+                    cell.style.padding = '8px';
+                    cell.style.textAlign = 'right';
+                })
+
+                ths.forEach(th => {
+                th.style.backgroundColor = '#f2f2f2';
+                });
+            });
+
+            return tempDiv.innerHTML; // Return the modified HTML
+        }
+
         function getStatusHtml(d)
         {
 
@@ -229,12 +267,14 @@
             if (typeof d['message']['message'] === 'undefined')
             {
                 d = d['message'];
+                console.log(d);
                 document.body.innerHTML = '';
                 document.body.style.fontSize = '6.5px';
                 var container = document.createElement('div');
                 container.style.overflowX = 'auto';
                 container.style.maxWidth = '100%';
-                container.innerHTML = d;
+                container.innerHTML = fixTableBorders(d);
+                console.log(container);
                 document.body.appendChild(container);
                 return;
             }
@@ -291,6 +331,25 @@
             height: 70vh;
             overflow-x: hidden;
         }
+
+        .dataframe {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .dataframe th,
+        .dataframe td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+        }
+
+        .dataframe th {
+            background-color: #f2f2f2;
+        }
+
         .flex-button {
             display: flex;
             flex-direction: row;
