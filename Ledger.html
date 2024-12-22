@@ -230,14 +230,7 @@
             {
                 d = d['message'];
                 document.body.innerHTML = '';
-                document.body.style.fontSize = '8px';
-                var style = document.createElement('style');
-                style.innerHTML = `
-                    table, th, td {
-                        padding: 2px !important;
-                    }
-                `;
-                document.head.appendChild(style);
+                document.body.style.fontSize = '5px';
                 var container = document.createElement('div');
                 container.style.overflowX = 'auto';
                 container.style.maxWidth = '100%';
