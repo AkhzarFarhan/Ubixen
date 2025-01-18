@@ -285,16 +285,16 @@
             document.getElementById('table_id').setAttribute("style", "display: true");
             document.getElementById('last_updated_id').setAttribute("style", "display: true");
             
-            const d = get_last_rows_from_dataframe(1);
+            const d = data['message'];
             //Showing Days Left and Rakah Left
             var dl_elements = document.getElementsByClassName('actual_days_left');
             var pl_elements = document.getElementsByClassName('predicted_days_left');
             var rl_elements = document.getElementsByClassName('raka_left');
             for(let i=0; i<dl_elements.length; i++)
             {
-                dl_elements[i].innerText = get_remaining(d[i], i);
-                pl_elements[i].innerText = data['message'][2][i];
-                rl_elements[i].innerText = d[i];
+                dl_elements[i].innerText = d[3][i];
+                pl_elements[i].innerText = d[2][i];
+                rl_elements[i].innerText = d[4][i];
             }
         }
 
