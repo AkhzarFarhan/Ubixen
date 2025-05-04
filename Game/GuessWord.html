@@ -3,725 +3,1082 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Word Guess Game</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
+    <title>Word Guessing Game</title>
+    <style>
+        :root {
+            --primary: #4a6fff;
+            --primary-dark: #3a5ede;
+            --secondary: #ff6b6b;
+            --dark: #333;
+            --light: #f9f9f9;
+            --gray: #eaeaea;
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --error: #F44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 100%;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2, h3 {
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #e55a5a;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+        }
+
+        .btn-success:hover {
+            background-color: #3d8b40;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: var(--dark);
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background-color: var(--gray);
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+
+        .tab.active {
+            background-color: white;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .word-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .letter-box {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--primary);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: white;
+        }
+
+        .guess-history {
+            margin-top: 20px;
+        }
+
+        .guess-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: var(--gray);
+            border-radius: 5px;
+        }
+
+        .guess-word {
+            flex: 1;
+            font-weight: bold;
+        }
+
+        .guess-result {
+            margin-left: 10px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .scoreboard {
+            margin-top: 20px;
+        }
+
+        .player-score {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .player-score:last-child {
+            border-bottom: none;
+        }
+
+        .loader {
+            border: 5px solid var(--gray);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+
+        .alert-error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+
+        .alert-info {
+            background-color: #d9edf7;
+            color: #31708f;
+            border: 1px solid #bce8f1;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .guess-feedback {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .feedback-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .word-display {
+                flex-wrap: wrap;
+            }
+            
+            .letter-box {
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
             }
         }
-    </script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .loader {
-            border: 4px solid #f3f3f3; border-top: 4px solid #3498db;
-            border-radius: 50%; width: 24px; height: 24px;
-            animation: spin 1s linear infinite; display: inline-block;
-            margin-left: 8px; vertical-align: middle;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* Simple Tab styling */
-        .tab-button {
-            @apply px-4 py-2 rounded-t-md border-b-2 border-transparent transition duration-150 ease-in-out;
-        }
-        .tab-button.active {
-            @apply border-blue-600 text-blue-600 font-semibold bg-white;
-        }
-        .tab-button:not(.active) {
-            @apply text-gray-500 hover:text-gray-700 hover:border-gray-300 bg-gray-50;
-        }
-        .tab-content { @apply hidden; }
-        .tab-content.active { @apply block; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center pt-10 px-4">
-
-    <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Cloud Word Guess Game</h1>
-
-    <div id="login-screen-container" class="w-full max-w-md bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="flex border-b border-gray-200">
-            <button id="participant-tab-button" class="tab-button flex-1 text-center active">Participant</button>
-            <button id="organizer-tab-button" class="tab-button flex-1 text-center">Organizer</button>
+<body>
+    <header>
+        <div class="container">
+            <h1>Word Guessing Game</h1>
         </div>
+    </header>
 
-        <div class="p-6 md:p-8">
-            <div id="participant-login" class="tab-content active">
-                <h2 class="text-xl font-semibold text-gray-700 mb-6 text-center">Join Game</h2>
-                <div class="mb-4">
-                    <label for="username" class="block text-sm font-medium text-gray-600 mb-1">Username:</label>
-                    <input type="text" id="username" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <div class="mb-6">
-                    <label for="game-key" class="block text-sm font-medium text-gray-600 mb-1">Game Key:</label>
-                    <input type="text" id="game-key" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <button id="login-button"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out flex items-center justify-center">
-                    Enter Game
-                    <span id="login-spinner" class="loader hidden ml-2"></span>
-                </button>
-                <p id="login-error" class="text-red-600 text-sm mt-4 text-center"></p>
+    <main class="container">
+        <!-- Loading and Alerts -->
+        <div class="loader" id="loader"></div>
+        <div class="alert alert-success" id="alertSuccess"></div>
+        <div class="alert alert-error" id="alertError"></div>
+        <div class="alert alert-info" id="alertInfo"></div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="card">
+            <div class="tabs">
+                <div class="tab active" data-tab="participant">Participant Login</div>
+                <div class="tab" data-tab="organizer">Organizer Login</div>
             </div>
-
-            <div id="organizer-login" class="tab-content">
-                <h2 class="text-xl font-semibold text-gray-700 mb-6 text-center">Organizer Login</h2>
-                 <div class="mb-4">
-                    <label for="organizer-username" class="block text-sm font-medium text-gray-600 mb-1">Organizer Username:</label>
-                    <input type="text" id="organizer-username" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            
+            <div class="tab-content active" id="participantLogin">
+                <h2>Join the Game</h2>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter your username">
                 </div>
-                <div class="mb-6">
-                    <label for="organizer-password" class="block text-sm font-medium text-gray-600 mb-1">Password:</label>
-                    <input type="password" id="organizer-password" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <div class="form-group">
+                    <label for="gameKey">Game Key</label>
+                    <input type="text" id="gameKey" placeholder="Enter the game key shared by organizer">
                 </div>
-                 <button id="organizer-login-button"
-                        class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out flex items-center justify-center">
-                    Login as Organizer
-                    <span id="organizer-login-spinner" class="loader hidden ml-2"></span>
-                </button>
-                <p id="organizer-login-error" class="text-red-600 text-sm mt-4 text-center"></p>
+                <button class="btn" id="joinGameBtn">Join Game</button>
+            </div>
+            
+            <div class="tab-content" id="organizerLogin">
+                <h2>Organizer Login</h2>
+                <div class="form-group">
+                    <label for="orgUsername">Username</label>
+                    <input type="text" id="orgUsername" placeholder="Enter organizer username">
+                </div>
+                <div class="form-group">
+                    <label for="orgPassword">Password</label>
+                    <input type="password" id="orgPassword" placeholder="Enter password">
+                </div>
+                <button class="btn" id="organizerLoginBtn">Login</button>
             </div>
         </div>
-    </div>
 
-    <div id="organizer-controls" class="w-full max-w-md bg-white p-6 md:p-8 rounded-lg shadow-md mt-8 hidden">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-6 text-center">Organizer Panel</h2>
-        <p class="text-center mb-4 text-gray-600">Welcome, Organizer <strong id="organizer-display-name"></strong>!</p>
-
-        <div class="mb-6 p-4 border border-green-300 rounded-md bg-green-50">
-             <h3 class="text-lg font-medium text-green-800 mb-3">Set Word for Next Game</h3>
-             <label for="set-word-input" class="block text-sm font-medium text-gray-600 mb-1">Word to Guess:</label>
-             <div class="flex items-center space-x-2 mb-3">
-                 <input type="text" id="set-word-input" placeholder="Enter the secret word"
-                        class="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                 <button id="set-word-button"
-                         class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out flex items-center justify-center">
-                     Set Word
-                     <span id="set-word-spinner" class="loader hidden ml-2"></span>
-                 </button>
-             </div>
-             <p id="set-word-feedback" class="text-sm mt-2"></p> <div id="game-key-display" class="mt-3 hidden">
-                 <p class="text-sm text-gray-700">Share this Game Key with participants:</p>
-                 <p id="generated-game-key" class="text-lg font-bold text-blue-600 bg-blue-100 p-2 rounded-md text-center font-mono break-all"></p>
-             </div>
-        </div>
-
-         <div class="mb-6 p-4 border border-red-300 rounded-md bg-red-50">
-            <h3 class="text-lg font-medium text-red-800 mb-3">Manage Game</h3>
-             <button id="restart-game-button"
-                     class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out flex items-center justify-center">
-                 Restart Current Game (Clear Winner)
-                 <span id="restart-game-spinner" class="loader hidden ml-2"></span>
-             </button>
-             <p id="restart-game-feedback" class="text-sm mt-2 text-center"></p>
-         </div>
-
-         <button id="organizer-logout-button"
-                 class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out">
-             Logout Organizer
-         </button>
-    </div>
-
-    <div id="game-screen" class="w-full max-w-md bg-white p-6 md:p-8 rounded-lg shadow-md mt-8 hidden">
-        <h2 class="text-xl font-semibold text-gray-700 mb-2">Welcome, <span id="display-username" class="font-bold"></span>!</h2>
-        <p class="text-sm text-gray-500 mb-4">Game Key: <span id="display-game-key" class="font-mono"></span></p>
-        <div id="game-info" class="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-md mb-6">
-            <p id="waiting-message">Waiting for game to start...</p>
-            <p id="word-info" class="hidden">The word has <strong id="word-length" class="text-xl"></strong> letters.</p>
-        </div>
-        <div id="guess-area" class="mb-6 hidden">
-            <label for="guess-input" class="block text-sm font-medium text-gray-600 mb-1">Your Guess:</label>
-            <div class="flex items-center space-x-2">
-                <input type="text" id="guess-input" placeholder="Enter your guess"
-                       class="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                <button id="submit-guess"
-                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out flex items-center justify-center">
-                    Submit
-                     <span id="guess-spinner" class="loader hidden ml-2"></span>
-                </button>
+        <!-- Organizer Dashboard -->
+        <div id="organizerDashboard" class="hidden">
+            <div class="card">
+                <h2>Game Control Panel</h2>
+                <div class="form-group">
+                    <label for="gameWord">Set Word to Guess</label>
+                    <input type="text" id="gameWord" placeholder="Enter a word for players to guess">
+                </div>
+                <div class="form-group">
+                    <label for="gameKeyGen">Game Access Key</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="gameKeyGen" readonly>
+                        <button class="btn btn-secondary" id="generateKeyBtn">Generate New Key</button>
+                    </div>
+                </div>
+                <button class="btn" id="startGameBtn">Start New Game</button>
+                <button class="btn btn-warning" id="resetGameBtn">Reset Game</button>
             </div>
-            <p id="guess-feedback" class="text-md mt-3 font-medium"></p>
-            <p id="guess-error" class="text-red-600 text-sm mt-2"></p>
+            
+            <div class="card">
+                <h2>Game Status</h2>
+                <div id="gameStatusOrg">Not started</div>
+            </div>
+            
+            <div class="card">
+                <h2>Player Scoreboard</h2>
+                <div id="scoreboardOrg"></div>
+            </div>
         </div>
-        <div id="game-over-message" class="bg-yellow-50 border border-yellow-300 text-yellow-800 p-4 rounded-md text-center hidden">
-            <h3 class="text-xl font-bold mb-2">Game Over!</h3>
-            <p><strong id="winner-name" class="text-2xl"></strong> guessed the word first!</p>
-        </div>
-         <button id="participant-logout-button"
-                 class="w-full mt-6 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out">
-             Leave Game
-         </button>
-    </div>
 
-    <div id="scoreboard" class="w-full max-w-md bg-white p-6 md:p-8 rounded-lg shadow-md mt-8 hidden">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4 text-center">Scoreboard</h2>
-        <ul id="score-list" class="space-y-2">
-            <li class="text-gray-500 italic">Loading scores...</li>
-        </ul>
-        <p id="score-error" class="text-red-600 text-sm mt-4 text-center"></p>
-    </div>
+        <!-- Participant Game Section -->
+        <div id="gameSection" class="hidden">
+            <div class="card">
+                <h2>Word to Guess</h2>
+                <div class="word-display" id="wordDisplay"></div>
+                
+                <div class="form-group">
+                    <label for="guessInput">Your Guess</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="guessInput" placeholder="Enter your guess">
+                        <button class="btn" id="submitGuessBtn">Submit</button>
+                    </div>
+                </div>
+                
+                <div class="guess-feedback">
+                    <div class="feedback-item">
+                        <span>Correct letters:</span>
+                        <strong id="correctLetters">0</strong>
+                    </div>
+                    <div class="feedback-item">
+                        <span>Correct positions:</span>
+                        <strong id="correctPositions">0</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Game Status</h2>
+                <div id="gameStatus">Waiting for game to start...</div>
+            </div>
+            
+            <div class="card">
+                <h2>Your Guesses</h2>
+                <div id="guessHistory" class="guess-history"></div>
+            </div>
+            
+            <div class="card">
+                <h2>Scoreboard</h2>
+                <div id="scoreboard" class="scoreboard"></div>
+            </div>
+        </div>
+    </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM Elements ---
-            const loginScreenContainer = document.getElementById('login-screen-container');
-            const participantTabButton = document.getElementById('participant-tab-button');
-            const organizerTabButton = document.getElementById('organizer-tab-button');
-            const participantLoginDiv = document.getElementById('participant-login');
-            const organizerLoginDiv = document.getElementById('organizer-login');
+        // Configuration
+        const API_ENDPOINT = 'https://perpule-data.firebaseio.com/game/GuessWord.json'; // Replace with your actual API endpoint
+        const POLLING_INTERVAL = 3000; // 3 seconds - how often to check for updates
 
+        // Game state
+        let gameState = {
+            isLoggedIn: false,
+            isOrganizer: false,
+            currentUser: null,
+            gameKey: null,
+            gameActive: false,
+            wordToGuess: "",
+            wordLength: 0,
+            guesses: [],
+            players: [],
+            winner: null
+        };
+
+        // DOM Elements
+        const elements = {
+            // Sections
+            loginSection: document.getElementById('loginSection'),
+            gameSection: document.getElementById('gameSection'),
+            organizerDashboard: document.getElementById('organizerDashboard'),
+            
+            // Tabs
+            tabs: document.querySelectorAll('.tab'),
+            tabContents: document.querySelectorAll('.tab-content'),
+            
             // Participant Login
-            const usernameInput = document.getElementById('username');
-            const gameKeyInput = document.getElementById('game-key');
-            const loginButton = document.getElementById('login-button');
-            const loginSpinner = document.getElementById('login-spinner');
-            const loginError = document.getElementById('login-error');
-
+            username: document.getElementById('username'),
+            gameKey: document.getElementById('gameKey'),
+            joinGameBtn: document.getElementById('joinGameBtn'),
+            
             // Organizer Login
-            const organizerUsernameInput = document.getElementById('organizer-username');
-            const organizerPasswordInput = document.getElementById('organizer-password');
-            const organizerLoginButton = document.getElementById('organizer-login-button');
-            const organizerLoginSpinner = document.getElementById('organizer-login-spinner');
-            const organizerLoginError = document.getElementById('organizer-login-error');
+            orgUsername: document.getElementById('orgUsername'),
+            orgPassword: document.getElementById('orgPassword'),
+            organizerLoginBtn: document.getElementById('organizerLoginBtn'),
+            
+            // Organizer Dashboard
+            gameWord: document.getElementById('gameWord'),
+            gameKeyGen: document.getElementById('gameKeyGen'),
+            generateKeyBtn: document.getElementById('generateKeyBtn'),
+            startGameBtn: document.getElementById('startGameBtn'),
+            resetGameBtn: document.getElementById('resetGameBtn'),
+            gameStatusOrg: document.getElementById('gameStatusOrg'),
+            scoreboardOrg: document.getElementById('scoreboardOrg'),
+            
+            // Game Section
+            wordDisplay: document.getElementById('wordDisplay'),
+            guessInput: document.getElementById('guessInput'),
+            submitGuessBtn: document.getElementById('submitGuessBtn'),
+            correctLetters: document.getElementById('correctLetters'),
+            correctPositions: document.getElementById('correctPositions'),
+            gameStatus: document.getElementById('gameStatus'),
+            guessHistory: document.getElementById('guessHistory'),
+            scoreboard: document.getElementById('scoreboard'),
+            
+            // Utilities
+            loader: document.getElementById('loader'),
+            alertSuccess: document.getElementById('alertSuccess'),
+            alertError: document.getElementById('alertError'),
+            alertInfo: document.getElementById('alertInfo')
+        };
 
-            // Organizer Controls
-            const organizerControlsDiv = document.getElementById('organizer-controls');
-            const organizerDisplayName = document.getElementById('organizer-display-name');
-            const setWordInput = document.getElementById('set-word-input');
-            const setWordButton = document.getElementById('set-word-button');
-            const setWordSpinner = document.getElementById('set-word-spinner');
-            const setWordFeedback = document.getElementById('set-word-feedback');
-            const gameKeyDisplayDiv = document.getElementById('game-key-display');
-            const generatedGameKeySpan = document.getElementById('generated-game-key');
-            const restartGameButton = document.getElementById('restart-game-button');
-            const restartGameSpinner = document.getElementById('restart-game-spinner');
-            const restartGameFeedback = document.getElementById('restart-game-feedback');
-            const organizerLogoutButton = document.getElementById('organizer-logout-button');
+        // Tab switching functionality
+        elements.tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                elements.tabs.forEach(t => t.classList.remove('active'));
+                elements.tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                const tabId = tab.getAttribute('data-tab');
+                const content = tabId === 'participant' ? 
+                    document.getElementById('participantLogin') : 
+                    document.getElementById('organizerLogin');
+                
+                content.classList.add('active');
+            });
+        });
 
-            // Participant Game Screen
-            const gameScreen = document.getElementById('game-screen');
-            const displayUsername = document.getElementById('display-username');
-            const displayGameKey = document.getElementById('display-game-key');
-            const gameInfo = document.getElementById('game-info');
-            const waitingMessage = document.getElementById('waiting-message');
-            const wordInfo = document.getElementById('word-info');
-            const wordLengthSpan = document.getElementById('word-length');
-            const guessArea = document.getElementById('guess-area');
-            const guessInput = document.getElementById('guess-input');
-            const submitGuessButton = document.getElementById('submit-guess');
-            const guessSpinner = document.getElementById('guess-spinner');
-            const guessFeedback = document.getElementById('guess-feedback');
-            const guessError = document.getElementById('guess-error');
-            const gameOverMessage = document.getElementById('game-over-message');
-            const winnerNameSpan = document.getElementById('winner-name');
-            const participantLogoutButton = document.getElementById('participant-logout-button');
+        // Utility Functions
+        function showLoader() {
+            elements.loader.style.display = 'block';
+        }
 
-            // Scoreboard
-            const scoreboardDiv = document.getElementById('scoreboard');
-            const scoreList = document.getElementById('score-list');
-            const scoreError = document.getElementById('score-error');
+        function hideLoader() {
+            elements.loader.style.display = 'none';
+        }
 
-            // --- State ---
-            let currentUsername = null; // Participant username
-            let currentGameKey = null; // Participant game key
-            let currentOrganizerUsername = null; // Organizer username
-            let currentOrganizerPassword = null; // Organizer password (store temporarily, not ideal for production)
-            let currentWordLength = 0;
-            let scoreUpdateInterval = null;
-            let gameStateCheckInterval = null;
-            const SCORE_POLL_INTERVAL_MS = 5000;
-            const GAME_STATE_POLL_INTERVAL_MS = 8000;
-            const API_BASE_URL = "https://perpule-data.firebaseio.com/game/GuessWord"; // Replace if needed
+        function showAlert(type, message, duration = 5000) {
+            const alert = elements[`alert${type.charAt(0).toUpperCase() + type.slice(1)}`];
+            alert.textContent = message;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, duration);
+        }
 
-            // --- API Endpoints (PLACEHOLDERS - REPLACE WITH YOUR ACTUAL API) ---
-            const API = {
-                // Participant Endpoints
-                login: `${API_BASE_URL}/login`,             // POST { username, gameKey } -> { success, gameState }
-                gameState: `${API_BASE_URL}/gameState`,     // GET ?gameKey=... -> { wordLength, winner, gameActive }
-                guess: `${API_BASE_URL}/guess`,             // POST { username, gameKey, guess } -> { correct, correctLetters, correctPositions, message?, winner?, gameActive }
-                scores: `${API_BASE_URL}/scores`,           // GET ?gameKey=... -> { scores: { username: score } }
+        function generateUniqueKey() {
+            return Math.random().toString(36).substring(2, 10).toUpperCase();
+        }
 
-                // Organizer Endpoints (NEW - IMPLEMENT THESE ON YOUR BACKEND)
-                organizerLogin: `${API_BASE_URL}/organizer_login`,      // POST { username, password } -> { success: boolean, message?: string }
-                setWord: `${API_BASE_URL}/setWord`,           // POST { username, password, word } -> { success: boolean, gameKey?: string, message: string }
-                restartGame: `${API_BASE_URL}/restartGame`    // POST { username, password } -> { success: boolean, message: string }
+        // Create empty letter boxes for the word display
+        function renderWordDisplay(length) {
+            elements.wordDisplay.innerHTML = '';
+            
+            for (let i = 0; i < length; i++) {
+                const letterBox = document.createElement('div');
+                letterBox.className = 'letter-box';
+                elements.wordDisplay.appendChild(letterBox);
+            }
+        }
+
+        // Update the scoreboard with player scores
+        function updateScoreboard(players, element) {
+            element.innerHTML = '';
+            
+            if (players.length === 0) {
+                element.innerHTML = '<p>No players yet</p>';
+                return;
+            }
+            
+            // Sort players by score (highest first)
+            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+            
+            sortedPlayers.forEach(player => {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'player-score';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = player.username;
+                
+                const scoreSpan = document.createElement('span');
+                scoreSpan.textContent = `Score: ${player.score}`;
+                
+                playerDiv.appendChild(nameSpan);
+                playerDiv.appendChild(scoreSpan);
+                element.appendChild(playerDiv);
+            });
+        }
+
+        // Add a guess to the guess history
+        function addGuessToHistory(guess, correctLetters, correctPositions) {
+            const guessItem = document.createElement('div');
+            guessItem.className = 'guess-item';
+            
+            const guessWord = document.createElement('div');
+            guessWord.className = 'guess-word';
+            guessWord.textContent = guess;
+            
+            const guessResult = document.createElement('div');
+            guessResult.className = 'guess-result';
+            
+            const lettersSpan = document.createElement('span');
+            lettersSpan.textContent = `Letters: ${correctLetters}`;
+            
+            const positionsSpan = document.createElement('span');
+            positionsSpan.textContent = `Positions: ${correctPositions}`;
+            
+            guessResult.appendChild(lettersSpan);
+            guessResult.appendChild(positionsSpan);
+            
+            guessItem.appendChild(guessWord);
+            guessItem.appendChild(guessResult);
+            
+            elements.guessHistory.prepend(guessItem);
+        }
+
+        // Check a guess against the word to guess
+        function checkGuess(guess, wordToGuess) {
+            const result = {
+                correctLetters: 0,
+                correctPositions: 0,
+                isCorrect: false
             };
-
-            // --- Utility Functions (displayError, toggleSpinner, apiCall - same as before) ---
-            function displayError(element, message) { /* ... (same as before) ... */
-                element.textContent = message;
-                element.style.display = message ? 'block' : 'none'; // Simple visibility toggle
-                element.classList.toggle('hidden', !message); // Tailwind alternative
+            
+            // Convert both strings to lowercase for comparison
+            const guessLower = guess.toLowerCase();
+            const wordLower = wordToGuess.toLowerCase();
+            
+            // Create frequency maps for the word letters
+            const wordFreq = {};
+            
+            for (const char of wordLower) {
+                wordFreq[char] = (wordFreq[char] || 0) + 1;
             }
-
-            function toggleSpinner(spinnerElement, show) { /* ... (same as before) ... */
-                 spinnerElement.classList.toggle('hidden', !show);
+            
+            // Check for correct positions first
+            for (let i = 0; i < guessLower.length; i++) {
+                if (i < wordLower.length && guessLower[i] === wordLower[i]) {
+                    result.correctPositions++;
+                    // Decrease frequency for this letter
+                    wordFreq[guessLower[i]]--;
+                }
             }
+            
+            // Check for correct letters (regardless of position)
+            for (let i = 0; i < guessLower.length; i++) {
+                const char = guessLower[i];
+                
+                // Skip letters that were already counted as correct positions
+                if (i < wordLower.length && char === wordLower[i]) {
+                    continue;
+                }
+                
+                // If the character exists in the word and we haven't used all occurrences
+                if (wordFreq[char] && wordFreq[char] > 0) {
+                    result.correctLetters++;
+                    wordFreq[char]--;
+                }
+            }
+            
+            // Check if the guess is completely correct
+            result.isCorrect = guessLower === wordLower;
+            
+            return result;
+        }
 
-            async function apiCall(url, options = {}) { /* ... (same as before, handles fetch and basic error checking) ... */
-                 try {
-                    const response = await fetch(url, options);
-                    let data;
-                    try {
-                        data = await response.json();
-                    } catch (jsonError) {
-                        if (!response.ok) {
-                             throw new Error(`HTTP error ${response.status}: ${response.statusText}. Server did not return valid JSON.`);
-                        }
-                        throw new Error("Failed to parse JSON response from server.");
+        // API Functions
+        async function fetchGameState() {
+            try {
+                showLoader();
+                
+                const response = await fetch(`${API_ENDPOINT}/state?key=${gameState.gameKey}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch game state');
+                }
+                
+                const data = await response.json();
+                
+                // Update local game state with received data
+                if (data.wordLength) {
+                    gameState.wordLength = data.wordLength;
+                    renderWordDisplay(data.wordLength);
+                }
+                
+                gameState.gameActive = data.gameActive || false;
+                gameState.players = data.players || [];
+                gameState.winner = data.winner || null;
+                
+                // If organizer, get the secret word
+                if (gameState.isOrganizer && data.secretWord) {
+                    gameState.wordToGuess = data.secretWord;
+                    elements.gameWord.value = data.secretWord;
+                }
+                
+                // Update UI based on game state
+                if (gameState.gameActive) {
+                    if (gameState.isOrganizer) {
+                        elements.gameStatusOrg.textContent = 'Game is active';
+                    } else {
+                        elements.gameStatus.textContent = 'Game is active - make your guess!';
                     }
-                    if (!response.ok) {
-                        const errorMessage = data?.message || `API request failed with status ${response.status}`;
-                        throw new Error(errorMessage);
-                    }
-                    return data;
-                } catch (networkError) {
-                    console.error(`Network error calling ${url}:`, networkError);
-                    // Check if it's a TypeError, often indicating network issue/CORS
-                    if (networkError instanceof TypeError) {
-                         throw new Error(`Network error: Could not connect to the API server at ${url}. Check the URL and server status.`);
-                    }
-                    // Re-throw other errors (like those from response.ok check)
-                    throw networkError;
-                }
-            }
-
-            // --- Tab Switching Logic ---
-            function switchTab(activeTab) {
-                const isActiveParticipant = activeTab === 'participant';
-
-                participantTabButton.classList.toggle('active', isActiveParticipant);
-                organizerTabButton.classList.toggle('active', !isActiveParticipant);
-
-                participantLoginDiv.classList.toggle('active', isActiveParticipant);
-                organizerLoginDiv.classList.toggle('active', !isActiveParticipant);
-
-                // Clear errors when switching tabs
-                displayError(loginError, "");
-                displayError(organizerLoginError, "");
-            }
-
-            // --- Participant Logic (login, fetchGameState, updateGameStateUI, submitGuess, fetchScores, polling - mostly same as before) ---
-            async function login() { /* ... (same as before, but ensure it hides organizer controls if shown) ... */
-                const username = usernameInput.value.trim();
-                const gameKey = gameKeyInput.value.trim();
-                if (!username || !gameKey) {
-                    displayError(loginError, "Username and Game Key are required."); return;
-                }
-                displayError(loginError, "");
-                loginButton.disabled = true;
-                toggleSpinner(loginSpinner, true);
-                try {
-                    const data = await apiCall(API.login, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, gameKey })
-                    });
-                    if (!data.success) { throw new Error(data.message || "Login failed. Please check your Game Key."); }
-
-                    currentUsername = username;
-                    currentGameKey = gameKey;
-                    displayUsername.textContent = currentUsername;
-                    displayGameKey.textContent = currentGameKey;
-
-                    // Hide login and organizer controls, show game screen/scoreboard
-                    loginScreenContainer.classList.add('hidden');
-                    organizerControlsDiv.classList.add('hidden');
-                    gameScreen.classList.remove('hidden');
-                    scoreboardDiv.classList.remove('hidden');
-
-                    if (data.gameState) { updateGameStateUI(data.gameState); }
-                    else { await fetchGameState(); }
-
-                    await fetchScores();
-                    startScorePolling();
-                    startGameStatePolling();
-                } catch (error) {
-                    console.error("Login error:", error);
-                    displayError(loginError, `Login failed: ${error.message}`);
-                } finally {
-                    loginButton.disabled = false;
-                    toggleSpinner(loginSpinner, false);
-                }
-            }
-
-            async function fetchGameState() { /* ... (same as before) ... */
-                 if (!currentGameKey || !currentUsername) return; // Only fetch if participant is logged in
-                try {
-                    const url = `${API.gameState}?gameKey=${encodeURIComponent(currentGameKey)}`;
-                    const data = await apiCall(url, { method: 'GET' });
-                    updateGameStateUI(data);
-                } catch (error) {
-                    console.error("Error fetching game state:", error);
-                    // Maybe display error within game screen?
-                }
-            }
-
-            function updateGameStateUI(gameState) { /* ... (same as before, updates participant game screen) ... */
-                 console.log("Updating Participant Game State UI:", gameState);
-                if (!gameState) return;
-
-                currentWordLength = gameState.wordLength || 0;
-                const isGameOver = !!gameState.winner;
-                const isGameActive = gameState.gameActive === true;
-
-                if (isGameOver) {
-                    wordInfo.classList.add('hidden');
-                    guessArea.classList.add('hidden');
-                    waitingMessage.classList.add('hidden');
-                    gameOverMessage.classList.remove('hidden');
-                    winnerNameSpan.textContent = gameState.winner;
-                    stopScorePolling();
-                    stopGameStatePolling();
-                    return;
-                }
-
-                if (isGameActive && currentWordLength > 0) {
-                    waitingMessage.classList.add('hidden');
-                    wordLengthSpan.textContent = currentWordLength;
-                    wordInfo.classList.remove('hidden');
-                    guessArea.classList.remove('hidden');
-                    gameOverMessage.classList.add('hidden');
-                    guessInput.maxLength = currentWordLength;
-                    guessInput.disabled = false;
-                    submitGuessButton.disabled = false;
                 } else {
-                    waitingMessage.classList.remove('hidden');
-                    wordInfo.classList.add('hidden');
-                    guessArea.classList.add('hidden');
-                    gameOverMessage.classList.add('hidden');
-                }
-                guessFeedback.textContent = '';
-                displayError(guessError, '');
-            }
-
-            async function submitGuess() { /* ... (same as before) ... */
-                const guess = guessInput.value.trim().toLowerCase();
-                displayError(guessError, "");
-                guessFeedback.textContent = "";
-                if (!guess) { displayError(guessError, "Please enter a guess."); return; }
-                if (guess.length !== currentWordLength) { displayError(guessError, `Your guess must be ${currentWordLength} letters long.`); return; }
-
-                submitGuessButton.disabled = true;
-                guessInput.disabled = true;
-                toggleSpinner(guessSpinner, true);
-                try {
-                    const data = await apiCall(API.guess, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: currentUsername, gameKey: currentGameKey, guess: guess })
-                    });
-                    if (data.correct) {
-                        guessFeedback.textContent = `Congratulations! "${guess.toUpperCase()}" is the correct word!`;
-                        guessFeedback.className = 'text-md mt-3 font-medium text-green-600';
-                        if (data.winner) { updateGameStateUI({ wordLength: currentWordLength, winner: data.winner, gameActive: false }); }
-                        guessInput.disabled = true;
-                        submitGuessButton.disabled = true;
-                        await fetchScores();
+                    const status = gameState.winner ? 
+                        `Game ended. Winner: ${gameState.winner}` : 
+                        'Waiting for game to start...';
+                    
+                    if (gameState.isOrganizer) {
+                        elements.gameStatusOrg.textContent = status;
                     } else {
-                        guessFeedback.textContent = `Incorrect. Correct letters: ${data.correctLetters}, Correct positions: ${data.correctPositions}. Try again!`;
-                        guessFeedback.className = 'text-md mt-3 font-medium text-yellow-700';
-                        guessInput.disabled = false;
-                        guessInput.value = '';
-                        guessInput.focus();
+                        elements.gameStatus.textContent = status;
                     }
-                     if (typeof data.gameActive === 'boolean') {
-                         updateGameStateUI({
-                            wordLength: currentWordLength, winner: data.winner || null, gameActive: data.gameActive
-                         });
-                    }
-                } catch (error) {
-                    console.error("Guess submission error:", error);
-                    displayError(guessError, `Error: ${error.message}`);
-                    guessInput.disabled = false;
-                } finally {
-                    if (gameOverMessage.classList.contains('hidden')) {
-                       submitGuessButton.disabled = false;
-                       guessInput.disabled = false;
-                    }
-                    toggleSpinner(guessSpinner, false);
                 }
+                
+                // Update scoreboard
+                updateScoreboard(gameState.players, gameState.isOrganizer ? elements.scoreboardOrg : elements.scoreboard);
+                
+                hideLoader();
+                return data;
+            } catch (error) {
+                hideLoader();
+                showAlert('error', 'Error fetching game state: ' + error.message);
+                console.error('Error fetching game state:', error);
+                return null;
             }
+        }
 
-            async function fetchScores() { /* ... (same as before, updates scoreboard UI) ... */
-                 if (!currentGameKey || !currentUsername) return; // Only fetch if participant is logged in
-                displayError(scoreError, "");
-                try {
-                    const url = `${API.scores}?gameKey=${encodeURIComponent(currentGameKey)}`;
-                    const data = await apiCall(url, { method: 'GET' });
-                    if (!data || typeof data.scores !== 'object') { throw new Error("Invalid score data format."); }
+        async function startGame(word, gameKey) {
+            try {
+                showLoader();
+                
+                const response = await fetch(`${API_ENDPOINT}/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        word,
+                        gameKey,
+                        organizer: gameState.currentUser
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to start game');
+                }
+                
+                const data = await response.json();
+                
+                gameState.gameActive = true;
+                gameState.wordToGuess = word;
+                gameState.wordLength = word.length;
+                gameState.winner = null;
+                
+                showAlert('success', 'Game started successfully!');
+                elements.gameStatusOrg.textContent = 'Game is active';
+                
+                hideLoader();
+                return data;
+            } catch (error) {
+                hideLoader();
+                showAlert('error', 'Error starting game: ' + error.message);
+                console.error('Error starting game:', error);
+                return null;
+            }
+        }
 
-                    scoreList.innerHTML = '';
-                    const sortedScores = Object.entries(data.scores).sort(([, a], [, b]) => b - a);
-                    if (sortedScores.length === 0) {
-                        scoreList.innerHTML = '<li class="text-gray-500 italic">No scores yet.</li>';
-                    } else {
-                        sortedScores.forEach(([player, score]) => {
-                            const li = document.createElement('li');
-                            li.className = 'flex justify-between items-center py-1 border-b border-gray-200 last:border-b-0';
-                            const isCurrentUser = player === currentUsername;
-                            li.innerHTML = `<span class="font-medium ${isCurrentUser ? 'text-blue-600' : 'text-gray-700'}">${player}</span> <span class="font-bold ${isCurrentUser ? 'text-blue-700' : 'text-gray-800'}">${score}</span>`;
-                            scoreList.appendChild(li);
+        async function resetGame() {
+            try {
+                showLoader();
+                
+                const response = await fetch(`${API_ENDPOINT}/reset`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        gameKey: gameState.gameKey,
+                        organizer: gameState.currentUser
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to reset game');
+                }
+                
+                const data = await response.json();
+                
+                gameState.gameActive = false;
+                gameState.winner = null;
+                gameState.players = gameState.players.map(player => ({
+                    ...player,
+                    score: 0
+                }));
+                
+                elements.gameStatusOrg.textContent = 'Game reset. Ready to start a new game.';
+                showAlert('success', 'Game reset successfully!');
+                
+                hideLoader();
+                return data;
+            } catch (error) {
+                hideLoader();
+                showAlert('error', 'Error resetting game: ' + error.message);
+                console.error('Error resetting game:', error);
+                return null;
+            }
+        }
+
+        async function joinGame(username, gameKey) {
+            try {
+                showLoader();
+                
+                const response = await fetch(`${API_ENDPOINT}/join`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        gameKey
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to join game');
+                }
+                
+                const data = await response.json();
+                
+                gameState.isLoggedIn = true;
+                gameState.isOrganizer = false;
+                gameState.currentUser = username;
+                gameState.gameKey = gameKey;
+                
+                if (data.wordLength) {
+                    gameState.wordLength = data.wordLength;
+                    renderWordDisplay(data.wordLength);
+                }
+                
+                gameState.gameActive = data.gameActive || false;
+                
+                showAlert('success', 'Successfully joined the game!');
+                
+                // Hide login, show game section
+                elements.loginSection.style.display = 'none';
+                elements.gameSection.style.display = 'block';
+                
+                // Start polling for game updates
+                startPolling();
+                
+                hideLoader();
+                return data;
+            } catch (error) {
+                hideLoader();
+                showAlert('error', 'Error joining game: ' + error.message);
+                console.error('Error joining game:', error);
+                return null;
+            }
+        }
+
+        async function submitGuess(guess) {
+            try {
+                if (!gameState.gameActive) {
+                    showAlert('info', 'Game is not active. Wait for the organizer to start a game.');
+                    return null;
+                }
+                
+                if (guess.length !== gameState.wordLength) {
+                    showAlert('error', `Your guess must be ${gameState.wordLength} letters long.`);
+                    return null;
+                }
+                
+                showLoader();
+                
+                // If we have the word locally (for instance in test mode), check the guess
+                // Without making a network request
+                let guessResult;
+                
+                if (gameState.wordToGuess) {
+                    guessResult = checkGuess(guess, gameState.wordToGuess);
+                    
+                    elements.correctLetters.textContent = guessResult.correctLetters;
+                    elements.correctPositions.textContent = guessResult.correctPositions;
+                    
+                    addGuessToHistory(guess, guessResult.correctLetters, guessResult.correctPositions);
+                    
+                    if (guessResult.isCorrect) {
+                        showAlert('success', 'Congratulations! You guessed the word correctly!');
+                        
+                        // Submit winning guess to the API
+                        await fetch(`${API_ENDPOINT}/win`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                username: gameState.currentUser,
+                                gameKey: gameState.gameKey,
+                                guess
+                            })
                         });
                     }
-                } catch (error) {
-                    console.error("Score fetch error:", error);
-                    displayError(scoreError, `Could not update scores: ${error.message}`);
+                    
+                    hideLoader();
+                    return guessResult;
                 }
+                
+                // Otherwise make an API request
+                const response = await fetch(`${API_ENDPOINT}/guess`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: gameState.currentUser,
+                        gameKey: gameState.gameKey,
+                        guess
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to submit guess');
+                }
+                
+                const data = await response.json();
+                
+                elements.correctLetters.textContent = data.correctLetters;
+                elements.correctPositions.textContent = data.correctPositions;
+                
+                addGuessToHistory(guess, data.correctLetters, data.correctPositions);
+                
+                if (data.isCorrect) {
+                    showAlert('success', 'Congratulations! You guessed the word correctly!');
+                }
+                
+                hideLoader();
+                return data;
+            } catch (error) {
+                hideLoader();
+                showAlert('error', 'Error submitting guess: ' + error.message);
+                console.error('Error submitting guess:', error);
+                return null;
             }
+        }
 
-            function startScorePolling() { /* ... (same as before) ... */
-                stopScorePolling(); scoreUpdateInterval = setInterval(fetchScores, SCORE_POLL_INTERVAL_MS); console.log("Score polling started.");
-            }
-            function stopScorePolling() { /* ... (same as before) ... */
-                 if (scoreUpdateInterval) { clearInterval(scoreUpdateInterval); scoreUpdateInterval = null; console.log("Score polling stopped."); }
-            }
-            function startGameStatePolling() { /* ... (same as before) ... */
-                 stopGameStatePolling(); fetchGameState(); gameStateCheckInterval = setInterval(fetchGameState, GAME_STATE_POLL_INTERVAL_MS); console.log("Game state polling started.");
-            }
-            function stopGameStatePolling() { /* ... (same as before) ... */
-                 if (gameStateCheckInterval) { clearInterval(gameStateCheckInterval); gameStateCheckInterval = null; console.log("Game state polling stopped."); }
-            }
-
-            function participantLogout() {
-                // Clear participant state
-                currentUsername = null;
-                currentGameKey = null;
-                stopScorePolling();
-                stopGameStatePolling();
-
-                // Hide game/scoreboard, show login
-                gameScreen.classList.add('hidden');
-                scoreboardDiv.classList.add('hidden');
-                loginScreenContainer.classList.remove('hidden');
-                switchTab('participant'); // Ensure participant tab is active
-
-                // Clear fields potentially
-                usernameInput.value = '';
-                gameKeyInput.value = '';
-                console.log("Participant logged out.");
-            }
-
-
-            // --- Organizer Logic ---
-            async function organizerLogin() {
-                const username = organizerUsernameInput.value.trim();
-                const password = organizerPasswordInput.value.trim(); // Get password
-
+        async function organizerLogin(username, password) {
+            try {
+                showLoader();
+                
+                // In a real app, you'd validate credentials against the server
+                // For demo purposes, we'll accept any non-empty values
                 if (!username || !password) {
-                    displayError(organizerLoginError, "Organizer Username and Password are required.");
+                    throw new Error('Username and password are required');
+                }
+                
+                const gameKey = elements.gameKeyGen.value || generateUniqueKey();
+                
+                // In a real app, you'd make an API call here
+                // For demo, we'll simulate a successful login
+                gameState.isLoggedIn = true;
+                gameState.isOrganizer = true;
+                gameState.currentUser = username;
+                gameState.gameKey = gameKey;
+                
+                // Update the game key input
+                elements.gameKeyGen.value = gameKey;
+                
+                showAlert('success', 'Successfully logged in as organizer!');
+                
+                // Hide login, show organizer dashboard
+                elements.loginSection.style.display = 'none';
+                elements.organizerDashboard.style.display = 'block';
+                
+                // Start polling for game updates
+                startPolling();
+                
+                hideLoader();
+                return true;
+            } catch (error) {
+                hideLoader();
+                showAlert('error', 'Login failed: ' + error.message);
+                console.error('Login failed:', error);
+                return false;
+            }
+        }
+
+        // Polling for game updates
+        let pollingInterval;
+
+        function startPolling() {
+            // Clear any existing polling
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+            }
+            
+            // Initial fetch
+            fetchGameState();
+            
+            // Set up interval for polling
+            pollingInterval = setInterval(fetchGameState, POLLING_INTERVAL);
+        }
+
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+
+        // Event Handlers
+        elements.joinGameBtn.addEventListener('click', async () => {
+            const username = elements.username.value.trim();
+            const gameKey = elements.gameKey.value.trim();
+            
+            if (!username || !gameKey) {
+                showAlert('error', 'Username and game key are required');
+                return;
+            }
+            
+            await joinGame(username, gameKey);
+        });
+        
+        elements.organizerLoginBtn.addEventListener('click', async () => {
+            const username = elements.orgUsername.value.trim();
+            const password = elements.orgPassword.value.trim();
+            
+            await organizerLogin(username, password);
+        });
+        
+        elements.generateKeyBtn.addEventListener('click', () => {
+            const newKey = generateUniqueKey();
+            elements.gameKeyGen.value = newKey;
+            gameState.gameKey = newKey;
+            
+            showAlert('info', 'New game key generated!');
+        });
+        
+        elements.startGameBtn.addEventListener('click', async () => {
+            const word = elements.gameWord.value.trim();
+            
+            if (!word) {
+                showAlert('error', 'Please enter a word to guess');
+                return;
+            }
+            
+            if (!gameState.gameKey) {
+                const newKey = generateUniqueKey();
+                elements.gameKeyGen.value = newKey;
+                gameState.gameKey = newKey;
+            }
+            
+            await startGame(word, gameState.gameKey);
+        });
+        
+        elements.resetGameBtn.addEventListener('click', async () => {
+            await resetGame();
+        });
+        
+        elements.submitGuessBtn.addEventListener('click', async () => {
+            const guess = elements.guessInput.value.trim();
+            
+            if (!guess) {
+                showAlert('error', 'Please enter a guess');
+                return;
+            }
+            
+            if (guess.length !== gameState.wordLength) {
+                showAlert('error', `Your guess must be ${gameState.wordLength} letters long`);
+                return;
+            }
+            
+            await submitGuess(guess);
+            elements.guessInput.value = '';
+        });
+        
+        // Also listen for Enter key on guess input
+        elements.guessInput.addEventListener('keyup', async (event) => {
+            if (event.key === 'Enter') {
+                const guess = elements.guessInput.value.trim();
+                
+                if (!guess) {
+                    showAlert('error', 'Please enter a guess');
                     return;
                 }
-
-                displayError(organizerLoginError, "");
-                organizerLoginButton.disabled = true;
-                toggleSpinner(organizerLoginSpinner, true);
-
-                try {
-                    // *** API CALL: Organizer Login ***
-                    const data = await apiCall(API.organizerLogin, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password }) // Send username and password
-                    });
-
-                    if (!data.success) {
-                        throw new Error(data.message || "Organizer login failed. Check credentials.");
-                    }
-
-                    // --- Organizer login successful ---
-                    currentOrganizerUsername = username;
-                    currentOrganizerPassword = password; // Store password temporarily (NOT RECOMMENDED FOR PRODUCTION)
-                    organizerDisplayName.textContent = currentOrganizerUsername;
-
-                    // Hide login screen, show organizer controls
-                    loginScreenContainer.classList.add('hidden');
-                    organizerControlsDiv.classList.remove('hidden');
-
-                    // Clear any lingering participant UI elements just in case
-                    gameScreen.classList.add('hidden');
-                    scoreboardDiv.classList.add('hidden');
-                    stopScorePolling(); // Stop participant polling if it was running
-                    stopGameStatePolling();
-
-                     // Clear organizer login form fields
-                    organizerUsernameInput.value = '';
-                    organizerPasswordInput.value = '';
-                    console.log("Organizer logged in:", currentOrganizerUsername);
-
-                } catch (error) {
-                    console.error("Organizer login error:", error);
-                    displayError(organizerLoginError, `Login failed: ${error.message}`);
-                     currentOrganizerUsername = null; // Clear on failure
-                     currentOrganizerPassword = null;
-                } finally {
-                    organizerLoginButton.disabled = false;
-                    toggleSpinner(organizerLoginSpinner, false);
-                }
-            }
-
-            async function setWord() {
-                const word = setWordInput.value.trim().toLowerCase(); // Standardize word
-
-                if (!word) {
-                    setWordFeedback.textContent = "Please enter a word to set.";
-                    setWordFeedback.className = 'text-sm mt-2 text-red-600';
+                
+                if (guess.length !== gameState.wordLength) {
+                    showAlert('error', `Your guess must be ${gameState.wordLength} letters long`);
                     return;
                 }
-                 if (!currentOrganizerUsername || !currentOrganizerPassword) {
-                     setWordFeedback.textContent = "Organizer not logged in.";
-                     setWordFeedback.className = 'text-sm mt-2 text-red-600';
-                     return;
-                 }
-
-
-                setWordFeedback.textContent = "";
-                setWordButton.disabled = true;
-                toggleSpinner(setWordSpinner, true);
-                gameKeyDisplayDiv.classList.add('hidden'); // Hide previous key
-
-                try {
-                     // *** API CALL: Set Word ***
-                     const data = await apiCall(API.setWord, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username: currentOrganizerUsername,
-                            password: currentOrganizerPassword, // Sending password (again, not ideal)
-                            word: word
-                        })
-                    });
-
-                     if (!data.success || !data.gameKey) {
-                         throw new Error(data.message || "Failed to set word on the server.");
-                     }
-
-                     // --- Word set successfully ---
-                     setWordFeedback.textContent = data.message || `Word "${word.toUpperCase()}" set successfully!`;
-                     setWordFeedback.className = 'text-sm mt-2 text-green-700';
-                     generatedGameKeySpan.textContent = data.gameKey;
-                     gameKeyDisplayDiv.classList.remove('hidden'); // Show the new key
-                     setWordInput.value = ''; // Clear input
-
-                     console.log("Word set, Game Key:", data.gameKey);
-
-                } catch (error) {
-                     console.error("Set word error:", error);
-                     setWordFeedback.textContent = `Error: ${error.message}`;
-                     setWordFeedback.className = 'text-sm mt-2 text-red-600';
-                } finally {
-                     setWordButton.disabled = false;
-                     toggleSpinner(setWordSpinner, false);
-                }
+                
+                await submitGuess(guess);
+                elements.guessInput.value = '';
             }
-
-            async function restartGame() {
-                 if (!currentOrganizerUsername || !currentOrganizerPassword) {
-                     restartGameFeedback.textContent = "Organizer not logged in.";
-                     restartGameFeedback.className = 'text-sm mt-2 text-red-600 text-center';
-                     return;
-                 }
-
-                restartGameFeedback.textContent = "";
-                restartGameButton.disabled = true;
-                toggleSpinner(restartGameSpinner, true);
-
-                 try {
-                     // *** API CALL: Restart Game ***
-                     const data = await apiCall(API.restartGame, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username: currentOrganizerUsername,
-                            password: currentOrganizerPassword // Sending password
-                        })
-                    });
-
-                     if (!data.success) {
-                         throw new Error(data.message || "Failed to restart game on the server.");
-                     }
-
-                     // --- Game restarted successfully ---
-                     restartGameFeedback.textContent = data.message || "Game restarted successfully. You can now set a new word.";
-                     restartGameFeedback.className = 'text-sm mt-2 text-green-700 text-center';
-                     // Optionally clear the displayed game key or word input
-                     // gameKeyDisplayDiv.classList.add('hidden');
-                     // setWordInput.value = '';
-                     console.log("Game restarted by organizer.");
-
-                } catch (error) {
-                     console.error("Restart game error:", error);
-                     restartGameFeedback.textContent = `Error: ${error.message}`;
-                     restartGameFeedback.className = 'text-sm mt-2 text-red-600 text-center';
-                } finally {
-                     restartGameButton.disabled = false;
-                     toggleSpinner(restartGameSpinner, false);
-                }
+        });
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Generate initial game key for organizer
+            elements.gameKeyGen.value = generateUniqueKey();
+            
+            // Demo mode - enable this for testing without API
+            const DEMO_MODE = false;
+            
+            if (DEMO_MODE) {
+                // Set up demo word and allow local checking
+                gameState.wordToGuess = "CLOUD";
+                gameState.wordLength = 5;
+                
+                // Add demo event listeners and UI updates
+                console.log("Running in demo mode with word: CLOUD");
             }
+        });
 
-             function organizerLogout() {
-                // Clear organizer state
-                currentOrganizerUsername = null;
-                currentOrganizerPassword = null; // Clear stored password
-
-                // Hide organizer controls, show login screen
-                organizerControlsDiv.classList.add('hidden');
-                loginScreenContainer.classList.remove('hidden');
-                switchTab('organizer'); // Ensure organizer tab is active
-
-                 // Clear fields and feedback
-                 organizerUsernameInput.value = '';
-                 organizerPasswordInput.value = '';
-                 setWordInput.value = '';
-                 setWordFeedback.textContent = '';
-                 restartGameFeedback.textContent = '';
-                 gameKeyDisplayDiv.classList.add('hidden');
-
-                console.log("Organizer logged out.");
-            }
-
-
-            // --- Event Listeners ---
-            participantTabButton.addEventListener('click', () => switchTab('participant'));
-            organizerTabButton.addEventListener('click', () => switchTab('organizer'));
-
-            // Participant listeners
-            loginButton.addEventListener('click', login);
-            submitGuessButton.addEventListener('click', submitGuess);
-            guessInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !submitGuessButton.disabled) submitGuess(); });
-            usernameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') gameKeyInput.focus(); });
-            gameKeyInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !loginButton.disabled) login(); });
-            participantLogoutButton.addEventListener('click', participantLogout);
-
-
-            // Organizer listeners
-            organizerLoginButton.addEventListener('click', organizerLogin);
-            organizerPasswordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !organizerLoginButton.disabled) organizerLogin(); });
-            organizerUsernameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') organizerPasswordInput.focus(); });
-            setWordButton.addEventListener('click', setWord);
-            setWordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !setWordButton.disabled) setWord(); });
-            restartGameButton.addEventListener('click', restartGame);
-            organizerLogoutButton.addEventListener('click', organizerLogout);
-
-
-            // Initial setup
-            switchTab('participant'); // Start with participant tab active
-
-             // Clean up intervals on page unload
-            window.addEventListener('beforeunload', () => {
-                stopScorePolling();
-                stopGameStatePolling();
-            });
-
-        }); // End DOMContentLoaded
+        // Clean up when leaving the page
+        window.addEventListener('beforeunload', () => {
+            stopPolling();
+        });
     </script>
 </body>
 </html>
