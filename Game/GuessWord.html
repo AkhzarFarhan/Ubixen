@@ -405,7 +405,7 @@
 
     <script>
         // Configuration
-        const API_ENDPOINT = 'https://perpule-data.firebaseio.com/game/GuessWord.json'; // Replace with your actual API endpoint
+        const API_ENDPOINT = 'https://perpule-data.firebaseio.com/game/GuessWord.json?orderBy="$key"&limitToLast=1'; // Replace with your actual API endpoint
         const POLLING_INTERVAL = 3000; // 3 seconds - how often to check for updates
 
         // Game state
@@ -416,6 +416,7 @@
             gameKey: null,
             gameActive: false,
             wordToGuess: "",
+            guessedWord: "",
             wordLength: 0,
             guesses: [],
             players: [],
@@ -633,13 +634,15 @@
             try {
                 showLoader();
                 
-                const response = await fetch(`${API_ENDPOINT}/state?key=${gameState.gameKey}`);
+                const response = await fetch(`${API_ENDPOINT}`);
                 
-                if (!response.ok) {
+                if (!response.json()) {
                     throw new Error('Failed to fetch game state');
                 }
                 
-                const data = await response.json();
+                let data = await response.json();
+                const keys = Object.keys(data);
+                data = data[keys[0]]; // Get the latest game state
                 
                 // Update local game state with received data
                 if (data.wordLength) {
@@ -689,20 +692,16 @@
             }
         }
 
-        async function startGame(word, gameKey) {
+        async function startGame(word) {
             try {
                 showLoader();
-                
-                const response = await fetch(`${API_ENDPOINT}/start`, {
+                gameState.guessedWord = word;
+                const response = await fetch(`${API_ENDPOINT}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        word,
-                        gameKey,
-                        organizer: gameState.currentUser
-                    })
+                    body: JSON.stringify({ gameState })
                 });
                 
                 if (!response.ok) {
@@ -732,16 +731,25 @@
         async function resetGame() {
             try {
                 showLoader();
-                
-                const response = await fetch(`${API_ENDPOINT}/reset`, {
+                gameState.wordToGuess = "";
+                gameState.wordLength = 0;
+                gameState.guessedWord = "";
+                gameState.guesses = [];
+                gameState.winner = null;
+                gameState.players = gameState.players.map(player => ({ ...player, score: 0 }));
+                gameState.gameActive = false;
+                gameState.currentUser = null;
+                gameState.gameKey = null;
+                gameState.isLoggedIn = false;
+                gameState.isOrganizer = false;
+                gameState.guesses = [];
+
+                const response = await fetch(`${API_ENDPOINT}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        gameKey: gameState.gameKey,
-                        organizer: gameState.currentUser
-                    })
+                    body: JSON.stringify({ gameState })
                 });
                 
                 if (!response.ok) {
@@ -773,21 +781,19 @@
         async function joinGame(username, gameKey) {
             try {
                 showLoader();
-                
-                const response = await fetch(`${API_ENDPOINT}/join`, {
+                gameState.currentUser = username;
+
+                const response = await fetch(`${API_ENDPOINT}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        username,
-                        gameKey
-                    })
+                    body: JSON.stringify({ gameState })
                 });
                 
-                if (!response.ok) {
-                    throw new Error('Failed to join game');
-                }
+                // if (!response.ok) {
+                //     throw new Error('Failed to join game');
+                // }
                 
                 const data = await response.json();
                 
@@ -852,16 +858,15 @@
                         showAlert('success', 'Congratulations! You guessed the word correctly!');
                         
                         // Submit winning guess to the API
-                        await fetch(`${API_ENDPOINT}/win`, {
+                        gameState.winner = gameState.currentUser;
+                        gameState.guessedWord = guess;
+
+                        await fetch(`${API_ENDPOINT}`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({
-                                username: gameState.currentUser,
-                                gameKey: gameState.gameKey,
-                                guess
-                            })
+                            body: JSON.stringify({ gameState })
                         });
                     }
                     
@@ -870,16 +875,13 @@
                 }
                 
                 // Otherwise make an API request
-                const response = await fetch(`${API_ENDPOINT}/guess`, {
+                gameState.guessedWord = guess;
+                const response = await fetch(`${API_ENDPOINT}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        username: gameState.currentUser,
-                        gameKey: gameState.gameKey,
-                        guess
-                    })
+                    body: JSON.stringify({ gameState })
                 });
                 
                 if (!response.ok) {
@@ -913,8 +915,8 @@
                 
                 // In a real app, you'd validate credentials against the server
                 // For demo purposes, we'll accept any non-empty values
-                if (!username || !password) {
-                    throw new Error('Username and password are required');
+                if (username !== 'admin' || password !== 'admin') {
+                    throw new Error('Invalid credentials');
                 }
                 
                 const gameKey = elements.gameKeyGen.value || generateUniqueKey();
