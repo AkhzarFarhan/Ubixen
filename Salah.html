@@ -232,6 +232,34 @@
             border-width: 0 3px 3px 0;
             transform: rotate(45deg);
         }
+
+        /* Group input and checkbox side by side */
+        .salah-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .salah-row input[type="number"] {
+            flex: 1 1 120px;
+            min-width: 0;
+        }
+        .salah-row input[type="checkbox"] {
+            flex: 0 0 22px;
+        }
+
+        @media (max-width: 600px) {
+            .salah-row {
+                flex-wrap: nowrap;
+            }
+            .salah-row input[type="number"] {
+                flex: 1 1 60%;
+            }
+            .salah-row input[type="checkbox"] {
+                flex: 0 0 22px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -240,28 +268,26 @@
         <div class="form-container">
             <div id="sampleForm">
                 <div class="form-group">
-                
-                    <input type="number" class="text_box" id="0" name="0" placeholder="Fajr">
-                    <span style="display: inline-flex; align-items: center; margin-left: 8px;">
-                        <input type="checkbox" id="0" name="0" style="margin-left: 0;">
-                    </span>
-                    <input type="number" class="text_box" id="1" name="1" placeholder="Zohar">
-                    <span style="display: inline-flex; align-items: center; margin-left: 8px;">
-                        <input type="checkbox" id="1" name="1" style="margin-left: 0;">
-                    </span>
-                    <input type="number" class="text_box" id="2" name="2" placeholder="Asr">
-                    <span style="display: inline-flex; align-items: center; margin-left: 8px;">
-                        <input type="checkbox" id="2" name="2" style="margin-left: 0;">
-                    </span>
-                    <input type="number" class="text_box" id="3" name="3" placeholder="Maghrib">
-                    <span style="display: inline-flex; align-items: center; margin-left: 8px;">
-                        <input type="checkbox" id="3" name="3" style="margin-left: 0;">
-                    </span>
-                    <input type="number" class="text_box" id="4" name="4" placeholder="Isha">
-                    <span style="display: inline-flex; align-items: center; margin-left: 8px;">
-                        <input type="checkbox" id="4" name="4" style="margin-left: 0;">
-                    </span>
-                    
+                    <div class="salah-row">
+                        <input type="number" class="text_box" id="0" name="0" placeholder="Fajr">
+                        <input type="checkbox" id="0" name="0">
+                    </div>
+                    <div class="salah-row">
+                        <input type="number" class="text_box" id="1" name="1" placeholder="Zohar">
+                        <input type="checkbox" id="1" name="1">
+                    </div>
+                    <div class="salah-row">
+                        <input type="number" class="text_box" id="2" name="2" placeholder="Asr">
+                        <input type="checkbox" id="2" name="2">
+                    </div>
+                    <div class="salah-row">
+                        <input type="number" class="text_box" id="3" name="3" placeholder="Maghrib">
+                        <input type="checkbox" id="3" name="3">
+                    </div>
+                    <div class="salah-row">
+                        <input type="number" class="text_box" id="4" name="4" placeholder="Isha">
+                        <input type="checkbox" id="4" name="4">
+                    </div>
                 </div>
                 <div class="form-group">
                 <div class="alert-div" id="alert-div-id"></div>
