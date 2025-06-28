@@ -506,6 +506,7 @@
 
                 expenses.forEach(expense => {
                     const row = tableBody.insertRow();
+                    row.classList.add('responsive-row');
                     row.innerHTML = `
                         <td data-label="Date">${new Date(expense.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</td>
                         <td data-label="Amount">₹${expense.amount.toLocaleString('en-IN')}</td>
