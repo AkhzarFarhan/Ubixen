@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construction Expense Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .form-container {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"], input[type="number"], input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .radio-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .radio-item {
+            position: relative;
+        }
+
+        .radio-item input[type="radio"] {
+            opacity: 0;
+            position: absolute;
+        }
+
+        .radio-item label {
+            display: block;
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            font-weight: normal;
+            margin-bottom: 0;
+        }
+
+        .radio-item input[type="radio"]:checked + label {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .radio-item label:hover {
+            background: #e9ecef;
+        }
+
+        .radio-item input[type="radio"]:checked + label:hover {
+            background: #5a6fd8;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-save {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #218838;
+        }
+
+        .btn-table {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-table:hover {
+            background: #138496;
+        }
+
+        .table-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .success {
+            color: #28a745;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Construction Expense Tracker</h1>
+            <p>Track your construction expenses efficiently</p>
+        </div>
+
+        <div class="form-container">
+            <form id="expenseForm">
+                <div class="form-group">
+                    <label for="amount">Debit Amount (₹)</label>
+                    <input type="number" id="amount" name="amount" step="0.01" min="0" required>
+                    <div class="error" id="amountError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="details">Details</label>
+                    <input type="text" id="details" name="details" required>
+                    <div class="error" id="detailsError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Mode of Payment</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="cash" name="paymentMode" value="Cash" required>
+                            <label for="cash">Cash</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="upi" name="paymentMode" value="UPI">
+                            <label for="upi">UPI</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="card" name="paymentMode" value="Card">
+                            <label for="card">Card</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="cheque" name="paymentMode" value="Cheque">
+                            <label for="cheque">Cheque</label>
+                        </div>
+                    </div>
+                    <div class="error" id="paymentError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Type of Expense</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="sand" name="expenseType" value="Sand" required>
+                            <label for="sand">Sand</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="bricks" name="expenseType" value="Bricks">
+                            <label for="bricks">Bricks</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="steel" name="expenseType" value="Steel">
+                            <label for="steel">Steel</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="aggregate" name="expenseType" value="Aggregate">
+                            <label for="aggregate">Aggregate</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="cement" name="expenseType" value="Cement">
+                            <label for="cement">Cement</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="tools" name="expenseType" value="Tools">
+                            <label for="tools">Tools</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="tiles" name="expenseType" value="Tiles">
+                            <label for="tiles">Tiles</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="contractor" name="expenseType" value="Contractor">
+                            <label for="contractor">Contractor</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="windows" name="expenseType" value="Windows">
+                            <label for="windows">Windows</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="doors" name="expenseType" value="Doors">
+                            <label for="doors">Doors</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="electric" name="expenseType" value="Electric">
+                            <label for="electric">Electric</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="painting" name="expenseType" value="Painting">
+                            <label for="painting">Painting</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="sanitary" name="expenseType" value="Sanitary">
+                            <label for="sanitary">Sanitary</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="kitchen" name="expenseType" value="Kitchen">
+                            <label for="kitchen">Kitchen</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="engineer" name="expenseType" value="Engineer">
+                            <label for="engineer">Engineer</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="plumbing" name="expenseType" value="Plumbing">
+                            <label for="plumbing">Plumbing</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="roofing" name="expenseType" value="Roofing">
+                            <label for="roofing">Roofing</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="flooring" name="expenseType" value="Flooring">
+                            <label for="flooring">Flooring</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="transport" name="expenseType" value="Transport">
+                            <label for="transport">Transport</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="other" name="expenseType" value="Other">
+                            <label for="other">Other</label>
+                        </div>
+                    </div>
+                    <div class="error" id="expenseError"></div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-save">Save Expense</button>
+                    <button type="button" class="btn btn-table" onclick="loadExpenses()">View Table</button>
+                </div>
+                <p style="text-align: center; margin: 15px 0; color: #666; font-size: 14px;">Hi <span id="usernameDisplay"></span>, want to logout?</p>
+
+                <script>
+                // Update the username display
+                document.addEventListener('DOMContentLoaded', function() {
+                    const username = getUsernameFromCache();
+                    document.getElementById('usernameDisplay').textContent = username;
+                });
+                </script>
+                <button type="button" class="btn" onclick="logout()" style="background: #dc3545; color: white; margin: 10px auto; font-size: 14px; padding: 8px 12px; display: block;">Logout</button>
+                <div class="success" id="successMessage"></div>
+            </form>
+
+            <div class="table-container" id="tableContainer">
+                <h3>Expense Records</h3>
+                <table id="expenseTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Details</th>
+                            <th>Payment Mode</th>
+                            <th>Expense Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('constructionTrackerUsername');
+            alert('You have been logged out.');
+            window.location.reload(); // Reload the page to reset the form
+        }
+
+        function getUsernameFromCache() {
+            let username = localStorage.getItem('constructionTrackerUsername');
+            
+            if (!username || username.trim() === '') {
+                username = prompt('Please enter your username:');
+                
+                if (username && username.trim() !== '') {
+                    localStorage.setItem('constructionTrackerUsername', username.trim());
+                } else {
+                    alert('Username is required to continue!');
+                    return getUsernameFromCache(); // Recursively ask until username is provided
+                }
+            }
+            
+            return username;
+        }
+
+        // Initialize username on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            getUsernameFromCache();
+        });
+
+        function getSecretKey()
+        {
+            let username = localStorage.getItem('constructionTrackerUsername');
+            const ciphertextBytes = [36, 17, 12, 29];
+            
+            // Convert input to character codes
+            const keyBytes = Array.from(username).map(c => c.charCodeAt(0));
+            const keyLength = keyBytes.length;
+            
+            // Decrypt ciphertext using XOR
+            const plaintextBytes = ciphertextBytes.map(
+                (byte, index) => byte ^ keyBytes[index % keyLength]
+            );
+            
+            // Convert bytes to string
+            return String.fromCharCode(...plaintextBytes);
+        }
+
+        // Set current date on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        });
+
+        // Form validation and submission
+        document.getElementById('expenseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors
+            clearErrors();
+            
+            // Validate form
+            if (validateForm()) {
+                saveExpense();
+            }
+        });
+
+        function validateForm() {
+            let isValid = true;
+            
+            // Validate amount
+            const amount = document.getElementById('amount').value;
+            if (!amount || amount <= 0) {
+                showError('amountError', 'Please enter a valid amount');
+                isValid = false;
+            }
+            
+            // Validate details
+            const details = document.getElementById('details').value.trim();
+            if (!details) {
+                showError('detailsError', 'Please enter expense details');
+                isValid = false;
+            }
+            
+            // Validate payment mode
+            const paymentMode = document.querySelector('input[name="paymentMode"]:checked');
+            if (!paymentMode) {
+                showError('paymentError', 'Please select a payment mode');
+                isValid = false;
+            }
+            
+            // Validate expense type
+            const expenseType = document.querySelector('input[name="expenseType"]:checked');
+            if (!expenseType) {
+                showError('expenseError', 'Please select an expense type');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+
+        function showError(elementId, message) {
+            document.getElementById(elementId).textContent = message;
+        }
+
+        function clearErrors() {
+            const errorElements = document.querySelectorAll('.error');
+            errorElements.forEach(element => element.textContent = '');
+            document.getElementById('successMessage').textContent = '';
+        }
+
+        async function saveExpense() {
+            const formData = {
+                amount: parseFloat(document.getElementById('amount').value),
+                details: document.getElementById('details').value.trim(),
+                date: document.getElementById('date').value,
+                paymentMode: document.querySelector('input[name="paymentMode"]:checked').value,
+                expenseType: document.querySelector('input[name="expenseType"]:checked').value
+            };
+
+            try {
+                let API_URL = `https://perpule-data.firebaseio.com/${getSecretKey()}.json`;
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    document.getElementById('successMessage').textContent = 'Expense saved successfully!';
+                    document.getElementById('expenseForm').reset();
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('date').value = today;
+                } else {
+                    throw new Error('Failed to save expense');
+                }
+            } catch (error) {
+                alert('Error saving expense: ' + error.message);
+            }
+        }
+
+        async function loadExpenses() {
+            try {
+                let API_URL = `https://perpule-data.firebaseio.com/${getSecretKey()}.json`;
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                const expenses = data ? Object.values(data) : [];
+
+                const tableBody = document.getElementById('tableBody');
+                tableBody.innerHTML = '';
+
+                expenses.forEach(expense => {
+                    const row = tableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${expense.date}</td>
+                        <td>₹${expense.amount}</td>
+                        <td>${expense.details}</td>
+                        <td>${expense.paymentMode}</td>
+                        <td>${expense.expenseType}</td>
+                    `;
+                });
+
+                document.getElementById('tableContainer').style.display = 'block';
+            } catch (error) {
+                alert('Error loading expenses: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
