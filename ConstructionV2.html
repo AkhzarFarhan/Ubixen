@@ -341,8 +341,8 @@
                             <th>Date</th>
                             <th>Amount</th>
                             <th>Details</th>
-                            <th>Payment Mode</th>
-                            <th>Expense Type</th>
+                            <th>Mode</th>
+                            <th>Type</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -507,11 +507,11 @@
                 expenses.forEach(expense => {
                     const row = tableBody.insertRow();
                     row.innerHTML = `
-                        <td>${expense.date}</td>
-                        <td>₹${expense.amount}</td>
-                        <td>${expense.details}</td>
-                        <td>${expense.paymentMode}</td>
-                        <td>${expense.expenseType}</td>
+                        <td data-label="Date">${new Date(expense.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</td>
+                        <td data-label="Amount">₹${expense.amount.toLocaleString('en-IN')}</td>
+                        <td data-label="Details">${expense.details}</td>
+                        <td data-label="Mode">${expense.paymentMode}</td>
+                        <td data-label="Type">${expense.expenseType}</td>
                     `;
                 });
 
