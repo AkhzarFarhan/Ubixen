@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Task Manager</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --urgent: #e53935;
+            --high: #fb8c00;
+            --medium: #fbc02d;
+            --low: #43a047;
+            --negligible: #1e88e5;
+            --done: #bdbdbd;
+            --bg: #f5f6fa;
+            --card: #fff;
+            --shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 24px 8px 80px 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #222;
+            margin-bottom: 16px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .task-input-card {
+            background: var(--card);
+            box-shadow: var(--shadow);
+            border-radius: 12px;
+            padding: 18px 16px 12px 16px;
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .task-input-card input[type="text"] {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .priority-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 4px;
+        }
+        .priority-btn {
+            flex: 1 1 0;
+            padding: 8px 0;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            opacity: 0.85;
+            transition: opacity 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            filter: grayscale(1);
+            opacity: 0.7;
+        }
+        .priority-btn.selected {
+            opacity: 1;
+            filter: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+            outline: 2px solid #222;
+            outline-offset: 1px;
+            z-index: 1;
+        }
+        .priority-urgent { background: var(--urgent);}
+        .priority-high { background: var(--high);}
+        .priority-medium { background: var(--medium); color: #333;}
+        .priority-low { background: var(--low);}
+        .priority-negligible { background: var(--negligible);}
+        .save-btn {
+            margin-top: 4px;
+            background: linear-gradient(90deg, #43a047 60%, #1e88e5 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(67,160,71,0.10);
+            transition: background 0.2s;
+        }
+        .save-btn:active { background: #388e3c; }
+        .tasks-list {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .task-card {
+            background: var(--card);
+            box-shadow: var(--shadow);
+            border-radius: 10px;
+            padding: 14px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            transition: filter 0.3s, opacity 0.3s;
+        }
+        .task-card.done {
+            filter: grayscale(1) opacity(0.7);
+            background: #f0f0f0;
+            color: #888;
+        }
+        .task-info {
+            flex: 1 1 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .task-detail {
+            font-size: 1.05rem;
+            font-weight: 500;
+            word-break: break-word;
+        }
+        .task-meta {
+            font-size: 0.85rem;
+            color: #888;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .priority-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+        .dot-urgent { background: var(--urgent);}
+        .dot-high { background: var(--high);}
+        .dot-medium { background: var(--medium);}
+        .dot-low { background: var(--low);}
+        .dot-negligible { background: var(--negligible);}
+        .done-btn {
+            background: linear-gradient(135deg, #43a047 60%, #1e88e5 100%);
+            border: none;
+            outline: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #fff;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(67,160,71,0.10);
+            margin-left: 8px;
+            padding: 0;
+        }
+        .done-btn:hover {
+            background: linear-gradient(135deg, #388e3c 60%, #1565c0 100%);
+            box-shadow: 0 4px 12px rgba(30,136,229,0.13);
+        }
+        .done-btn.done {
+            background: #bdbdbd;
+            color: #fff;
+        }
+        .done-btn svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 12px 2vw 80px 2vw;}
+            .task-input-card, .task-card { padding: 12px 6px;}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Task Manager</h1>
+        <div class="task-input-card">
+            <input type="text" id="taskDetail" placeholder="Enter task details..." maxlength="120" />
+            <div class="priority-group" id="priorityGroup">
+                <button class="priority-btn priority-urgent" data-priority="Urgent">Urgent</button>
+                <button class="priority-btn priority-high" data-priority="High">High</button>
+                <button class="priority-btn priority-medium selected" data-priority="Medium">Medium</button>
+                <button class="priority-btn priority-low" data-priority="Low">Low</button>
+                <button class="priority-btn priority-negligible" data-priority="Negligible">Negligible</button>
+            </div>
+            <button class="save-btn" id="saveTaskBtn">Save Task</button>
+        </div>
+        <div class="tasks-list" id="tasksList">
+            <!-- Tasks will be rendered here -->
+        </div>
+    </div>
+    <script>
+        // Priority order for sorting
+        const PRIORITY_ORDER = {
+            'Urgent': 1,
+            'High': 2,
+            'Medium': 3,
+            'Low': 4,
+            'Negligible': 5
+        };
+
+        // REST API base URL
+        let API_BASE = getApiBase();
+
+        // Initialize REST API base URL
+        function getApiBase() {
+            var cred = JSON.parse(localStorage.getItem("user_info"));
+            const username = cred['username'];
+            const password = cred['password'];
+            const ciphertext = username + password;
+
+            const ciphertextBytes = [
+                9, 31, 28, 10, 18, 72, 73, 78, 6, 13, 25, 26, 36, 57, 101, 60,
+                46, 32, 26, 85, 83, 79, 13, 1, 8, 4, 16, 7, 18, 23, 1, 14, 64,
+                34, 36, 37, 117, 53, 51, 68, 83, 105, 23, 89, 70, 16, 18, 29, 8,
+                94, 19, 29, 21, 6, 124, 1, 30, 49, 59, 52, 109, 0, 5, 54, 39, 44,
+                21, 81, 7, 84, 27, 37, 47, 27, 52, 15, 28, 1, 9, 25, 61, 123, 112,
+                115, 88, 46, 6, 46, 39, 74, 54, 83, 26, 88, 54
+            ];
+            
+            // Convert input to character codes
+            const keyBytes = Array.from(ciphertext).map(c => c.charCodeAt(0));
+            const keyLength = keyBytes.length;
+            
+            // Decrypt ciphertext using XOR
+            const plaintextBytes = ciphertextBytes.map(
+                (byte, index) => byte ^ keyBytes[index % keyLength]
+            );
+            
+            // Convert bytes to string
+            return String.fromCharCode(...plaintextBytes);
+        }
+
+        // Utility: Format date
+        function formatDate(iso) {
+            const d = new Date(iso);
+            return d.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+        }
+
+        // State
+        let tasks = [];
+
+        // Priority selection
+        document.getElementById('priorityGroup').addEventListener('click', function(e) {
+            if (e.target.classList.contains('priority-btn')) {
+                document.querySelectorAll('.priority-btn').forEach(btn => btn.classList.remove('selected'));
+                e.target.classList.add('selected');
+            }
+        });
+
+        // Save Task (no reload)
+        document.getElementById('saveTaskBtn').addEventListener('click', async function() {
+            const detail = document.getElementById('taskDetail').value.trim();
+            const priority = document.querySelector('.priority-btn.selected').dataset.priority;
+            if (!detail) {
+                alert('Please enter task details.');
+                return;
+            }
+            const newTask = {
+                detail,
+                priority,
+                done: false,
+                createdAt: new Date().toISOString()
+            };
+            try {
+                const res = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newTask)
+                });
+                if (!res.ok) throw new Error('Failed to save task');
+                const savedTask = await res.json();
+                // Firebase returns {name: "..."} as the key
+                const id = savedTask.name || Object.keys(savedTask)[0];
+                tasks.push({ id, ...newTask });
+                renderTasks();
+                document.getElementById('taskDetail').value = '';
+                document.querySelectorAll('.priority-btn').forEach(btn => btn.classList.remove('selected'));
+                document.querySelector('.priority-btn.priority-urgent').classList.add('selected');
+            } catch (err) {
+                alert('Error saving task.');
+            }
+        });
+
+        // Fetch tasks from REST API
+        async function fetchTasks() {
+            try {
+                const res = await fetch(API_BASE);
+                if (!res.ok) throw new Error('Failed to fetch tasks');
+                const data = await res.json();
+                tasks = Object.entries(data || {}).map(([id, task]) => ({ id, ...task }));
+                renderTasks();
+            } catch (err) {
+                document.getElementById('tasksList').innerHTML = '<div style="color:#e53935;text-align:center;">Failed to load tasks.</div>';
+            }
+        }
+
+        // Mark task as done/undone (no reload)
+        async function toggleDone(taskId, done) {
+            try {
+                const res = await fetch(`${API_BASE.replace('.json', `/${taskId}.json`)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ done })
+                });
+                if (!res.ok) throw new Error('Failed to update task');
+                // Update local state
+                const idx = tasks.findIndex(t => t.id === taskId);
+                if (idx !== -1) {
+                    tasks[idx].done = done;
+                }
+                renderTasks();
+            } catch (err) {
+                alert('Error updating task.');
+            }
+        }
+
+        // Render tasks (without editable priority)
+        function renderTasks() {
+            const sorted = [...tasks].sort((a, b) => {
+                if (a.done !== b.done) return a.done - b.done;
+                if (!a.done) {
+                    if (PRIORITY_ORDER[a.priority] !== PRIORITY_ORDER[b.priority])
+                        return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+                    return new Date(a.createdAt) - new Date(b.createdAt);
+                } else {
+                    return new Date(a.doneAt || a.createdAt) - new Date(b.doneAt || b.createdAt);
+                }
+            });
+
+            const list = document.getElementById('tasksList');
+            list.innerHTML = '';
+            if (sorted.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:#888;">No tasks yet.</div>';
+                return;
+            }
+            for (const task of sorted) {
+                const card = document.createElement('div');
+                card.className = 'task-card' + (task.done ? ' done' : '');
+                card.innerHTML = `
+                    <div class="task-info">
+                        <div class="task-detail">${task.detail}</div>
+                        <div class="task-meta">
+                            <span class="priority-dot dot-${task.priority.toLowerCase()}"></span>
+                            <span class="priority-label">${task.priority}</span>
+                            <span>•</span>
+                            <span>${formatDate(task.createdAt)}</span>
+                        </div>
+                    </div>
+                    <button class="done-btn${task.done ? ' done' : ''}" title="${task.done ? 'Mark as Undone' : 'Mark as Done'}">
+                        ${task.done
+                            // Undo icon (arrow in a circle)
+                            ? `<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2"/><path d="M7 10l3-3v2.25C13 9.25 14.5 10.5 14.5 12c0 1.5-1.5 2.5-4.5 2.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+                            // Tick icon (checkmark in a circle)
+                            : `<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2"/><path d="M6 11l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+                        }
+                    </button>
+                `;
+                card.querySelector('.done-btn').onclick = () => toggleDone(task.id, !task.done);
+                list.appendChild(card);
+            }
+        }
+
+        // On page load
+        fetchTasks();
+    </script>
+</body>
+</html>
