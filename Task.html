@@ -402,15 +402,17 @@
         // Update renderTasks to show number and sort as per your rules
         function renderTasks() {
             const sorted = [...tasks].sort((a, b) => {
-                // 1. Priority order
-                if (PRIORITY_ORDER[a.priority] !== PRIORITY_ORDER[b.priority])
-                    return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
-                // 2. Number (lower is higher priority)
-                if ((a.number || 25) !== (b.number || 25))
-                    return (a.number || 25) - (b.number || 25);
-                // 3. Created at (earlier is higher priority)
-                return new Date(a.createdAt) - new Date(b.createdAt);
+                if (a.done !== b.done) return a.done - b.done;
+                if (!a.done) {
+                    if (PRIORITY_ORDER[a.priority] !== PRIORITY_ORDER[b.priority])
+                        return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+                    return new Date(a.createdAt) - new Date(b.createdAt);
+                } else {
+                    return new Date(a.doneAt || a.createdAt) - new Date(b.doneAt || b.createdAt);
+                }
             });
+
+            const sorted = [...undone, ...done];
 
             const list = document.getElementById('tasksList');
             list.innerHTML = '';
