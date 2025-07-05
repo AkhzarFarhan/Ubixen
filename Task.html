@@ -46,13 +46,14 @@
             flex-direction: column;
             gap: 10px;
         }
-        .task-input-card input[type="text"] {
+        .task-input-card textarea {
             padding: 10px 12px;
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
             outline: none;
             transition: border 0.2s;
+            resize: vertical;
         }
         .priority-group {
             display: flex;
@@ -186,6 +187,40 @@
             height: 18px;
             display: block;
         }
+        .number-group {
+            margin-bottom: 10px;
+        }
+        .number-radio-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px 6px;
+            margin-bottom: 2px;
+        }
+        .number-radio-btn {
+            border: none;
+            background: #f3f3f3;
+            color: #333;
+            border-radius: 6px;
+            padding: 5px 0;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+            outline: none;
+            font-family: inherit;
+            position: relative;
+            user-select: none;
+            box-shadow: 0 1px 2px rgba(30,136,229,0.03);
+        }
+        .number-radio-btn.selected {
+            background: linear-gradient(135deg, #1e88e5 60%, #43a047 100%);
+            color: #fff;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(30,136,229,0.10);
+            z-index: 1;
+        }
+        .number-radio-btn:active {
+            filter: brightness(0.95);
+        }
         @media (max-width: 600px) {
             .container { padding: 12px 2vw 80px 2vw;}
             .task-input-card, .task-card { padding: 12px 6px;}
@@ -196,13 +231,17 @@
     <div class="container">
         <h1>Task Manager</h1>
         <div class="task-input-card">
-            <input type="text" id="taskDetail" placeholder="Enter task details..." maxlength="120" />
+            <textarea id="taskDetail" placeholder="Enter task details..." maxlength="300" rows="3" style="resize:vertical; padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:1rem; outline:none; transition:border 0.2s;"></textarea>
             <div class="priority-group" id="priorityGroup">
                 <button class="priority-btn priority-urgent" data-priority="Urgent">Urgent</button>
                 <button class="priority-btn priority-high" data-priority="High">High</button>
                 <button class="priority-btn priority-medium selected" data-priority="Medium">Medium</button>
                 <button class="priority-btn priority-low" data-priority="Low">Low</button>
                 <button class="priority-btn priority-negligible" data-priority="Negligible">Negligible</button>
+            </div>
+            <div class="number-group" id="numberGroup">
+                <!-- <label style="font-size:0.97rem;color:#555;margin-bottom:4px;display:block;">Select Number (1-24):</label> -->
+                <div class="number-radio-grid"></div>
             </div>
             <button class="save-btn" id="saveTaskBtn">Save Task</button>
         </div>
@@ -269,10 +308,28 @@
             }
         });
 
+        // Number selection
+        const numberGrid = document.querySelector('.number-radio-grid');
+        let selectedNumber = 1;
+        for (let i = 1; i <= 24; i++) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'number-radio-btn' + (i === 1 ? ' selected' : '');
+            btn.textContent = i;
+            btn.dataset.value = i;
+            btn.onclick = function() {
+                document.querySelectorAll('.number-radio-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedNumber = i;
+            };
+            numberGrid.appendChild(btn);
+        }
+
         // Save Task (no reload)
         document.getElementById('saveTaskBtn').addEventListener('click', async function() {
             const detail = document.getElementById('taskDetail').value.trim();
             const priority = document.querySelector('.priority-btn.selected').dataset.priority;
+            const number = selectedNumber;
             if (!detail) {
                 alert('Please enter task details.');
                 return;
@@ -280,6 +337,7 @@
             const newTask = {
                 detail,
                 priority,
+                number,
                 done: false,
                 createdAt: new Date().toISOString()
             };
@@ -291,13 +349,17 @@
                 });
                 if (!res.ok) throw new Error('Failed to save task');
                 const savedTask = await res.json();
-                // Firebase returns {name: "..."} as the key
                 const id = savedTask.name || Object.keys(savedTask)[0];
                 tasks.push({ id, ...newTask });
                 renderTasks();
                 document.getElementById('taskDetail').value = '';
                 document.querySelectorAll('.priority-btn').forEach(btn => btn.classList.remove('selected'));
                 document.querySelector('.priority-btn.priority-urgent').classList.add('selected');
+                // Reset number to 1
+                selectedNumber = 1;
+                document.querySelectorAll('.number-radio-btn').forEach((b, idx) => {
+                    b.classList.toggle('selected', idx === 0);
+                });
             } catch (err) {
                 alert('Error saving task.');
             }
@@ -337,16 +399,17 @@
         }
 
         // Render tasks (without editable priority)
+        // Update renderTasks to show number and sort as per your rules
         function renderTasks() {
             const sorted = [...tasks].sort((a, b) => {
-                if (a.done !== b.done) return a.done - b.done;
-                if (!a.done) {
-                    if (PRIORITY_ORDER[a.priority] !== PRIORITY_ORDER[b.priority])
-                        return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
-                    return new Date(a.createdAt) - new Date(b.createdAt);
-                } else {
-                    return new Date(a.doneAt || a.createdAt) - new Date(b.doneAt || b.createdAt);
-                }
+                // 1. Priority order
+                if (PRIORITY_ORDER[a.priority] !== PRIORITY_ORDER[b.priority])
+                    return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+                // 2. Number (lower is higher priority)
+                if ((a.number || 25) !== (b.number || 25))
+                    return (a.number || 25) - (b.number || 25);
+                // 3. Created at (earlier is higher priority)
+                return new Date(a.createdAt) - new Date(b.createdAt);
             });
 
             const list = document.getElementById('tasksList');
@@ -364,6 +427,8 @@
                         <div class="task-meta">
                             <span class="priority-dot dot-${task.priority.toLowerCase()}"></span>
                             <span class="priority-label">${task.priority}</span>
+                            <span>•</span>
+                            <span>Number: ${task.number || '-'}</span>
                             <span>•</span>
                             <span>${formatDate(task.createdAt)}</span>
                         </div>
@@ -383,6 +448,7 @@
         }
 
         // On page load
+        // Add this JS block after DOM is ready (before fetchTasks();)
         fetchTasks();
     </script>
 </body>
