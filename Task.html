@@ -398,6 +398,17 @@
             }
         }
 
+        // Add this function before renderTasks
+        function formatTaskDetail(text) {
+            // Replace **bold** with <b>bold</b>
+            text = text.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+            // Replace lines starting with "- " with bullet
+            text = text.replace(/^-\s(.+)$/gm, '• $1');
+            // Replace newlines with <br>
+            text = text.replace(/\n/g, '<br>');
+            return text;
+        }
+
         // Render tasks (without editable priority)
         // Update renderTasks to show number and sort as per your rules
         function renderTasks() {
@@ -439,7 +450,7 @@
                 card.className = 'task-card' + (task.done ? ' done' : '');
                 card.innerHTML = `
                     <div class="task-info">
-                        <div class="task-detail">${task.detail}</div>
+                        <div class="task-detail">${formatTaskDetail(task.detail)}</div>
                         <div class="task-meta">
                             <span class="priority-dot dot-${task.priority.toLowerCase()}"></span>
                             <span class="priority-label">${task.priority}</span>
