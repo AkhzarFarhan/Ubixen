@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Code Share</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter for UI, Fira Code for the editor -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use Inter for the general UI and Fira Code for the code editor */
+        body { font-family: 'Inter', sans-serif; }
+        .font-code { font-family: 'Fira Code', monospace; }
+
+        /* This is the core trick for showing cursors in a textarea.
+           We create a backdrop div that is perfectly aligned behind the textarea.
+           The backdrop holds the code and the cursor elements.
+           The textarea itself is transparent, so you see the backdrop, but it
+           captures all the input and focus. */
+        .editor-container {
+            position: relative;
+        }
+        #editor-backdrop, #code-textarea {
+            margin: 0;
+            padding: 1rem;
+            border: 1px solid #4A5568; /* gray-700 */
+            border-radius: 0.5rem; /* rounded-lg */
+            width: 100%;
+            height: 100%;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre;
+            overflow-wrap: normal;
+            overflow: auto;
+            background-color: transparent;
+            box-sizing: border-box;
+            grid-area: 1 / 1 / 2 / 2;
+        }
+        #editor-backdrop {
+            color: transparent; /* The text itself is not visible, only the selection/cursors */
+            z-index: 1;
+            pointer-events: none; /* Allows clicks to go through to the textarea */
+        }
+        #code-textarea {
+            z-index: 2;
+            color: #E2E8F0; /* gray-300 */
+            resize: none;
+        }
+        .cursor {
+            position: absolute;
+            width: 2px;
+            height: 1.5em; /* Match line height */
+            background-color: red;
+            animation: blink 1s infinite;
+            pointer-events: none;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Main container -->
+    <div id="app-container" class="w-full max-w-6xl mx-auto">
+
+        <!-- Home Screen: Shown when no session is active -->
+        <div id="home-screen" class="text-center">
+            <h1 class="text-4xl font-bold text-white mb-2">Live Code Share</h1>
+            <p class="text-lg text-gray-400 mb-8">Real-time collaborative coding, powered by Firestore.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="create-session-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg">
+                    Start New Session
+                </button>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="join-session-input" placeholder="Enter session key" class="bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-3 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button id="join-session-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                        Join
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Screen: Shown when a session is active -->
+        <div id="editor-screen" class="hidden w-full h-[85vh] flex flex-col">
+            <div class="flex flex-wrap items-center justify-between mb-4 gap-4">
+                <h2 class="text-2xl font-bold text-white">Code Session</h2>
+                <div class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg p-2">
+                    <span class="text-gray-400">Session Key:</span>
+                    <input id="session-key-display" type="text" readonly class="font-mono bg-transparent text-indigo-400 outline-none w-28">
+                    <button id="copy-key-btn" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-md text-sm">Copy</button>
+                </div>
+                <button id="leave-session-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    Leave Session
+                </button>
+            </div>
+
+            <div class="editor-container w-full flex-grow grid grid-cols-1 grid-rows-1">
+                <!-- The backdrop for rendering cursors -->
+                <div id="editor-backdrop" class="font-code"></div>
+                <!-- The actual textarea for input -->
+                <textarea id="code-textarea" class="font-code bg-gray-800 border-gray-700" spellcheck="false"></textarea>
+            </div>
+             <div id="message-box" class="fixed bottom-5 right-5 bg-indigo-600 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transition-opacity duration-300">
+                Session key copied!
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // IMPORTANT: In a real app, use environment variables for Firebase config.
+        // For this demo, we use a global object that would be provided by the environment.
+
+        function xorStrings(a, b)
+        {
+            const longerString = a.length >= b.length ? a : b;
+            const shorterString = a.length < b.length ? a : b;
+            let result = '';
+            for (let i = 0; i < longerString.length; i++)
+            {
+                const charCodeA = longerString.charCodeAt(i);
+                const charCodeB = shorterString.charCodeAt(i % shorterString.length);
+                const xorResult = charCodeA ^ charCodeB;
+                result += String.fromCharCode(xorResult);
+            }
+            return result;
+        }
+
+        // Function to read cache, if cache is not found then ask user to enter password
+        function readCache()
+        {
+            const cachedData = localStorage.getItem("IDE_password");
+            if (cachedData)
+            {
+                window["IDE_password"] = JSON.parse(cachedData);
+            }
+            else
+            {
+                // Ask user to enter password
+                const password = prompt("Enter your password:");
+                if (password)
+                {
+                    window["IDE_password"] = password;
+                    localStorage.setItem("IDE_password", JSON.stringify(window["IDE_password"]));
+                }
+            }
+        }
+
+        function getEncrypterKey(plainText)
+        {
+            const password = window["IDE_password"];
+            return xorStrings(password, plainText);
+        }
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config)
+            : {
+                apiKey: getEncrypterKey('*.->+;)|"89+:2|- !3#'),
+                authDomain: getEncrypterKey('=((;7&l(;;`=*|2(<1+,#*3$1`7& '),
+                projectId: getEncrypterKey('=((;7&l(;;`=*'),
+                storageBucket: getEncrypterKey('=((;7&l(;;`=*|2(<1+,#*! .<5.(~."$'),
+                messagingSenderId: getEncrypterKey('x}`zbax{b~xi'),
+                appId: getEncrypterKey('xwabaq{m|{gzkd{91+w5|0fpz7{|3|45 {b+}2`c')
+            };
+
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        readCache(); // Read cache to get the password
+
+        // App state
+        let currentUserId = null;
+        let unsubscribeFromSession = null;
+        let lastKnownCode = "";
+        let activeSessionId = null; // Holds the current session ID
+        const userColors = ['#F87171', '#60A5FA', '#4ADE80', '#FBBF24', '#A78BFA', '#F472B6'];
+        let myColor = '';
+        
+        // DOM Elements
+        const homeScreen = document.getElementById('home-screen');
+        const editorScreen = document.getElementById('editor-screen');
+        const createSessionBtn = document.getElementById('create-session-btn');
+        const joinSessionInput = document.getElementById('join-session-input');
+        const joinSessionBtn = document.getElementById('join-session-btn');
+        const codeTextarea = document.getElementById('code-textarea');
+        const editorBackdrop = document.getElementById('editor-backdrop');
+        const sessionKeyDisplay = document.getElementById('session-key-display');
+        const copyKeyBtn = document.getElementById('copy-key-btn');
+        const leaveSessionBtn = document.getElementById('leave-session-btn');
+        const messageBox = document.getElementById('message-box');
+
+        // --- Core Functions ---
+
+        /**
+         * Initializes the application.
+         */
+        function main()
+        {
+            onAuthStateChanged(auth, (user) =>
+            {
+                if (user)
+                {
+                    currentUserId = user.uid;
+                    myColor = userColors[Math.floor(Math.random() * userColors.length)];
+                    // Always show the home screen on startup now.
+                    showHomeScreen();
+                }
+                else
+                {
+                    signInAnonymously(auth).catch(error =>
+                    {
+                        console.error("Anonymous sign-in failed:", error);
+                    });
+                }
+            });
+        }
+
+        /**
+         * Joins a collaborative session.
+         * @param {string} sessionId - The unique ID of the session.
+         */
+        async function joinSession(sessionId)
+        {
+            activeSessionId = sessionId; // Set the active session ID
+            showEditorScreen(sessionId);
+            const sessionRef = doc(db, "live-code-sessions", sessionId);
+
+            // Set up a real-time listener for the session document
+            unsubscribeFromSession = onSnapshot(sessionRef, (snapshot) =>
+            {
+                if (!snapshot.exists())
+                {
+                    // If the session doesn't exist, create it with default content.
+                    setDoc(sessionRef,
+                    {
+                        code: `// Welcome to your collaborative session!\n// Share the session key to invite others.\n\nfunction hello()\n{\n  console.log("Hello, world!");\n}`,
+                        cursors: {}
+                    });
+                    return;
+                }
+
+                const data = snapshot.data();
+
+                // Update code only if it has changed
+                if (data.code !== codeTextarea.value)
+                {
+                    const cursorPos = codeTextarea.selectionStart;
+                    codeTextarea.value = data.code;
+                    lastKnownCode = data.code;
+                    // Try to restore cursor position
+                    try
+                    {
+                        codeTextarea.setSelectionRange(cursorPos, cursorPos);
+                    }
+                    catch (e)
+                    {
+                        /* ignore */
+                    }
+                }
+
+                renderCursors(data.cursors);
+                syncScroll();
+            });
+        }
+
+        /**
+         * Renders the cursors of other users on the backdrop.
+         * @param {object} cursors - The cursors object from Firestore.
+         */
+        function renderCursors(cursors)
+        {
+            editorBackdrop.innerHTML = ''; // Clear old cursors
+
+            // This span is used to measure character positions
+            const measurementSpan = document.createElement('span');
+            measurementSpan.style.visibility = 'hidden';
+            editorBackdrop.appendChild(measurementSpan);
+
+            for (const userId in cursors)
+            {
+                if (userId !== currentUserId && cursors[userId])
+                {
+                    const { position, color } = cursors[userId];
+
+                    // To find the x,y coordinates, we get the substring up to the cursor
+                    // and put it in a hidden span to measure its final position.
+                    const preText = codeTextarea.value.substring(0, position);
+                    measurementSpan.textContent = preText;
+
+                    const cursorElem = document.createElement('div');
+                    cursorElem.className = 'cursor';
+                    cursorElem.style.backgroundColor = color;
+
+                    // Position the cursor at the end of the measured text
+                    cursorElem.style.left = `${measurementSpan.offsetWidth}px`;
+                    cursorElem.style.top = `${measurementSpan.offsetHeight}px`;
+
+                    editorBackdrop.appendChild(cursorElem);
+                }
+            }
+        }
+
+        /**
+         * Updates the current user's data (code or cursor) in Firestore.
+         * @param {object} payload - The data to update.
+         */
+        async function updateSession(payload)
+        {
+            // Use the activeSessionId variable instead of reading from URL
+            if (!currentUserId || !unsubscribeFromSession || !activeSessionId) return;
+            const sessionRef = doc(db, "live-code-sessions", activeSessionId);
+            await updateDoc(sessionRef, payload);
+        }
+
+        // --- UI and Event Handlers ---
+
+        function showHomeScreen()
+        {
+            homeScreen.classList.remove('hidden');
+            editorScreen.classList.add('hidden');
+        }
+
+        function showEditorScreen(sessionId)
+        {
+            homeScreen.classList.add('hidden');
+            editorScreen.classList.remove('hidden');
+            sessionKeyDisplay.value = sessionId;
+        }
+
+        createSessionBtn.addEventListener('click', () =>
+        {
+            const newSessionId = Math.random().toString(36).substring(2, 9);
+            // Removed history.pushState
+            joinSession(newSessionId);
+        });
+
+        joinSessionBtn.addEventListener('click', () =>
+        {
+            const sessionId = joinSessionInput.value.trim();
+            if (sessionId)
+            {
+                // Removed history.pushState
+                joinSession(sessionId);
+            }
+        });
+
+        leaveSessionBtn.addEventListener('click', () =>
+        {
+            if (unsubscribeFromSession)
+            {
+                unsubscribeFromSession();
+                unsubscribeFromSession = null;
+            }
+            // Clear the user's cursor position on leaving
+            updateSession({ [`cursors.${currentUserId}`]: null });
+            activeSessionId = null; // Clear the session ID
+            // Removed history.pushState
+            showHomeScreen();
+        });
+
+        copyKeyBtn.addEventListener('click', () =>
+        {
+            sessionKeyDisplay.select();
+            document.execCommand('copy');
+            messageBox.classList.remove('opacity-0');
+            setTimeout(() => messageBox.classList.add('opacity-0'), 2000);
+        });
+
+        // Debounce function to limit Firestore writes
+        function debounce(func, delay)
+        {
+            let timeout;
+            return function(...args)
+            {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        const debouncedCodeUpdate = debounce((code) => {
+            if (code !== lastKnownCode) {
+                updateSession({ code });
+                lastKnownCode = code;
+            }
+        }, 200);
+
+        codeTextarea.addEventListener('input', () =>
+        {
+            debouncedCodeUpdate(codeTextarea.value);
+            syncScroll();
+        });
+
+        const debouncedCursorUpdate = debounce((position) => {
+            updateSession({ [`cursors.${currentUserId}`]: { position, color: myColor } });
+        }, 50);
+
+        document.addEventListener('selectionchange', () =>
+        {
+            if (document.activeElement === codeTextarea)
+            {
+                debouncedCursorUpdate(codeTextarea.selectionStart);
+            }
+        });
+        
+        // Simple auto-indentation
+        codeTextarea.addEventListener('keydown', (e) =>
+        {
+            if (e.key === 'Enter')
+            {
+                e.preventDefault();
+                const pos = codeTextarea.selectionStart;
+                const text = codeTextarea.value;
+                const lineStart = text.lastIndexOf('\n', pos - 1) + 1;
+                const currentLine = text.substring(lineStart, pos);
+                const indent = currentLine.match(/^\s*/)[0];
+
+                const newText = text.substring(0, pos) + '\n' + indent + text.substring(pos);
+                codeTextarea.value = newText;
+                codeTextarea.selectionStart = codeTextarea.selectionEnd = pos + 1 + indent.length;
+            }
+            else if (e.key === '{')
+            {
+                e.preventDefault();
+                const pos = codeTextarea.selectionStart;
+                const text = codeTextarea.value;
+                const newText = text.substring(0, pos) + '{}' + text.substring(pos);
+                codeTextarea.value = newText;
+                codeTextarea.selectionStart = codeTextarea.selectionEnd = pos + 1;
+            }
+        });
+        
+        // Keep the backdrop scroll position in sync with the textarea
+        function syncScroll()
+        {
+            editorBackdrop.scrollTop = codeTextarea.scrollTop;
+            editorBackdrop.scrollLeft = codeTextarea.scrollLeft;
+        }
+        codeTextarea.addEventListener('scroll', syncScroll);
+
+
+        // Start the application
+    main();
+    </script>
+</body>
+</html>
