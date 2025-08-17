@@ -138,17 +138,21 @@
             if (cachedData)
             {
                 window["IDE_password"] = JSON.parse(cachedData);
+                return;
             }
-            else
+
+            // Ask user to enter password (required to decrypt config)
+            let password = '';
+            while (!password)
             {
-                // Ask user to enter password
-                const password = prompt("Enter your password:");
-                if (password)
+                password = prompt("Enter your password:") || '';
+                if (!password)
                 {
-                    window["IDE_password"] = password;
-                    localStorage.setItem("IDE_password", JSON.stringify(window["IDE_password"]));
+                    alert("Password is required to load the app.");
                 }
             }
+            window["IDE_password"] = password;
+            localStorage.setItem("IDE_password", JSON.stringify(window["IDE_password"]));
         }
 
         function getEncrypterKey(plainText)
@@ -156,6 +160,9 @@
             const password = window["IDE_password"];
             return xorStrings(password, plainText);
         }
+
+        // Ensure password is loaded BEFORE building firebaseConfig
+        readCache();
 
         const firebaseConfig = typeof __firebase_config !== 'undefined' 
             ? JSON.parse(__firebase_config)
@@ -174,15 +181,15 @@
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        readCache(); // Read cache to get the password
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
         // App state
         let currentUserId = null;
         let unsubscribeFromSession = null;
-        let lastKnownCode = "";
+    let lastKnownCode = "";
+    let latestCursors = {};
         let activeSessionId = null; // Holds the current session ID
         const userColors = ['#F87171', '#60A5FA', '#4ADE80', '#FBBF24', '#A78BFA', '#F472B6'];
         let myColor = '';
@@ -269,7 +276,8 @@
                     }
                 }
 
-                renderCursors(data.cursors);
+                latestCursors = data.cursors || {};
+                renderCursors(latestCursors);
                 syncScroll();
             });
         }
@@ -282,32 +290,47 @@
         {
             editorBackdrop.innerHTML = ''; // Clear old cursors
 
-            // This span is used to measure character positions
+            const cursorsObj = cursors && typeof cursors === 'object' ? cursors : {};
+
+            // Hidden span used to measure widths of the last line only
             const measurementSpan = document.createElement('span');
             measurementSpan.style.visibility = 'hidden';
+            measurementSpan.style.whiteSpace = 'pre';
             editorBackdrop.appendChild(measurementSpan);
 
-            for (const userId in cursors)
+            const cs = getComputedStyle(codeTextarea);
+            const lineHeight = parseFloat(cs.lineHeight) || 21; // fallback ~14px * 1.5
+            const padLeft = parseFloat(cs.paddingLeft) || 16;
+            const padTop = parseFloat(cs.paddingTop) || 16;
+
+            for (const userId in cursorsObj)
             {
-                if (userId !== currentUserId && cursors[userId])
-                {
-                    const { position, color } = cursors[userId];
+                const entry = cursorsObj[userId];
+                if (userId === currentUserId || !entry) continue;
 
-                    // To find the x,y coordinates, we get the substring up to the cursor
-                    // and put it in a hidden span to measure its final position.
-                    const preText = codeTextarea.value.substring(0, position);
-                    measurementSpan.textContent = preText;
+                const position = Math.max(0, Math.min(Number(entry.position) || 0, codeTextarea.value.length));
+                const color = entry.color || '#F87171';
 
-                    const cursorElem = document.createElement('div');
-                    cursorElem.className = 'cursor';
-                    cursorElem.style.backgroundColor = color;
+                // Compute line/column from position
+                const preText = codeTextarea.value.substring(0, position);
+                const lines = preText.split('\n');
+                const lineIndex = Math.max(0, lines.length - 1);
+                const lastLine = lines[lineIndex] || '';
 
-                    // Position the cursor at the end of the measured text
-                    cursorElem.style.left = `${measurementSpan.offsetWidth}px`;
-                    cursorElem.style.top = `${measurementSpan.offsetHeight}px`;
+                // Measure width of the last line
+                measurementSpan.textContent = lastLine;
+                const textWidth = measurementSpan.offsetWidth;
 
-                    editorBackdrop.appendChild(cursorElem);
-                }
+                const left = padLeft + textWidth - codeTextarea.scrollLeft;
+                const top = padTop + (lineIndex * lineHeight) - codeTextarea.scrollTop;
+
+                const cursorElem = document.createElement('div');
+                cursorElem.className = 'cursor';
+                cursorElem.style.backgroundColor = color;
+                cursorElem.style.left = `${left}px`;
+                cursorElem.style.top = `${top}px`;
+
+                editorBackdrop.appendChild(cursorElem);
             }
         }
 
@@ -318,9 +341,25 @@
         async function updateSession(payload)
         {
             // Use the activeSessionId variable instead of reading from URL
-            if (!currentUserId || !unsubscribeFromSession || !activeSessionId) return;
+            if (!activeSessionId) return;
             const sessionRef = doc(db, "live-code-sessions", activeSessionId);
-            await updateDoc(sessionRef, payload);
+            try
+            {
+                await updateDoc(sessionRef, payload);
+            }
+            catch (e)
+            {
+                // If the document doesn't exist yet, upsert with merge
+                if (e && (e.code === 'not-found' || String(e).toLowerCase().includes('no document to update')))
+                {
+                    await setDoc(sessionRef, payload, { merge: true });
+                }
+                else
+                {
+                    console.error('Failed to update session:', e);
+                    throw e;
+                }
+            }
         }
 
         // --- UI and Event Handlers ---
@@ -388,10 +427,11 @@
             };
         }
 
-        const debouncedCodeUpdate = debounce((code) => {
-            if (code !== lastKnownCode) {
-                updateSession({ code });
-                lastKnownCode = code;
+        const debouncedCodeUpdate = debounce(async (code) => {
+            if (code !== lastKnownCode)
+            {
+                try { await updateSession({ code }); }
+                catch (e) { /* error is logged in updateSession */ }
             }
         }, 200);
 
@@ -445,6 +485,8 @@
         {
             editorBackdrop.scrollTop = codeTextarea.scrollTop;
             editorBackdrop.scrollLeft = codeTextarea.scrollLeft;
+            // Re-render cursors to account for new scroll offsets
+            renderCursors(latestCursors);
         }
         codeTextarea.addEventListener('scroll', syncScroll);
 
