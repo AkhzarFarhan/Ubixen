@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Zen Sudoku</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+    :root{
+        /* softer, soothing mint palette and tighter spacing for mobile */
+        --bg: #f5fbfa;
+        --panel: #f8fbfb;
+        --card: #ffffff;
+        --accent: #5a8f86;
+        --muted: #7f9b97;
+        --danger: #e27a7a;
+        --cell-size: 60px; /* default cell size */
+        --gap: 4px;
+        --radius: 8px;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#eef9f7);} 
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:#123;display:flex;align-items:center;justify-content:center;padding:14px;}
+    .container{width:calc(var(--cell-size)*9 + var(--gap)*8 + 28px);max-width:100%;}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+    .title{font-weight:700;color:var(--accent);font-size:18px;letter-spacing:0.2px}
+    .controls{display:flex;gap:6px;align-items:center;}
+    .btn{background:var(--panel);border:1px solid rgba(90,140,130,0.06);padding:6px 10px;border-radius:10px;color:#0f3e37;font-weight:700;cursor:pointer;box-shadow:0 1px 0 rgba(255,255,255,0.6) inset;font-size:13px}
+    .btn.soft{background:transparent;border:1px solid rgba(90,140,130,0.06);color:var(--accent);}
+    .board{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 8px 20px rgba(17,60,55,0.04);}
+    .grid{display:grid;grid-template-columns:repeat(9, var(--cell-size));grid-template-rows:repeat(9, var(--cell-size));gap: var(--gap);user-select:none;}
+    .cell{
+        background:linear-gradient(180deg,#ffffff,var(--panel));
+        border-radius:var(--radius);display:flex;align-items:center;justify-content:center;position:relative;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);
+        font-weight:700;color:#06403b;font-size:22px;cursor:pointer;transition:box-shadow .12s,outline .12s,transform .08s;
+    }
+    .cell:active{transform:scale(0.998)}
+    .cell.fixed{background:linear-gradient(180deg,#fbfffd,#f2fbf9);color:#053a37;}
+    .cell.selected{outline:2px solid rgba(90,140,130,0.16);box-shadow:0 10px 18px rgba(15,60,55,0.05);}
+    .cell.err{background:linear-gradient(180deg,#fff6f6,#fffaf9);color:var(--danger);}
+    .cell .value{z-index:2}
+    .pencil{
+        position:absolute;inset:5px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+        font-weight:600;font-size:10px;color:rgba(6,45,40,0.42);align-items:center;justify-items:center;pointer-events:none;
+    }
+    .pencil span{opacity:.95}
+    .controls-row{display:flex;gap:8px;margin-top:10px;align-items:center;justify-content:space-between;}
+    .numpad{display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:10px;}
+    .nbtn{width:42px;height:42px;border-radius:10px;border:0;background:var(--panel);color:#0f3e37;font-weight:700;font-size:15px;cursor:pointer;}
+    .side-actions{display:flex;gap:6px;}
+    .level-modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(6,17,16,0.28);}
+    .level-card{background:var(--card);padding:18px;border-radius:10px;min-width:260px;text-align:center;box-shadow:0 18px 50px rgba(20,60,55,0.08);}
+    .levels{display:flex;gap:8px;justify-content:center;margin-top:12px;}
+    .level{padding:10px 14px;border-radius:10px;background:var(--panel);cursor:pointer;font-weight:700;color:#0f4f46;font-size:14px}
+    .footer{margin-top:10px;color:var(--muted);font-size:12px;text-align:center;}
+    /* thick box borders for 3x3 */
+    .grid > .cell:nth-child(3n){box-shadow: none;}
+    .grid > .cell{box-shadow:inset 0 1px 0 rgba(255,255,255,0.6), 0 1px 0 rgba(8,44,38,0.02);} 
+    /* draw heavier separators by pseudo elements */
+    .gwrap{position:relative;padding:8px;border-radius:10px;}
+    .gwrap::before{content:"";position:absolute;inset:8px;border-radius:8px;pointer-events:none;
+        background:
+            linear-gradient(transparent 0, transparent calc(33.333% - 1px), rgba(6,50,45,0.06) calc(33.333% - 1px), rgba(6,50,45,0.06) calc(33.333% + 1px), transparent calc(33.333% + 1px)) ,
+            linear-gradient(90deg, transparent 0, transparent calc(33.333% - 1px), rgba(6,50,45,0.06) calc(33.333% - 1px), rgba(6,50,45,0.06) calc(33.333% + 1px), transparent calc(33.333% + 1px));
+        opacity:0.55;
+    }
+    @media (max-width:640px){
+        :root{--cell-size:48px;--gap:4px}
+        body{padding:10px}
+        .title{font-size:16px}
+        .nbtn{width:36px;height:36px;font-size:14px}
+        .pencil{inset:4px;font-size:9px}
+        .level-card{min-width:220px;padding:14px}
+    }
+    @media (max-width:380px){
+        :root{--cell-size:42px}
+        .container{width:calc(var(--cell-size)*9 + var(--gap)*8 + 18px)}
+        .btn{padding:6px 8px;font-size:12px}
+        .title{font-size:15px}
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="title">Zen Sudoku</div>
+        <div class="controls">
+            <button class="btn" id="newGameBtn">New</button>
+            <button class="btn soft" id="resetBtn">Reset</button>
+            <button class="btn" id="checkBtn">Check</button>
+        </div>
+    </div>
+
+    <div class="board">
+        <div class="gwrap">
+            <div id="grid" class="grid"></div>
+        </div>
+
+        <div class="controls-row">
+            <div class="side-actions">
+                <button class="btn" id="hintBtn">Hint</button>
+                <button class="btn" id="solveBtn">Solve</button>
+            </div>
+            <div class="footer">Click a cell and type 1–9 or use the numpad. Candidates update automatically.</div>
+        </div>
+
+        <div class="numpad" id="numpad">
+            <button class="nbtn" data-num="1">1</button><button class="nbtn" data-num="2">2</button><button class="nbtn" data-num="3">3</button>
+            <button class="nbtn" data-num="4">4</button><button class="nbtn" data-num="5">5</button><button class="nbtn" data-num="6">6</button>
+            <button class="nbtn" data-num="7">7</button><button class="nbtn" data-num="8">8</button><button class="nbtn" data-num="9">9</button>
+            <button class="nbtn" id="erase">⌫</button><button class="nbtn" id="clearAll">Clear</button><button class="nbtn" id="autoCandidates">Cand</button>
+        </div>
+    </div>
+</div>
+
+<div id="levelModal" class="level-modal" role="dialog" aria-modal="true">
+    <div class="level-card">
+        <div style="font-weight:800;font-size:18px;color:#163f3a">Choose difficulty</div>
+        <div class="levels">
+            <div class="level" data-clues="44" style="background:linear-gradient(180deg,#f1f9f6,#e6f3ef);">Easy</div>
+            <div class="level" data-clues="36" style="background:linear-gradient(180deg,#f9fbf5,#eef7f0);">Medium</div>
+            <div class="level" data-clues="28" style="background:linear-gradient(180deg,#fff8f6,#fff2ee);color:#4a1f1f;">Hard</div>
+        </div>
+        <div style="margin-top:14px;color:var(--muted);font-size:13px">Puzzles generated offline. Candidates show automatically.</div>
+    </div>
+</div>
+
+<script>
+/* Zen Sudoku - single file offline app
+     - Generates a full solution then removes cells by difficulty, preserving uniqueness
+     - Shows pencil marks (candidates) automatically in every empty cell
+     - Allows input by click, keyboard and numpad
+*/
+
+const SIZE = 9;
+const BOX = 3;
+
+let solution = createEmpty();
+let puzzle = createEmpty();
+let fixed = createEmpty(false); // booleans for starting clues
+let selected = null;
+let modal = document.getElementById('levelModal');
+
+const gridEl = document.getElementById('grid');
+const newGameBtn = document.getElementById('newGameBtn');
+const resetBtn = document.getElementById('resetBtn');
+const checkBtn = document.getElementById('checkBtn');
+const hintBtn = document.getElementById('hintBtn');
+const solveBtn = document.getElementById('solveBtn');
+const eraseBtn = document.getElementById('erase');
+const clearAllBtn = document.getElementById('clearAll');
+const autoCandBtn = document.getElementById('autoCandidates');
+
+document.addEventListener('keydown', e=>{
+    if(modal.style.display !== 'none' && modal.style.display !== '') return;
+    if(!selected) return;
+    if(e.key >= '1' && e.key <= '9'){ inputNumber(+e.key); }
+    if(e.key === 'Backspace' || e.key === 'Delete'){ clearCell(); }
+    if(e.key === 'Escape'){ selected = null; renderGrid(); }
+});
+
+numpadEvents();
+
+document.querySelectorAll('.level').forEach(el=>{
+    el.addEventListener('click', ()=>{
+        const clues = +el.getAttribute('data-clues');
+        startNew(clues);
+        modal.style.display = 'none';
+    });
+});
+
+newGameBtn.addEventListener('click', ()=>{ modal.style.display='flex'; });
+resetBtn.addEventListener('click', ()=>{ resetToPuzzle(); });
+checkBtn.addEventListener('click', ()=>{ checkMistakes(); });
+hintBtn.addEventListener('click', ()=>{ giveHint(); });
+solveBtn.addEventListener('click', ()=>{ if(confirm('Reveal solution?')) revealSolution(); });
+eraseBtn.addEventListener('click', ()=>{ clearCell(); });
+clearAllBtn.addEventListener('click', ()=>{ if(confirm('Clear all non-fixed entries?')) clearAll(); });
+autoCandBtn.addEventListener('click', ()=>{ renderGrid(true); });
+
+function createEmpty(val=0){
+    const a = new Array(SIZE);
+    for(let r=0;r<SIZE;r++){ a[r]=new Array(SIZE).fill(val); }
+    return a;
+}
+function startNew(cluesCount=36){
+    // generate full solution
+    solution = createEmpty();
+    solveFill(solution);
+    // make puzzle by removing while preserving uniqueness
+    puzzle = solution.map(row=>row.slice());
+    fixed = createEmpty(false);
+    for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++) fixed[r][c]=true;
+    const removals = 81 - cluesCount;
+    let positions = [];
+    for(let i=0;i<81;i++) positions.push(i);
+    shuffle(positions);
+    let removed = 0;
+    for(let idx of positions){
+        if(removed >= removals) break;
+        const r = Math.floor(idx/9), c = idx%9;
+        const backup = puzzle[r][c];
+        puzzle[r][c]=0;
+        fixed[r][c]=false;
+        // test uniqueness
+        const copy = puzzle.map(row=>row.slice());
+        const sols = countSolutions(copy, 2);
+        if(sols !== 1){
+            // revert
+            puzzle[r][c]=backup;
+            fixed[r][c]=true;
+        } else {
+            removed++;
+        }
+    }
+    selected = null;
+    renderGrid();
+}
+
+function solveFill(grid){
+    // backtracking randomized fill to make a full solution
+    let nums = [1,2,3,4,5,6,7,8,9];
+    function backtrack(pos=0){
+        if(pos===81) return true;
+        const r=Math.floor(pos/9), c=pos%9;
+        if(grid[r][c]!==0) return backtrack(pos+1);
+        shuffle(nums);
+        for(let v of nums){
+            if(isSafe(grid,r,c,v)){
+                grid[r][c]=v;
+                if(backtrack(pos+1)) return true;
+                grid[r][c]=0;
+            }
+        }
+        return false;
+    }
+    backtrack(0);
+}
+
+function isSafe(g,r,c,v){
+    for(let i=0;i<9;i++){ if(g[r][i]===v) return false; if(g[i][c]===v) return false; }
+    const br = Math.floor(r/3)*3, bc = Math.floor(c/3)*3;
+    for(let i=0;i<3;i++) for(let j=0;j<3;j++) if(g[br+i][bc+j]===v) return false;
+    return true;
+}
+
+function countSolutions(g, limit=2){
+    let count=0;
+    function bt(pos=0){
+        if(count>=limit) return;
+        if(pos===81){ count++; return; }
+        const r=Math.floor(pos/9), c=pos%9;
+        if(g[r][c]!==0) return bt(pos+1);
+        for(let v=1;v<=9;v++){
+            if(isSafe(g,r,c,v)){
+                g[r][c]=v;
+                bt(pos+1);
+                g[r][c]=0;
+                if(count>=limit) return;
+            }
+        }
+    }
+    bt(0);
+    return count;
+}
+
+function renderGrid(forceCandidates=false){
+    gridEl.innerHTML='';
+    for(let r=0;r<SIZE;r++){
+        for(let c=0;c<SIZE;c++){
+            const idx = r*9+c;
+            const cell = document.createElement('div');
+            cell.className='cell';
+            if(fixed[r][c]) cell.classList.add('fixed');
+            if(selected && selected[0]===r && selected[1]===c) cell.classList.add('selected');
+            cell.dataset.r=r; cell.dataset.c=c;
+            const val = puzzle[r][c];
+            if(val!==0){
+                const v = document.createElement('div');
+                v.className='value';
+                v.textContent = val;
+                cell.appendChild(v);
+            } else {
+                // pencil marks (candidates)
+                const cand = computeCandidates(puzzle, r, c);
+                const p = document.createElement('div');
+                p.className='pencil';
+                for(let n=1;n<=9;n++){
+                    const sp=document.createElement('span');
+                    sp.textContent = cand.includes(n)? n : '';
+                    p.appendChild(sp);
+                }
+                cell.appendChild(p);
+            }
+            // extra styling for box borders (visual)
+            // mark error if filled but wrong compared to solution (optional)
+            if(puzzle[r][c]!==0 && solution[r][c] && puzzle[r][c]!==solution[r][c] && !fixed[r][c]) {
+                cell.classList.add('err');
+            }
+            cell.addEventListener('click', ()=>{ if(!fixed[r][c]) selected=[r,c]; renderGrid(); });
+            gridEl.appendChild(cell);
+        }
+    }
+}
+
+function computeCandidates(g, r, c){
+    if(g[r][c]!==0) return [];
+    const used = new Set();
+    for(let i=0;i<9;i++){ if(g[r][i]) used.add(g[r][i]); if(g[i][c]) used.add(g[i][c]); }
+    const br = Math.floor(r/3)*3, bc = Math.floor(c/3)*3;
+    for(let i=0;i<3;i++) for(let j=0;j<3;j++) if(g[br+i][bc+j]) used.add(g[br+i][bc+j]);
+    const out = [];
+    for(let n=1;n<=9;n++) if(!used.has(n)) out.push(n);
+    return out;
+}
+
+function inputNumber(n){
+    if(!selected) return;
+    const [r,c]=selected;
+    if(fixed[r][c]) return;
+    puzzle[r][c]=n;
+    renderGrid();
+    // optionally auto-select next empty
+}
+
+function clearCell(){
+    if(!selected) return;
+    const [r,c]=selected;
+    if(fixed[r][c]) return;
+    puzzle[r][c]=0;
+    renderGrid();
+}
+
+function resetToPuzzle(){
+    // revert to starting clues
+    for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){
+        if(!fixed[r][c]) puzzle[r][c]=0;
+    }
+    selected=null;
+    renderGrid();
+}
+
+function clearAll(){
+    for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){
+        if(!fixed[r][c]) puzzle[r][c]=0;
+    }
+    selected=null;
+    renderGrid();
+}
+
+function revealSolution(){
+    puzzle = solution.map(row=>row.slice());
+    selected=null;
+    renderGrid();
+}
+
+function checkMistakes(){
+    const wrong = [];
+    for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){
+        if(puzzle[r][c]!==0 && puzzle[r][c]!==solution[r][c]) wrong.push([r,c]);
+    }
+    if(wrong.length===0) alert('No mistakes found.');
+    else alert('Found '+wrong.length+' incorrect cell(s). They are highlighted in red.');
+    renderGrid();
+}
+
+function giveHint(){
+    // fill one correct non-fixed cell
+    for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){
+        if(!fixed[r][c] && puzzle[r][c]===0){
+            puzzle[r][c]=solution[r][c];
+            renderGrid();
+            return;
+        }
+    }
+    alert('No hints available.');
+}
+
+/* utilities */
+function shuffle(a){
+    for(let i=a.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+}
+
+/* backtracking solver for arbitrary puzzle (not necessarily unique) */
+function solveGrid(g){
+    const grid = g.map(r=>r.slice());
+    function bt(pos=0){
+        if(pos===81) return grid;
+        const r=Math.floor(pos/9), c=pos%9;
+        if(grid[r][c]!==0) return bt(pos+1);
+        for(let v=1;v<=9;v++){
+            if(isSafe(grid,r,c,v)){
+                grid[r][c]=v;
+                const res = bt(pos+1);
+                if(res) return res;
+                grid[r][c]=0;
+            }
+        }
+        return null;
+    }
+    return bt(0);
+}
+
+/* numpad events */
+function numpadEvents(){
+    document.getElementById('numpad').addEventListener('click', (ev)=>{
+        const t = ev.target;
+        if(!t.dataset) return;
+        if(t.dataset.num){
+            inputNumber(+t.dataset.num);
+        }
+    });
+}
+
+/* On load: show modal and generate initial puzzle when chosen */
+window.addEventListener('load', ()=>{
+    // start hidden until difficulty chosen
+    modal.style.display='flex';
+    // pre-generate empty solution to avoid blank UI
+    for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){ puzzle[r][c]=0; fixed[r][c]=false; }
+    renderGrid();
+});
+
+/* For debugging: generate quick puzzle with default clues if someone clicks new quickly */
+startNew(36); modal.style.display='none';
+renderGrid(true);
+
+</script>
+</body>
+</html>
