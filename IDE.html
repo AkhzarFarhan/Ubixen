@@ -806,18 +806,14 @@ int main() {
             validateApiKey() {
                 this.updateApiKeyButton();
                 
-                // Skip validation and notification if API key is embedded (not from localStorage)
-                if (!this.judgeApiKey) {
-                    // Only show notification for localStorage-based setup
-                    setTimeout(() => {
-                        this.showNotification('⚠️ Configure your Judge0 CE API key for online compilation', 'error');
-                    }, 2000);
-                } else if (this.judgeApiKey && !localStorage.getItem('judge0-api-key')) {
+                // Only show success notification if API key is embedded (not from localStorage)
+                if (this.judgeApiKey && !localStorage.getItem('judge0-api-key')) {
                     // API key is embedded (not from localStorage) - show success
                     setTimeout(() => {
                         this.showNotification('🎉 IDE ready with embedded API key!', 'success');
                     }, 1000);
                 }
+                // No warning notification needed - API key will be embedded during deployment
             }
 
             updateApiKeyButton() {
