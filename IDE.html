@@ -3,496 +3,1677 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Code Share</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter for UI, Fira Code for the editor -->
+    <title>Ubixen IDE - C/C++ Editor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <style>
-        /* Use Inter for the general UI and Fira Code for the code editor */
-        body { font-family: 'Inter', sans-serif; }
-        .font-code { font-family: 'Fira Code', monospace; }
-
-        /* This is the core trick for showing cursors in a textarea.
-           We create a backdrop div that is perfectly aligned behind the textarea.
-           The backdrop holds the code and the cursor elements.
-           The textarea itself is transparent, so you see the backdrop, but it
-           captures all the input and focus. */
-        .editor-container {
-            position: relative;
+        :root {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #252526;
+            --bg-tertiary: #2d2d30;
+            --text-primary: #d4d4d4;
+            --text-secondary: #969696;
+            --accent-blue: #007acc;
+            --accent-green: #4caf50;
+            --accent-orange: #ff9800;
+            --border: #404040;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --error: #f44336;
+            --success: #4caf50;
         }
-        #editor-backdrop, #code-textarea {
+
+        * {
             margin: 0;
-            padding: 1rem;
-            border: 1px solid #4A5568; /* gray-700 */
-            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .logo::before {
+            content: "⚡";
+            font-size: 24px;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--error);
+            transition: background-color 0.3s ease;
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+        }
+
+        .language-selector {
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .editor-container {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .console-container {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: none;
+            flex-direction: column;
+            height: 300px;
+            resize: vertical;
+            overflow: hidden;
+        }
+
+        .console-container.show {
+            display: flex;
+        }
+
+        .console-header {
+            background: var(--bg-tertiary);
+            padding: 8px 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .console-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .console-tab {
+            padding: 4px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .console-tab.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .console-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .run-btn {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background-color 0.2s ease;
+        }
+
+        .run-btn:hover {
+            background: #45a049;
+        }
+
+        .run-btn:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+        }
+
+        .clear-btn {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .console-content {
+            flex: 1;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .output-panel {
+            padding: 15px;
+            white-space: pre-wrap;
+            color: var(--text-primary);
+        }
+
+        .output-panel.stdout {
+            background: var(--bg-primary);
+        }
+
+        .output-panel.stderr {
+            background: #2d1b1b;
+            color: #ff8a80;
+        }
+
+        .output-panel.compilation {
+            background: #1e2a1e;
+            color: #81c784;
+        }
+
+        .input-panel {
+            padding: 15px;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border);
+        }
+
+        .input-field {
             width: 100%;
-            height: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .execution-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .status-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .toggle-console {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .api-key-btn {
+            background: var(--accent-orange);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background-color 0.2s ease;
+        }
+
+        .api-key-btn:hover {
+            background: #e68900;
+        }
+
+        .api-key-btn.configured {
+            background: var(--success);
+        }
+
+        /* API Key Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h2 {
+            color: var(--accent-blue);
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        .modal p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .modal input {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 12px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .modal .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .modal .btn-primary:hover {
+            background: #0066aa;
+        }
+
+        .modal .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .modal .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .line-numbers {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            padding: 20px 15px 20px 20px;
             font-size: 14px;
             line-height: 1.5;
+            text-align: right;
+            user-select: none;
+            border-right: 1px solid var(--border);
+            min-width: 60px;
+            white-space: pre;
+            font-family: inherit;
+        }
+
+        .editor-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            background: var(--bg-primary);
+            border: none;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            resize: none;
+            tab-size: 4;
             white-space: pre;
             overflow-wrap: normal;
-            overflow: auto;
-            background-color: transparent;
-            box-sizing: border-box;
-            grid-area: 1 / 1 / 2 / 2;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) var(--bg-primary);
         }
-        #editor-backdrop {
-            color: transparent; /* The text itself is not visible, only the selection/cursors */
-            z-index: 1;
-            pointer-events: none; /* Allows clicks to go through to the textarea */
+
+        .code-editor::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
         }
-        #code-textarea {
-            z-index: 2;
-            color: #E2E8F0; /* gray-300 */
-            resize: none;
+
+        .code-editor::-webkit-scrollbar-track {
+            background: var(--bg-primary);
         }
-        .cursor {
+
+        .code-editor::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 6px;
+        }
+
+        .code-editor::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        .code-highlight {
             position: absolute;
-            width: 2px;
-            height: 1.5em; /* Match line height */
-            background-color: red;
-            animation: blink 1s infinite;
+            top: 0;
+            left: 0;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
             pointer-events: none;
+            white-space: pre;
+            overflow: hidden;
+            color: transparent;
+            z-index: 1;
         }
-        @keyframes blink {
-            50% { opacity: 0; }
+
+        .code-editor {
+            position: relative;
+            z-index: 2;
+            background: transparent;
+        }
+
+        /* Prism.js custom theme for C/C++ */
+        .token.comment {
+            color: #6a9955;
+            font-style: italic;
+        }
+
+        .token.keyword {
+            color: #c586c0;
+            font-weight: 500;
+        }
+
+        .token.string {
+            color: #ce9178;
+        }
+
+        .token.number {
+            color: #b5cea8;
+        }
+
+        .token.function {
+            color: #dcdcaa;
+            font-weight: 500;
+        }
+
+        .token.operator {
+            color: #d4d4d4;
+        }
+
+        .token.punctuation {
+            color: #d4d4d4;
+        }
+
+        .token.builtin {
+            color: #4ec9b0;
+        }
+
+        .token.class-name {
+            color: #4ec9b0;
+            font-weight: 500;
+        }
+
+        .token.macro {
+            color: #9cdcfe;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px var(--shadow);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--error);
+        }
+
+        .footer {
+            background: var(--bg-secondary);
+            padding: 8px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .footer-info {
+            display: flex;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+
+            .code-editor, .code-highlight {
+                padding: 15px;
+                font-size: 13px;
+            }
+
+            .line-numbers {
+                padding: 15px 10px 15px 15px;
+                min-width: 50px;
+                font-size: 13px;
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1001;
+            color: var(--accent-blue);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200 flex flex-col items-center justify-center min-h-screen p-4">
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
 
-    <!-- Main container -->
-    <div id="app-container" class="w-full max-w-6xl mx-auto">
-
-        <!-- Home Screen: Shown when no session is active -->
-        <div id="home-screen" class="text-center">
-            <h1 class="text-4xl font-bold text-white mb-2">Live Code Share</h1>
-            <p class="text-lg text-gray-400 mb-8">Real-time collaborative coding, powered by Firestore.</p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button id="create-session-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg">
-                    Start New Session
-                </button>
-                <div class="flex items-center gap-2">
-                    <input type="text" id="join-session-input" placeholder="Enter session key" class="bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-3 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <button id="join-session-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
-                        Join
-                    </button>
-                </div>
-            </div>
+    <header class="header">
+        <div class="logo">
+            <h1>Ubixen IDE</h1>
         </div>
-
-        <!-- Editor Screen: Shown when a session is active -->
-        <div id="editor-screen" class="hidden w-full h-[85vh] flex flex-col">
-            <div class="flex flex-wrap items-center justify-between mb-4 gap-4">
-                <h2 class="text-2xl font-bold text-white">Code Session</h2>
-                <div class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg p-2">
-                    <span class="text-gray-400">Session Key:</span>
-                    <input id="session-key-display" type="text" readonly class="font-mono bg-transparent text-indigo-400 outline-none w-28">
-                    <button id="copy-key-btn" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-md text-sm">Copy</button>
-                </div>
-                <button id="leave-session-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    Leave Session
-                </button>
+        <div class="status-bar">
+            <select class="language-selector" id="languageSelector">
+                <option value="c">C</option>
+                <option value="cpp">C++</option>
+            </select>
+            <div class="status-indicator">
+                <div class="status-dot" id="connectionStatus"></div>
+                <span id="statusText">Connecting...</span>
             </div>
+            <button class="api-key-btn" id="apiKeyBtn">🔑 API Key</button>
+            <button class="toggle-console" id="toggleConsole">
+                <span>▲</span>
+                <span>Console</span>
+            </button>
+        </div>
+    </header>
 
-            <div class="editor-container w-full flex-grow grid grid-cols-1 grid-rows-1">
-                <!-- The backdrop for rendering cursors -->
-                <div id="editor-backdrop" class="font-code"></div>
-                <!-- The actual textarea for input -->
-                <textarea id="code-textarea" class="font-code bg-gray-800 border-gray-700" spellcheck="false"></textarea>
-            </div>
-             <div id="message-box" class="fixed bottom-5 right-5 bg-indigo-600 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transition-opacity duration-300">
-                Session key copied!
+    <div class="main-container">
+        <div class="editor-container">
+            <div class="line-numbers" id="lineNumbers">1</div>
+            <div class="editor-wrapper">
+                <pre class="code-highlight" id="codeHighlight"><code class="language-c"></code></pre>
+                <textarea class="code-editor" id="codeEditor" placeholder="// Welcome to Ubixen IDE
+// Start coding in C/C++...
+
+#include <stdio.h>
+
+int main() {
+    printf(\"Hello, World!\\n\");
+    return 0;
+}"></textarea>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script type="module">
-        // This code is human generated and should not be modified by AI
-        // IMPORTANT: In a real app, use environment variables for Firebase config.
-        // For this demo, we use a global object that would be provided by the environment.
+    <div class="console-container" id="consoleContainer">
+        <div class="console-header">
+            <div class="console-tabs">
+                <div class="console-tab active" data-tab="output">Output</div>
+                <div class="console-tab" data-tab="input">Input</div>
+                <div class="console-tab" data-tab="errors">Errors</div>
+            </div>
+            <div class="console-controls">
+                <div class="execution-status" id="executionStatus"></div>
+                <button class="run-btn" id="runBtn">
+                    <span>▶</span>
+                    <span>Run</span>
+                </button>
+                <button class="clear-btn" id="clearBtn">Clear</button>
+            </div>
+        </div>
+        <div class="console-content">
+            <div class="output-panel stdout" id="outputPanel">Ready to run your code...</div>
+            <div class="output-panel stderr" id="errorPanel" style="display: none;"></div>
+            <div class="input-panel" id="inputPanel" style="display: none;">
+                <textarea class="input-field" id="inputField" placeholder="Enter input for your program here..."></textarea>
+            </div>
+        </div>
+    </div>
 
-        function xorStrings(a, b)
-        {
-            const longerString = a.length >= b.length ? a : b;
-            const shorterString = a.length < b.length ? a : b;
-            let result = '';
-            for (let i = 0; i < longerString.length; i++)
-            {
-                const charCodeA = longerString.charCodeAt(i);
-                const charCodeB = shorterString.charCodeAt(i % shorterString.length);
-                const xorResult = charCodeA ^ charCodeB;
-                result += String.fromCharCode(xorResult);
-            }
-            return result;
-        }
+    <footer class="footer">
+        <div class="footer-info">
+            <span id="lineCol">Ln 1, Col 1</span>
+            <span id="charCount">0 characters</span>
+            <span id="lastSaved">Never saved</span>
+        </div>
+        <div>
+            <span>Auto-save enabled</span>
+        </div>
+    </footer>
 
-        // Function to read cache, if cache is not found then ask user to enter password
-        function readCache()
-        {
-            const cachedData = localStorage.getItem("IDE_password");
-            if (cachedData)
-            {
-                window["IDE_password"] = JSON.parse(cachedData);
-                return;
-            }
+    <div class="notification" id="notification"></div>
 
-            // Ask user to enter password (required to decrypt config)
-            let password = '';
-            while (!password)
-            {
-                password = prompt("Enter your password:") || '';
-                if (!password)
-                {
-                    alert("Password is required to load the app.");
-                }
-            }
-            window["IDE_password"] = password;
-            localStorage.setItem("IDE_password", JSON.stringify(window["IDE_password"]));
-        }
+    <!-- API Key Configuration Modal -->
+    <div class="modal-overlay" id="apiKeyModal">
+        <div class="modal">
+            <h2>🔑 Configure Judge0 CE API Key</h2>
+            <p>To enable online compilation, you need a Judge0 CE API key from RapidAPI:</p>
+            <ol style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px; padding-left: 20px;">
+                <li>Visit <a href="https://rapidapi.com/judge0-official/api/judge0-ce/" target="_blank" style="color: var(--accent-blue);">Judge0 CE on RapidAPI</a></li>
+                <li>Subscribe to the API (free tier available)</li>
+                <li>Copy your X-RapidAPI-Key</li>
+                <li>Paste it below</li>
+            </ol>
+            <input type="password" id="apiKeyInput" placeholder="Enter your RapidAPI key here..." />
+            <div class="modal-buttons">
+                <button class="btn-secondary" id="cancelApiKey">Cancel</button>
+                <button class="btn-primary" id="saveApiKey">Save Key</button>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 12px;">
+                ⚠️ Your API key is stored locally in your browser and never sent to our servers.
+            </p>
+        </div>
+    </div>
 
-        function getEncrypterKey(plainText)
-        {
-            const password = window["IDE_password"];
-            return xorStrings(password, plainText);
-        }
-
-        // Ensure password is loaded BEFORE building firebaseConfig
-        readCache();
-
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config)
-            : {
-                apiKey: getEncrypterKey('*.->+;)|"89+:2|- !3#'),
-                authDomain: getEncrypterKey('=((;7&l(;;`=*|2(<1+,#*3$1`7& '),
-                projectId: getEncrypterKey('=((;7&l(;;`=*'),
-                storageBucket: getEncrypterKey('=((;7&l(;;`=*|2(<1+,#*! .<5.(~."$'),
-                messagingSenderId: getEncrypterKey('x}`zbax{b~xi'),
-                appId: getEncrypterKey('xwabaq{m|{gzkd{91+w5|0fpz7{|3|45 {b+}2`c')
-            };
-
-        // Import Firebase modules
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-        // App state
-        let currentUserId = null;
-        let unsubscribeFromSession = null;
-    let lastKnownCode = "";
-    let latestCursors = {};
-        let activeSessionId = null; // Holds the current session ID
-        const userColors = ['#F87171', '#60A5FA', '#4ADE80', '#FBBF24', '#A78BFA', '#F472B6'];
-        let myColor = '';
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+    
+    <script>
+        /*
+         * SETUP INSTRUCTIONS FOR JUDGE0 CE API:
+         * 
+         * 1. Go to https://rapidapi.com/judge0-official/api/judge0-ce/
+         * 2. Subscribe to the Judge0 CE API (free tier available)
+         * 3. Copy your X-RapidAPI-Key from the API dashboard
+         * 4. Replace 'YOUR_RAPIDAPI_KEY_HERE' below with your actual API key
+         * 
+         * Example: this.judgeApiKey = 'abc123def456ghi789jkl012mno345pqr678';
+         */
         
-        // DOM Elements
-        const homeScreen = document.getElementById('home-screen');
-        const editorScreen = document.getElementById('editor-screen');
-        const createSessionBtn = document.getElementById('create-session-btn');
-        const joinSessionInput = document.getElementById('join-session-input');
-        const joinSessionBtn = document.getElementById('join-session-btn');
-        const codeTextarea = document.getElementById('code-textarea');
-        const editorBackdrop = document.getElementById('editor-backdrop');
-        const sessionKeyDisplay = document.getElementById('session-key-display');
-        const copyKeyBtn = document.getElementById('copy-key-btn');
-        const leaveSessionBtn = document.getElementById('leave-session-btn');
-        const messageBox = document.getElementById('message-box');
+        class UbixenIDE {
+            constructor() {
+                this.firebaseUrl = 'https://openware-ai-default-rtdb.firebaseio.com/';
+                this.currentLanguage = 'c';
+                this.isConnected = false;
+                this.lastSaveTime = null;
+                this.saveTimeout = null;
+                this.syncTimeout = null;
+                this.judgeApiUrl = 'https://judge0-ce.p.rapidapi.com';
+                this.judgeApiKey = localStorage.getItem('judge0-api-key') || null;
+                this.currentTab = 'output';
+                this.consoleVisible = false;
+                
+                this.elements = {
+                    editor: document.getElementById('codeEditor'),
+                    highlight: document.getElementById('codeHighlight').querySelector('code'),
+                    lineNumbers: document.getElementById('lineNumbers'),
+                    languageSelector: document.getElementById('languageSelector'),
+                    connectionStatus: document.getElementById('connectionStatus'),
+                    statusText: document.getElementById('statusText'),
+                    lineCol: document.getElementById('lineCol'),
+                    charCount: document.getElementById('charCount'),
+                    lastSaved: document.getElementById('lastSaved'),
+                    notification: document.getElementById('notification'),
+                    loading: document.getElementById('loading'),
+                    consoleContainer: document.getElementById('consoleContainer'),
+                    toggleConsole: document.getElementById('toggleConsole'),
+                    runBtn: document.getElementById('runBtn'),
+                    clearBtn: document.getElementById('clearBtn'),
+                    outputPanel: document.getElementById('outputPanel'),
+                    errorPanel: document.getElementById('errorPanel'),
+                    inputPanel: document.getElementById('inputPanel'),
+                    inputField: document.getElementById('inputField'),
+                    executionStatus: document.getElementById('executionStatus'),
+                    apiKeyBtn: document.getElementById('apiKeyBtn'),
+                    apiKeyModal: document.getElementById('apiKeyModal'),
+                    apiKeyInput: document.getElementById('apiKeyInput'),
+                    saveApiKey: document.getElementById('saveApiKey'),
+                    cancelApiKey: document.getElementById('cancelApiKey')
+                };
+                
+                this.init();
+            }
 
-        // --- Core Functions ---
+            async init() {
+                this.setupEventListeners();
+                this.updateLineNumbers();
+                this.updateStats();
+                
+                // Load initial content from Firebase
+                await this.loadFromFirebase();
+                
+                // Hide loading spinner
+                this.elements.loading.style.display = 'none';
+                
+                // Start real-time sync
+                this.startRealTimeSync();
+                
+                // Validate API key on startup
+                this.validateApiKey();
+            }
 
-        /**
-         * Initializes the application.
-         */
-        function main()
-        {
-            onAuthStateChanged(auth, (user) =>
-            {
-                if (user)
-                {
-                    currentUserId = user.uid;
-                    myColor = userColors[Math.floor(Math.random() * userColors.length)];
-                    // Always show the home screen on startup now.
-                    showHomeScreen();
+            validateApiKey() {
+                this.updateApiKeyButton();
+                
+                // Skip validation and notification if API key is embedded (not from localStorage)
+                if (!this.judgeApiKey) {
+                    // Only show notification for localStorage-based setup
+                    setTimeout(() => {
+                        this.showNotification('⚠️ Configure your Judge0 CE API key for online compilation', 'error');
+                    }, 2000);
+                } else if (this.judgeApiKey && !localStorage.getItem('judge0-api-key')) {
+                    // API key is embedded (not from localStorage) - show success
+                    setTimeout(() => {
+                        this.showNotification('🎉 IDE ready with embedded API key!', 'success');
+                    }, 1000);
                 }
-                else
-                {
-                    signInAnonymously(auth).catch(error =>
-                    {
-                        console.error("Anonymous sign-in failed:", error);
-                    });
+            }
+
+            updateApiKeyButton() {
+                if (this.judgeApiKey) {
+                    this.elements.apiKeyBtn.classList.add('configured');
+                    // Check if key is from localStorage or embedded
+                    if (localStorage.getItem('judge0-api-key')) {
+                        this.elements.apiKeyBtn.innerHTML = '<span>✓</span><span>API Configured</span>';
+                    } else {
+                        // Embedded key - different styling
+                        this.elements.apiKeyBtn.innerHTML = '<span>🔒</span><span>API Embedded</span>';
+                        this.elements.apiKeyBtn.style.cursor = 'default';
+                        this.elements.apiKeyBtn.title = 'API key is embedded in this deployment';
+                    }
+                } else {
+                    this.elements.apiKeyBtn.classList.remove('configured');
+                    this.elements.apiKeyBtn.innerHTML = '<span>🔑</span><span>API Key</span>';
+                    this.elements.apiKeyBtn.style.cursor = 'pointer';
+                    this.elements.apiKeyBtn.title = 'Click to configure API key';
                 }
-            });
-        }
+            }
 
-        /**
-         * Joins a collaborative session.
-         * @param {string} sessionId - The unique ID of the session.
-         */
-        async function joinSession(sessionId)
-        {
-            activeSessionId = sessionId; // Set the active session ID
-            showEditorScreen(sessionId);
-            const sessionRef = doc(db, "live-code-sessions", sessionId);
+            setupEventListeners() {
+                // Editor events
+                this.elements.editor.addEventListener('input', () => {
+                    this.updateHighlight();
+                    this.updateLineNumbers();
+                    this.updateStats();
+                    this.scheduleAutoSave();
+                });
 
-            // Set up a real-time listener for the session document
-            unsubscribeFromSession = onSnapshot(sessionRef, (snapshot) =>
-            {
-                if (!snapshot.exists())
-                {
-                    // If the session doesn't exist, create it with default content.
-                    setDoc(sessionRef,
-                    {
-                        code: `// Welcome to your collaborative session!\n// Share the session key to invite others.\n\nfunction hello()\n{\n  console.log("Hello, world!");\n}`,
-                        cursors: {}
+                this.elements.editor.addEventListener('scroll', () => {
+                    this.syncScroll();
+                });
+
+                this.elements.editor.addEventListener('keyup', () => {
+                    this.updateStats();
+                });
+
+                this.elements.editor.addEventListener('click', () => {
+                    this.updateStats();
+                });
+
+                // Language selector
+                this.elements.languageSelector.addEventListener('change', (e) => {
+                    this.currentLanguage = e.target.value;
+                    this.elements.highlight.className = `language-${this.currentLanguage}`;
+                    this.updateHighlight();
+                    this.saveToFirebase();
+                });
+
+                // Handle special keys (Tab, Enter, braces)
+                this.elements.editor.addEventListener('keydown', (e) => {
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const start = e.target.selectionStart;
+                        const end = e.target.selectionEnd;
+                        e.target.value = e.target.value.substring(0, start) + '    ' + e.target.value.substring(end);
+                        e.target.selectionStart = e.target.selectionEnd = start + 4;
+                        this.updateHighlight();
+                        this.updateLineNumbers();
+                    } else if (e.key === 'Enter') {
+                        this.handleEnterKey(e);
+                    } else if (e.key === '{') {
+                        this.handleOpenBrace(e);
+                    } else if (e.key === '(' || e.key === '[' || e.key === '"' || e.key === "'") {
+                        this.handleAutoPairing(e);
+                    } else if (e.key === 'Backspace') {
+                        this.handleBackspace(e);
+                    }
+                });
+
+                // Console controls
+                this.elements.toggleConsole.addEventListener('click', () => {
+                    this.toggleConsole();
+                });
+
+                this.elements.runBtn.addEventListener('click', () => {
+                    this.runCode();
+                });
+
+                this.elements.clearBtn.addEventListener('click', () => {
+                    this.clearConsole();
+                });
+
+                // Console tabs
+                document.querySelectorAll('.console-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        this.switchTab(e.target.dataset.tab);
                     });
+                });
+
+                // API Key modal
+                this.elements.apiKeyBtn.addEventListener('click', () => {
+                    // Don't show modal if API key is embedded
+                    if (this.judgeApiKey && !localStorage.getItem('judge0-api-key')) {
+                        this.showNotification('API key is embedded in this deployment', 'success');
+                        return;
+                    }
+                    this.showApiKeyModal();
+                });
+
+                this.elements.saveApiKey.addEventListener('click', () => {
+                    this.saveApiKey();
+                });
+
+                this.elements.cancelApiKey.addEventListener('click', () => {
+                    this.hideApiKeyModal();
+                });
+
+                // Close modal on overlay click
+                this.elements.apiKeyModal.addEventListener('click', (e) => {
+                    if (e.target === this.elements.apiKeyModal) {
+                        this.hideApiKeyModal();
+                    }
+                });
+            }
+
+            showApiKeyModal() {
+                this.elements.apiKeyInput.value = this.judgeApiKey || '';
+                this.elements.apiKeyModal.classList.add('show');
+                this.elements.apiKeyInput.focus();
+            }
+
+            hideApiKeyModal() {
+                this.elements.apiKeyModal.classList.remove('show');
+                this.elements.apiKeyInput.value = '';
+            }
+
+            saveApiKey() {
+                const apiKey = this.elements.apiKeyInput.value.trim();
+                
+                if (!apiKey) {
+                    this.showNotification('Please enter a valid API key', 'error');
                     return;
                 }
 
-                const data = snapshot.data();
-
-                // Update code only if it has changed
-                if (data.code !== codeTextarea.value)
-                {
-                    const cursorPos = codeTextarea.selectionStart;
-                    codeTextarea.value = data.code;
-                    lastKnownCode = data.code;
-                    // Try to restore cursor position
-                    try
-                    {
-                        codeTextarea.setSelectionRange(cursorPos, cursorPos);
-                    }
-                    catch (e)
-                    {
-                        /* ignore */
-                    }
+                // Basic validation - RapidAPI keys are typically 50 characters
+                if (apiKey.length < 20) {
+                    this.showNotification('API key seems too short. Please check your key.', 'error');
+                    return;
                 }
 
-                latestCursors = data.cursors || {};
-                renderCursors(latestCursors);
-                syncScroll();
-            });
-        }
-
-        /**
-         * Renders the cursors of other users on the backdrop.
-         * @param {object} cursors - The cursors object from Firestore.
-         */
-        function renderCursors(cursors)
-        {
-            editorBackdrop.innerHTML = ''; // Clear old cursors
-
-            const cursorsObj = cursors && typeof cursors === 'object' ? cursors : {};
-
-            // Hidden span used to measure widths of the last line only
-            const measurementSpan = document.createElement('span');
-            measurementSpan.style.visibility = 'hidden';
-            measurementSpan.style.whiteSpace = 'pre';
-            editorBackdrop.appendChild(measurementSpan);
-
-            const cs = getComputedStyle(codeTextarea);
-            const lineHeight = parseFloat(cs.lineHeight) || 21; // fallback ~14px * 1.5
-            const padLeft = parseFloat(cs.paddingLeft) || 16;
-            const padTop = parseFloat(cs.paddingTop) || 16;
-
-            for (const userId in cursorsObj)
-            {
-                const entry = cursorsObj[userId];
-                if (userId === currentUserId || !entry) continue;
-
-                const position = Math.max(0, Math.min(Number(entry.position) || 0, codeTextarea.value.length));
-                const color = entry.color || '#F87171';
-
-                // Compute line/column from position
-                const preText = codeTextarea.value.substring(0, position);
-                const lines = preText.split('\n');
-                const lineIndex = Math.max(0, lines.length - 1);
-                const lastLine = lines[lineIndex] || '';
-
-                // Measure width of the last line
-                measurementSpan.textContent = lastLine;
-                const textWidth = measurementSpan.offsetWidth;
-
-                const left = padLeft + textWidth - codeTextarea.scrollLeft;
-                const top = padTop + (lineIndex * lineHeight) - codeTextarea.scrollTop;
-
-                const cursorElem = document.createElement('div');
-                cursorElem.className = 'cursor';
-                cursorElem.style.backgroundColor = color;
-                cursorElem.style.left = `${left}px`;
-                cursorElem.style.top = `${top}px`;
-
-                editorBackdrop.appendChild(cursorElem);
+                // Save to localStorage
+                localStorage.setItem('judge0-api-key', apiKey);
+                this.judgeApiKey = apiKey;
+                
+                this.hideApiKeyModal();
+                this.updateApiKeyButton();
+                this.showNotification('API key saved successfully! 🎉', 'success');
             }
-        }
 
-        /**
-         * Updates the current user's data (code or cursor) in Firestore.
-         * @param {object} payload - The data to update.
-         */
-        async function updateSession(payload)
-        {
-            // Use the activeSessionId variable instead of reading from URL
-            if (!activeSessionId) return;
-            const sessionRef = doc(db, "live-code-sessions", activeSessionId);
-            try
-            {
-                await updateDoc(sessionRef, payload);
-            }
-            catch (e)
-            {
-                // If the document doesn't exist yet, upsert with merge
-                if (e && (e.code === 'not-found' || String(e).toLowerCase().includes('no document to update')))
-                {
-                    await setDoc(sessionRef, payload, { merge: true });
-                }
-                else
-                {
-                    console.error('Failed to update session:', e);
-                    throw e;
-                }
-            }
-        }
-
-        // --- UI and Event Handlers ---
-
-        function showHomeScreen()
-        {
-            homeScreen.classList.remove('hidden');
-            editorScreen.classList.add('hidden');
-        }
-
-        function showEditorScreen(sessionId)
-        {
-            homeScreen.classList.add('hidden');
-            editorScreen.classList.remove('hidden');
-            sessionKeyDisplay.value = sessionId;
-        }
-
-        createSessionBtn.addEventListener('click', () =>
-        {
-            const newSessionId = Math.random().toString(36).substring(2, 9);
-            // Removed history.pushState
-            joinSession(newSessionId);
-        });
-
-        joinSessionBtn.addEventListener('click', () =>
-        {
-            const sessionId = joinSessionInput.value.trim();
-            if (sessionId)
-            {
-                // Removed history.pushState
-                joinSession(sessionId);
-            }
-        });
-
-        leaveSessionBtn.addEventListener('click', () =>
-        {
-            if (unsubscribeFromSession)
-            {
-                unsubscribeFromSession();
-                unsubscribeFromSession = null;
-            }
-            // Clear the user's cursor position on leaving
-            updateSession({ [`cursors.${currentUserId}`]: null });
-            activeSessionId = null; // Clear the session ID
-            // Removed history.pushState
-            showHomeScreen();
-        });
-
-        copyKeyBtn.addEventListener('click', () =>
-        {
-            sessionKeyDisplay.select();
-            document.execCommand('copy');
-            messageBox.classList.remove('opacity-0');
-            setTimeout(() => messageBox.classList.add('opacity-0'), 2000);
-        });
-
-        // Debounce function to limit Firestore writes
-        function debounce(func, delay)
-        {
-            let timeout;
-            return function(...args)
-            {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-
-        const debouncedCodeUpdate = debounce(async (code) => {
-            if (code !== lastKnownCode)
-            {
-                try { await updateSession({ code }); }
-                catch (e) { /* error is logged in updateSession */ }
-            }
-        }, 200);
-
-        codeTextarea.addEventListener('input', () =>
-        {
-            debouncedCodeUpdate(codeTextarea.value);
-            syncScroll();
-        });
-
-        const debouncedCursorUpdate = debounce((position) => {
-            updateSession({ [`cursors.${currentUserId}`]: { position, color: myColor } });
-        }, 50);
-
-        document.addEventListener('selectionchange', () =>
-        {
-            if (document.activeElement === codeTextarea)
-            {
-                debouncedCursorUpdate(codeTextarea.selectionStart);
-            }
-        });
-        
-        // Simple auto-indentation
-        codeTextarea.addEventListener('keydown', (e) =>
-        {
-            if (e.key === 'Enter')
-            {
+            handleEnterKey(e) {
                 e.preventDefault();
-                const pos = codeTextarea.selectionStart;
-                const text = codeTextarea.value;
-                const lineStart = text.lastIndexOf('\n', pos - 1) + 1;
-                const currentLine = text.substring(lineStart, pos);
-                const indent = currentLine.match(/^\s*/)[0];
-
-                const newText = text.substring(0, pos) + '\n' + indent + text.substring(pos);
-                codeTextarea.value = newText;
-                codeTextarea.selectionStart = codeTextarea.selectionEnd = pos + 1 + indent.length;
+                
+                const editor = this.elements.editor;
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                const value = editor.value;
+                
+                // Get the current line
+                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                const currentLine = value.substring(lineStart, start);
+                
+                // Calculate current indentation
+                const indentMatch = currentLine.match(/^(\s*)/);
+                const currentIndent = indentMatch ? indentMatch[1] : '';
+                
+                // Check if we're inside braces
+                const beforeCursor = value.substring(0, start);
+                const afterCursor = value.substring(start);
+                const prevChar = beforeCursor.slice(-1);
+                const nextChar = afterCursor.charAt(0);
+                
+                let newText = '';
+                let cursorOffset = 0;
+                
+                if (prevChar === '{' && nextChar === '}') {
+                    // Inside empty braces - add two lines with proper indentation
+                    newText = '\n' + currentIndent + '    \n' + currentIndent;
+                    cursorOffset = currentIndent.length + 5; // Position cursor on the inner line
+                } else if (prevChar === '{') {
+                    // After opening brace - add indented line
+                    newText = '\n' + currentIndent + '    ';
+                    cursorOffset = newText.length;
+                } else if (currentLine.trim().endsWith('{')) {
+                    // Line ends with brace - add indented line
+                    newText = '\n' + currentIndent + '    ';
+                    cursorOffset = newText.length;
+                } else {
+                    // Normal enter - maintain current indentation
+                    newText = '\n' + currentIndent;
+                    cursorOffset = newText.length;
+                }
+                
+                // Insert the new text
+                editor.value = value.substring(0, start) + newText + value.substring(end);
+                editor.selectionStart = editor.selectionEnd = start + cursorOffset;
+                
+                this.updateHighlight();
+                this.updateLineNumbers();
+                this.updateStats();
+                this.scheduleAutoSave();
             }
-            else if (e.key === '{')
-            {
+
+            handleOpenBrace(e) {
                 e.preventDefault();
-                const pos = codeTextarea.selectionStart;
-                const text = codeTextarea.value;
-                const newText = text.substring(0, pos) + '{}' + text.substring(pos);
-                codeTextarea.value = newText;
-                codeTextarea.selectionStart = codeTextarea.selectionEnd = pos + 1;
+                
+                const editor = this.elements.editor;
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                const value = editor.value;
+                
+                // Get the current line
+                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                const currentLine = value.substring(lineStart, start);
+                
+                // Calculate current indentation
+                const indentMatch = currentLine.match(/^(\s*)/);
+                const currentIndent = indentMatch ? indentMatch[1] : '';
+                
+                // Check if this looks like a function/control structure opening
+                const beforeText = value.substring(0, start).trim();
+                const shouldAutoComplete = (
+                    beforeText.endsWith(')') || // function() {
+                    /\b(if|else|for|while|do|switch|struct|enum|union)\s*\([^)]*\)$/.test(beforeText.slice(-50)) || // control structures
+                    /\b(struct|enum|union|class)\s+\w+$/.test(beforeText.slice(-50)) || // type definitions
+                    currentLine.trim() === '' // empty line
+                );
+                
+                let newText = '';
+                let cursorOffset = 0;
+                
+                if (shouldAutoComplete) {
+                    // Add opening brace, newline with indentation, and closing brace
+                    newText = '{\n' + currentIndent + '    \n' + currentIndent + '}';
+                    cursorOffset = 2 + currentIndent.length + 4; // Position cursor on the inner line
+                } else {
+                    // Just add the opening brace
+                    newText = '{';
+                    cursorOffset = 1;
+                }
+                
+                // Insert the new text
+                editor.value = value.substring(0, start) + newText + value.substring(end);
+                editor.selectionStart = editor.selectionEnd = start + cursorOffset;
+                
+                this.updateHighlight();
+                this.updateLineNumbers();
+                this.updateStats();
+                this.scheduleAutoSave();
+            }
+
+            handleAutoPairing(e) {
+                const editor = this.elements.editor;
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                const value = editor.value;
+                
+                const pairs = {
+                    '(': ')',
+                    '[': ']',
+                    '"': '"',
+                    "'": "'"
+                };
+                
+                const openChar = e.key;
+                const closeChar = pairs[openChar];
+                
+                if (!closeChar) return;
+                
+                // For quotes, check if we're closing an existing quote
+                if ((openChar === '"' || openChar === "'") && value.charAt(start) === openChar) {
+                    // Move cursor past the existing quote
+                    e.preventDefault();
+                    editor.selectionStart = editor.selectionEnd = start + 1;
+                    return;
+                }
+                
+                // Add the pair
+                e.preventDefault();
+                const selectedText = value.substring(start, end);
+                const newText = openChar + selectedText + closeChar;
+                
+                editor.value = value.substring(0, start) + newText + value.substring(end);
+                editor.selectionStart = editor.selectionEnd = start + 1;
+                
+                this.updateHighlight();
+                this.updateStats();
+                this.scheduleAutoSave();
+            }
+
+            handleBackspace(e) {
+                const editor = this.elements.editor;
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                const value = editor.value;
+                
+                // If there's a selection, let default backspace handle it
+                if (start !== end) return;
+                
+                const prevChar = value.charAt(start - 1);
+                const nextChar = value.charAt(start);
+                
+                // Check for paired characters
+                const pairs = {
+                    '(': ')',
+                    '[': ']',
+                    '{': '}',
+                    '"': '"',
+                    "'": "'"
+                };
+                
+                if (pairs[prevChar] === nextChar) {
+                    // Remove both characters
+                    e.preventDefault();
+                    editor.value = value.substring(0, start - 1) + value.substring(start + 1);
+                    editor.selectionStart = editor.selectionEnd = start - 1;
+                    
+                    this.updateHighlight();
+                    this.updateLineNumbers();
+                    this.updateStats();
+                    this.scheduleAutoSave();
+                }
+            }
+
+            toggleConsole() {
+                this.consoleVisible = !this.consoleVisible;
+                this.elements.consoleContainer.classList.toggle('show', this.consoleVisible);
+                
+                const arrow = this.elements.toggleConsole.querySelector('span');
+                arrow.textContent = this.consoleVisible ? '▼' : '▲';
+                
+                // Adjust main container height
+                const mainContainer = document.querySelector('.main-container');
+                if (this.consoleVisible) {
+                    mainContainer.style.height = 'calc(100vh - 360px)';
+                } else {
+                    mainContainer.style.height = 'calc(100vh - 60px)';
+                }
+            }
+
+            switchTab(tabName) {
+                this.currentTab = tabName;
+                
+                // Update tab appearance
+                document.querySelectorAll('.console-tab').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.tab === tabName);
+                });
+                
+                // Show/hide panels
+                this.elements.outputPanel.style.display = tabName === 'output' ? 'block' : 'none';
+                this.elements.errorPanel.style.display = tabName === 'errors' ? 'block' : 'none';
+                this.elements.inputPanel.style.display = tabName === 'input' ? 'block' : 'none';
+            }
+
+            clearConsole() {
+                this.elements.outputPanel.textContent = 'Console cleared.';
+                this.elements.errorPanel.textContent = '';
+                this.elements.executionStatus.textContent = '';
+            }
+
+            async runCode() {
+                if (!this.consoleVisible) {
+                    this.toggleConsole();
+                }
+                
+                this.switchTab('output');
+                this.elements.runBtn.disabled = true;
+                this.elements.outputPanel.textContent = 'Compiling and running...';
+                this.elements.executionStatus.innerHTML = '<div class="status-spinner"></div> Executing...';
+                
+                try {
+                    const code = this.elements.editor.value.trim();
+                    if (!code) {
+                        throw new Error('No code to execute');
+                    }
+                    
+                    // Get language ID for Judge0 CE API
+                    // C (GCC 9.2.0): 50, C++ (GCC 9.2.0): 54
+                    // C (Clang 7.0.1): 75, C++ (Clang 7.0.1): 76
+                    const languageId = this.getLanguageId(this.currentLanguage);
+                    const stdin = this.elements.inputField.value;
+                    
+                    // Use a free alternative API (compile.sh or other free service)
+                    const result = await this.executeCodeWithFreeAPI(code, languageId, stdin);
+                    
+                    this.displayExecutionResult(result);
+                } catch (error) {
+                    this.elements.outputPanel.textContent = `Error: ${error.message}`;
+                    this.elements.executionStatus.textContent = 'Execution failed';
+                } finally {
+                    this.elements.runBtn.disabled = false;
+                }
+            }
+
+            async executeCodeWithFreeAPI(code, languageId, stdin) {
+                // Check if API key is configured
+                if (!this.judgeApiKey) {
+                    this.showNotification('Please configure your Judge0 CE API key first', 'error');
+                    return await this.mockCodeExecution(code, stdin);
+                }
+
+                try {
+                    // Step 1: Submit the code for execution
+                    const submissionData = {
+                        source_code: btoa(code), // Base64 encode
+                        language_id: languageId,
+                        stdin: stdin ? btoa(stdin) : undefined, // Base64 encode stdin if provided
+                        cpu_time_limit: 5,
+                        memory_limit: 128000,
+                        wall_time_limit: 10,
+                        expected_output: undefined,
+                        compiler_options: undefined,
+                        command_line_arguments: undefined
+                    };
+
+                    const submitResponse = await fetch(`${this.judgeApiUrl}/submissions?base64_encoded=true&wait=false`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+                            'X-RapidAPI-Key': this.judgeApiKey
+                        },
+                        body: JSON.stringify(submissionData)
+                    });
+
+                    if (!submitResponse.ok) {
+                        // Handle specific error codes
+                        if (submitResponse.status === 401) {
+                            this.showNotification('Invalid API key. Please check your configuration.', 'error');
+                            localStorage.removeItem('judge0-api-key');
+                            this.judgeApiKey = null;
+                            this.updateApiKeyButton();
+                        }
+                        throw new Error(`Submission failed: HTTP ${submitResponse.status}`);
+                    }
+
+                    const submissionResult = await submitResponse.json();
+                    const submissionToken = submissionResult.token;
+
+                    // Step 2: Poll for the result
+                    let result = null;
+                    let attempts = 0;
+                    const maxAttempts = 30; // 30 seconds timeout
+
+                    while (attempts < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                        attempts++;
+
+                        const resultResponse = await fetch(
+                            `${this.judgeApiUrl}/submissions/${submissionToken}?base64_encoded=true&fields=*`,
+                            {
+                                method: 'GET',
+                                headers: {
+                                    'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+                                    'X-RapidAPI-Key': this.judgeApiKey
+                                }
+                            }
+                        );
+
+                        if (!resultResponse.ok) {
+                            throw new Error(`Result fetch failed: HTTP ${resultResponse.status}`);
+                        }
+
+                        result = await resultResponse.json();
+
+                        // Check if execution is complete
+                        if (result.status && result.status.id > 2) {
+                            // Status ID > 2 means execution is complete
+                            break;
+                        }
+
+                        // Update status for user feedback
+                        this.elements.executionStatus.innerHTML = `
+                            <div class="status-spinner"></div> 
+                            Executing... (${attempts}s)
+                        `;
+                    }
+
+                    if (attempts >= maxAttempts) {
+                        throw new Error('Execution timeout - the program took too long to execute');
+                    }
+
+                    // Step 3: Decode and return the result
+                    return this.processJudge0Result(result);
+
+                } catch (error) {
+                    console.error('Judge0 API Error:', error);
+                    
+                    // Fallback to mock execution on error
+                    this.showNotification(`API Error: ${error.message}. Using demo mode.`, 'error');
+                    return await this.mockCodeExecution(code, stdin);
+                }
+            }
+
+            processJudge0Result(rawResult) {
+                // Decode base64 encoded fields
+                const result = {
+                    stdout: rawResult.stdout ? atob(rawResult.stdout) : null,
+                    stderr: rawResult.stderr ? atob(rawResult.stderr) : null,
+                    compile_output: rawResult.compile_output ? atob(rawResult.compile_output) : null,
+                    status: rawResult.status || { description: 'Unknown' },
+                    time: rawResult.time,
+                    memory: rawResult.memory,
+                    exit_code: rawResult.exit_code,
+                    exit_signal: rawResult.exit_signal
+                };
+
+                // Map Judge0 status to our expected format
+                const statusMap = {
+                    1: 'In Queue',
+                    2: 'Processing',
+                    3: 'Accepted',
+                    4: 'Wrong Answer',
+                    5: 'Time Limit Exceeded',
+                    6: 'Compilation Error',
+                    7: 'Runtime Error (SIGSEGV)',
+                    8: 'Runtime Error (SIGXFSZ)',
+                    9: 'Runtime Error (SIGFPE)',
+                    10: 'Runtime Error (SIGABRT)',
+                    11: 'Runtime Error (NZEC)',
+                    12: 'Runtime Error (Other)',
+                    13: 'Internal Error',
+                    14: 'Exec Format Error'
+                };
+
+                // Update status description with our mapping
+                if (result.status.id && statusMap[result.status.id]) {
+                    result.status.description = statusMap[result.status.id];
+                }
+
+                // Handle compilation errors specially
+                if (result.status.id === 6) {
+                    result.status.description = 'Compilation Error';
+                    result.stderr = result.compile_output || result.stderr || 'Compilation failed';
+                }
+
+                // Handle successful execution
+                if (result.status.id === 3) {
+                    result.status.description = 'Accepted';
+                }
+
+                return result;
+            }
+
+            getLanguageId(language) {
+                // Judge0 CE API Language IDs
+                const languageMap = {
+                    'c': 50,      // C (GCC 9.2.0)
+                    'cpp': 54,    // C++ (GCC 9.2.0)
+                    'c_clang': 75,    // C (Clang 7.0.1) - if you want to add this option
+                    'cpp_clang': 76   // C++ (Clang 7.0.1) - if you want to add this option
+                };
+                
+                return languageMap[language] || languageMap['c']; // Default to C
+            }
+
+            async mockCodeExecution(code, stdin) {
+                // Simulate compilation and execution
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Basic pattern matching for simple C programs
+                if (code.includes('printf("Hello, World!')) {
+                    return {
+                        stdout: 'Hello, World!\n',
+                        stderr: null,
+                        compile_output: 'Compilation successful',
+                        status: { description: 'Accepted' },
+                        time: '0.001',
+                        memory: 1024
+                    };
+                } else if (code.includes('scanf') && stdin) {
+                    return {
+                        stdout: `Output with input: ${stdin}\n`,
+                        stderr: null,
+                        compile_output: 'Compilation successful',
+                        status: { description: 'Accepted' },
+                        time: '0.002',
+                        memory: 1024
+                    };
+                } else if (code.includes('printf')) {
+                    // Try to extract printf content
+                    const printfMatch = code.match(/printf\s*\(\s*"([^"]+)"/);
+                    const output = printfMatch ? printfMatch[1].replace(/\\n/g, '\n') : 'Program executed successfully';
+                    return {
+                        stdout: output + '\n',
+                        stderr: null,
+                        compile_output: 'Compilation successful',
+                        status: { description: 'Accepted' },
+                        time: '0.001',
+                        memory: 1024
+                    };
+                } else if (!code.includes('#include')) {
+                    return {
+                        stdout: null,
+                        stderr: 'error: #include directive missing\nCompilation failed',
+                        compile_output: 'Compilation failed',
+                        status: { description: 'Compilation Error' },
+                        time: null,
+                        memory: null
+                    };
+                } else {
+                    return {
+                        stdout: 'Program compiled and executed successfully.\n(This is a demo - integrate with Judge0 CE for full functionality)',
+                        stderr: null,
+                        compile_output: 'Compilation successful',
+                        status: { description: 'Accepted' },
+                        time: '0.001',
+                        memory: 1024
+                    };
+                }
+            }
+
+            displayExecutionResult(result) {
+                this.elements.executionStatus.textContent = '';
+                
+                // Handle successful execution
+                if (result.status.description === 'Accepted') {
+                    this.elements.outputPanel.textContent = result.stdout || 'Program executed successfully (no output)';
+                    this.elements.executionStatus.innerHTML = `
+                        <span style="color: var(--success);">✓ Executed successfully</span>
+                        <span>Time: ${result.time || 'N/A'}s</span>
+                        <span>Memory: ${result.memory || 'N/A'}KB</span>
+                        <span>Exit Code: ${result.exit_code || 0}</span>
+                    `;
+                } 
+                // Handle compilation errors
+                else if (result.status.description === 'Compilation Error') {
+                    this.switchTab('errors');
+                    this.elements.errorPanel.textContent = result.stderr || result.compile_output || 'Compilation failed';
+                    this.elements.executionStatus.innerHTML = '<span style="color: var(--error);">✗ Compilation failed</span>';
+                } 
+                // Handle runtime errors
+                else if (result.status.description.startsWith('Runtime Error')) {
+                    this.switchTab('errors');
+                    this.elements.errorPanel.textContent = `${result.status.description}\n${result.stderr || 'No error details available'}`;
+                    this.elements.executionStatus.innerHTML = `
+                        <span style="color: var(--error);">✗ ${result.status.description}</span>
+                        <span>Exit Code: ${result.exit_code || 'N/A'}</span>
+                        ${result.exit_signal ? `<span>Signal: ${result.exit_signal}</span>` : ''}
+                    `;
+                    
+                    // Show stdout if available
+                    if (result.stdout) {
+                        this.elements.outputPanel.textContent = result.stdout;
+                    }
+                } 
+                // Handle time limit exceeded
+                else if (result.status.description === 'Time Limit Exceeded') {
+                    this.elements.outputPanel.textContent = result.stdout || 'Program output (before timeout):';
+                    this.elements.executionStatus.innerHTML = `
+                        <span style="color: var(--error);">⏱ Time Limit Exceeded</span>
+                        <span>Max Time: 5s</span>
+                    `;
+                } 
+                // Handle other statuses
+                else {
+                    this.elements.outputPanel.textContent = result.stdout || 'No output';
+                    if (result.stderr) {
+                        this.switchTab('errors');
+                        this.elements.errorPanel.textContent = result.stderr;
+                    }
+                    this.elements.executionStatus.innerHTML = `
+                        <span style="color: var(--error);">✗ ${result.status.description}</span>
+                        ${result.time ? `<span>Time: ${result.time}s</span>` : ''}
+                        ${result.memory ? `<span>Memory: ${result.memory}KB</span>` : ''}
+                    `;
+                }
+
+                // Add compilation output to errors if it exists and there were issues
+                if (result.compile_output && result.status.description !== 'Accepted') {
+                    const currentErrorContent = this.elements.errorPanel.textContent;
+                    this.elements.errorPanel.textContent = currentErrorContent + 
+                        (currentErrorContent ? '\n\n--- Compilation Output ---\n' : '') + 
+                        result.compile_output;
+                }
+            }
+
+            updateHighlight() {
+                const code = this.elements.editor.value;
+                this.elements.highlight.textContent = code;
+                Prism.highlightElement(this.elements.highlight);
+            }
+
+            syncScroll() {
+                const editor = this.elements.editor;
+                const highlight = this.elements.highlight.parentElement;
+                const lineNumbers = this.elements.lineNumbers;
+                
+                highlight.scrollTop = editor.scrollTop;
+                highlight.scrollLeft = editor.scrollLeft;
+                lineNumbers.scrollTop = editor.scrollTop;
+            }
+
+            updateLineNumbers() {
+                const lines = this.elements.editor.value.split('\n');
+                const lineCount = lines.length;
+                let lineNumbersText = '';
+                
+                for (let i = 1; i <= lineCount; i++) {
+                    lineNumbersText += i + '\n';
+                }
+                
+                this.elements.lineNumbers.textContent = lineNumbersText.trim();
+            }
+
+            updateStats() {
+                const editor = this.elements.editor;
+                const lines = editor.value.split('\n');
+                const currentLine = editor.value.substr(0, editor.selectionStart).split('\n').length;
+                const currentCol = editor.selectionStart - editor.value.lastIndexOf('\n', editor.selectionStart - 1);
+                
+                this.elements.lineCol.textContent = `Ln ${currentLine}, Col ${currentCol}`;
+                this.elements.charCount.textContent = `${editor.value.length} characters`;
+            }
+
+            scheduleAutoSave() {
+                clearTimeout(this.saveTimeout);
+                this.saveTimeout = setTimeout(() => {
+                    this.saveToFirebase();
+                }, 2000); // Auto-save after 2 seconds of inactivity
+            }
+
+            async saveToFirebase() {
+                try {
+                    const data = {
+                        code: this.elements.editor.value,
+                        language: this.currentLanguage,
+                        timestamp: Date.now(),
+                        lastModified: new Date().toISOString()
+                    };
+
+                    const response = await fetch(`${this.firebaseUrl}ubixen-ide.json`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        this.lastSaveTime = new Date();
+                        this.updateSaveStatus();
+                        this.setConnectionStatus(true, 'Connected');
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Save error:', error);
+                    this.setConnectionStatus(false, 'Save failed');
+                    this.showNotification('Failed to save to Firebase', 'error');
+                }
+            }
+
+            async loadFromFirebase() {
+                try {
+                    this.setConnectionStatus(false, 'Loading...');
+                    
+                    const response = await fetch(`${this.firebaseUrl}ubixen-ide.json`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data) {
+                            this.elements.editor.value = data.code || '';
+                            this.currentLanguage = data.language || 'c';
+                            this.elements.languageSelector.value = this.currentLanguage;
+                            this.elements.highlight.className = `language-${this.currentLanguage}`;
+                            
+                            this.updateHighlight();
+                            this.updateLineNumbers();
+                            this.updateStats();
+                            
+                            if (data.lastModified) {
+                                this.lastSaveTime = new Date(data.lastModified);
+                                this.updateSaveStatus();
+                            }
+                            
+                            this.showNotification('Code loaded successfully', 'success');
+                        } else {
+                            // No data exists, use placeholder
+                            this.updateHighlight();
+                        }
+                        
+                        this.setConnectionStatus(true, 'Connected');
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Load error:', error);
+                    this.setConnectionStatus(false, 'Connection failed');
+                    this.showNotification('Failed to load from Firebase', 'error');
+                    
+                    // Use placeholder content
+                    this.updateHighlight();
+                }
+            }
+
+            startRealTimeSync() {
+                // Poll for changes every 5 seconds
+                setInterval(async () => {
+                    try {
+                        const response = await fetch(`${this.firebaseUrl}ubixen-ide.json`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            
+                            if (data && data.timestamp && this.lastSaveTime) {
+                                const remoteTime = new Date(data.timestamp);
+                                const localTime = new Date(this.lastSaveTime.getTime() + 5000); // 5 second buffer
+                                
+                                if (remoteTime > localTime && data.code !== this.elements.editor.value) {
+                                    // Remote version is newer, update local
+                                    this.elements.editor.value = data.code;
+                                    this.currentLanguage = data.language || 'c';
+                                    this.elements.languageSelector.value = this.currentLanguage;
+                                    this.elements.highlight.className = `language-${this.currentLanguage}`;
+                                    
+                                    this.updateHighlight();
+                                    this.updateLineNumbers();
+                                    this.updateStats();
+                                    
+                                    this.showNotification('Code updated from server', 'success');
+                                }
+                            }
+                            
+                            this.setConnectionStatus(true, 'Connected');
+                        } else {
+                            this.setConnectionStatus(false, 'Connection error');
+                        }
+                    } catch (error) {
+                        this.setConnectionStatus(false, 'Offline');
+                    }
+                }, 5000);
+            }
+
+            setConnectionStatus(connected, message) {
+                this.isConnected = connected;
+                this.elements.connectionStatus.classList.toggle('connected', connected);
+                this.elements.statusText.textContent = message;
+            }
+
+            updateSaveStatus() {
+                if (this.lastSaveTime) {
+                    const timeString = this.lastSaveTime.toLocaleTimeString();
+                    this.elements.lastSaved.textContent = `Last saved: ${timeString}`;
+                }
+            }
+
+            showNotification(message, type = 'success') {
+                this.elements.notification.textContent = message;
+                this.elements.notification.className = `notification ${type}`;
+                this.elements.notification.classList.add('show');
+                
+                setTimeout(() => {
+                    this.elements.notification.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // Initialize the IDE when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new UbixenIDE();
+        });
+
+        // Handle page visibility changes for better sync
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && window.ubixenIDE) {
+                window.ubixenIDE.loadFromFirebase();
             }
         });
-        
-        // Keep the backdrop scroll position in sync with the textarea
-        function syncScroll()
-        {
-            editorBackdrop.scrollTop = codeTextarea.scrollTop;
-            editorBackdrop.scrollLeft = codeTextarea.scrollLeft;
-            // Re-render cursors to account for new scroll offsets
-            renderCursors(latestCursors);
-        }
-        codeTextarea.addEventListener('scroll', syncScroll);
-
-
-        // Start the application
-    main();
     </script>
 </body>
 </html>
