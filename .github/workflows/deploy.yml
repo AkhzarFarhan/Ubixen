@@ -1,0 +1,55 @@
+name: Deploy Ubixen IDE to GitHub Pages (Private)
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Embed API Key for Private Deployment
+      run: |
+        # Create a copy of IDE.html for deployment
+        cp IDE.html index.html
+        
+        # Replace localStorage-based API key with embedded secret
+        # This modifies: this.judgeApiKey = localStorage.getItem('judge0-api-key') || null;
+        sed -i "s/this.judgeApiKey = localStorage.getItem('judge0-api-key') || null;/this.judgeApiKey = '${{ secrets.JUDGE0_API_KEY }}';/" index.html
+        
+        # Disable API key modal since key is embedded
+        sed -i "s/this.validateApiKey();/\/\/ this.validateApiKey(); \/\/ API key embedded - validation disabled/" index.html
+        
+        # Hide the API key button in the UI
+        sed -i 's/<button class="api-key-btn" id="apiKeyBtn">🔑 API Key<\/button>/<!-- <button class="api-key-btn" id="apiKeyBtn">🔑 API Key<\/button> API key embedded -->/' index.html
+        
+        echo "✅ API key embedded successfully for private deployment"
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
