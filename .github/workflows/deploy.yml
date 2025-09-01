@@ -30,26 +30,70 @@ jobs:
         # Create a copy of IDE.html for deployment
         cp IDE.html index.html
         
+        # Use Python for reliable string replacement (handles all special characters)
+        python3 << 'EOF'
+        import re
+        import os
+        
+        # Read the API key from environment
+        api_key = os.environ.get('JUDGE0_API_KEY', '')
+        
+        if not api_key:
+            print("❌ No API key found in secrets!")
+            exit(1)
+        
+        # Read the HTML file
+        with open('index.html', 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Track replacements
+        replacements_made = 0
+        
         # Replace localStorage-based API key with embedded secret
-        sed -i "s|this\.judgeApiKey = localStorage\.getItem('judge0-api-key') || null;|this.judgeApiKey = '${{ secrets.JUDGE0_API_KEY }}';|" index.html
+        old_pattern = "this.judgeApiKey = localStorage.getItem('judge0-api-key') || null;"
+        new_pattern = f"this.judgeApiKey = '{api_key}';"
         
-        # Also replace the RapidAPI headers to use the embedded key
-        sed -i "s|'X-RapidAPI-Key': this\.judgeApiKey|'X-RapidAPI-Key': '${{ secrets.JUDGE0_API_KEY }}'|g" index.html
+        if old_pattern in content:
+            content = content.replace(old_pattern, new_pattern)
+            replacements_made += 1
+            print(f"✅ Replaced localStorage assignment")
+        else:
+            print("❌ Could not find localStorage assignment line")
         
-        # Update API key validation logic for embedded keys
-        sed -i "s|this\.validateApiKey();|// this.validateApiKey(); // API key embedded - validation disabled|" index.html
+        # Replace RapidAPI headers
+        header_pattern = "'X-RapidAPI-Key': this.judgeApiKey"
+        header_replacement = f"'X-RapidAPI-Key': '{api_key}'"
         
-        # Verify the replacement worked
-        if grep -q '${{ secrets.JUDGE0_API_KEY }}' index.html; then
-          echo "✅ API key embedded successfully!"
-          echo "API key found in these locations:"
-          grep -n '${{ secrets.JUDGE0_API_KEY }}' index.html | head -3
-        else
-          echo "❌ API key embedding failed!"
-          echo "Looking for line containing localStorage:"
-          grep -n "localStorage\.getItem('judge0-api-key')" index.html || echo "Line not found"
-          exit 1
-        fi
+        header_count = content.count(header_pattern)
+        if header_count > 0:
+            content = content.replace(header_pattern, header_replacement)
+            replacements_made += header_count
+            print(f"✅ Replaced {header_count} RapidAPI header references")
+        
+        # Disable API key validation
+        validation_pattern = "this.validateApiKey();"
+        validation_replacement = "// this.validateApiKey(); // API key embedded - validation disabled"
+        
+        if validation_pattern in content:
+            content = content.replace(validation_pattern, validation_replacement)
+            replacements_made += 1
+            print(f"✅ Disabled API key validation")
+        
+        # Write the modified content back
+        with open('index.html', 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        print(f"✅ Total replacements made: {replacements_made}")
+        
+        # Verify the API key is embedded
+        if api_key in content:
+            print("✅ API key embedding verified successfully!")
+        else:
+            print("❌ API key verification failed!")
+            exit(1)
+        EOF
+      env:
+        JUDGE0_API_KEY: ${{ secrets.JUDGE0_API_KEY }}
 
     - name: Setup Pages
       uses: actions/configure-pages@v4
