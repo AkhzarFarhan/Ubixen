@@ -31,16 +31,20 @@ jobs:
         cp IDE.html index.html
         
         # Replace localStorage-based API key with embedded secret
-        # This modifies: this.judgeApiKey = localStorage.getItem('judge0-api-key') || null;
-        sed -i "s/this.judgeApiKey = localStorage.getItem('judge0-api-key') || null;/this.judgeApiKey = '${{ secrets.JUDGE0_API_KEY }}';/" index.html
+        sed -i "s/this\.judgeApiKey = localStorage\.getItem('judge0-api-key') || null;/this.judgeApiKey = '${{ secrets.JUDGE0_API_KEY }}';/" index.html
         
-        # Disable API key modal since key is embedded
-        sed -i "s/this.validateApiKey();/\/\/ this.validateApiKey(); \/\/ API key embedded - validation disabled/" index.html
+        # Disable API key validation notification since key is embedded
+        sed -i "s/this\.validateApiKey();/\/\/ this.validateApiKey(); \/\/ API key embedded - validation disabled/" index.html
         
-        # Hide the API key button in the UI
-        sed -i 's/<button class="api-key-btn" id="apiKeyBtn">🔑 API Key<\/button>/<!-- <button class="api-key-btn" id="apiKeyBtn">🔑 API Key<\/button> API key embedded -->/' index.html
-        
-        echo "✅ API key embedded successfully for private deployment"
+        # Verify the replacement worked
+        if grep -q '${{ secrets.JUDGE0_API_KEY }}' index.html; then
+          echo "✅ API key embedded successfully!"
+        else
+          echo "❌ API key embedding failed!"
+          echo "Looking for line containing: this.judgeApiKey = localStorage.getItem"
+          grep -n "this\.judgeApiKey.*localStorage" index.html || true
+          exit 1
+        fi
 
     - name: Setup Pages
       uses: actions/configure-pages@v4
