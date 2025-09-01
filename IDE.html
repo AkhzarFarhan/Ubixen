@@ -410,22 +410,49 @@
             overflow: hidden;
         }
 
-        .code-editor {
+        .code-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             padding: 20px;
-            background: var(--bg-primary);
-            border: none;
+            margin: 0;
+            border: 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1;
+            box-sizing: border-box;
+        }
+
+        .code-editor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            margin: 0;
+            border: 0;
+            background: transparent;
+            color: transparent;
+            caret-color: var(--text-primary);
+            -webkit-text-fill-color: transparent;
             outline: none;
             font-family: 'JetBrains Mono', monospace;
             font-size: 14px;
             line-height: 1.5;
-            color: var(--text-primary);
             resize: none;
             tab-size: 4;
             white-space: pre;
             overflow-wrap: normal;
             overflow-x: auto;
+            z-index: 2;
+            box-sizing: border-box;
             scrollbar-width: thin;
             scrollbar-color: var(--border) var(--bg-primary);
         }
@@ -436,7 +463,7 @@
         }
 
         .code-editor::-webkit-scrollbar-track {
-            background: var(--bg-primary);
+            background: transparent;
         }
 
         .code-editor::-webkit-scrollbar-thumb {
@@ -446,35 +473,6 @@
 
         .code-editor::-webkit-scrollbar-thumb:hover {
             background: var(--text-secondary);
-        }
-
-        .code-highlight {
-            position: absolute;
-            top: 0;
-            left: 0;
-            padding: 20px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            pointer-events: none;
-            white-space: pre;
-            overflow: hidden;
-            z-index: 1;
-            margin: 0;
-            border: 0;
-            box-sizing: border-box;
-        }
-
-        .code-editor {
-            position: relative;
-            z-index: 2;
-            background: transparent;
-            color: transparent;
-            caret-color: var(--text-primary);
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-            border: 0;
-            box-sizing: border-box;
         }
 
         .code-editor::selection {
@@ -488,17 +486,6 @@
         /* Syntax highlighting should be visible while base text is transparent */
         .code-highlight * {
             color: inherit !important;
-        }
-
-        /* Ensure pre element has consistent styling */
-        .code-highlight {
-            margin: 0;
-            padding: 20px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            white-space: pre;
-            box-sizing: border-box;
         }
 
         /* Prism.js custom theme for C/C++ */
