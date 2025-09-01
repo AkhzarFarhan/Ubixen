@@ -459,7 +459,6 @@
             pointer-events: none;
             white-space: pre;
             overflow: hidden;
-            color: transparent;
             z-index: 1;
         }
 
@@ -467,6 +466,22 @@
             position: relative;
             z-index: 2;
             background: transparent;
+            color: transparent;
+            caret-color: var(--text-primary);
+            -webkit-text-fill-color: transparent;
+        }
+
+        .code-editor::selection {
+            background: rgba(173, 214, 255, 0.3);
+        }
+
+        .code-editor::-moz-selection {
+            background: rgba(173, 214, 255, 0.3);
+        }
+
+        /* Syntax highlighting should be visible while base text is transparent */
+        .code-highlight * {
+            color: inherit !important;
         }
 
         /* Prism.js custom theme for C/C++ */
