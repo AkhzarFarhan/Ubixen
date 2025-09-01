@@ -31,18 +31,23 @@ jobs:
         cp IDE.html index.html
         
         # Replace localStorage-based API key with embedded secret
-        sed -i "s/this\.judgeApiKey = localStorage\.getItem('judge0-api-key') || null;/this.judgeApiKey = '${{ secrets.JUDGE0_API_KEY }}';/" index.html
+        sed -i "s|this\.judgeApiKey = localStorage\.getItem('judge0-api-key') || null;|this.judgeApiKey = '${{ secrets.JUDGE0_API_KEY }}';|" index.html
         
-        # Disable API key validation notification since key is embedded
-        sed -i "s/this\.validateApiKey();/\/\/ this.validateApiKey(); \/\/ API key embedded - validation disabled/" index.html
+        # Also replace the RapidAPI headers to use the embedded key
+        sed -i "s|'X-RapidAPI-Key': this\.judgeApiKey|'X-RapidAPI-Key': '${{ secrets.JUDGE0_API_KEY }}'|g" index.html
+        
+        # Update API key validation logic for embedded keys
+        sed -i "s|this\.validateApiKey();|// this.validateApiKey(); // API key embedded - validation disabled|" index.html
         
         # Verify the replacement worked
         if grep -q '${{ secrets.JUDGE0_API_KEY }}' index.html; then
           echo "✅ API key embedded successfully!"
+          echo "API key found in these locations:"
+          grep -n '${{ secrets.JUDGE0_API_KEY }}' index.html | head -3
         else
           echo "❌ API key embedding failed!"
-          echo "Looking for line containing: this.judgeApiKey = localStorage.getItem"
-          grep -n "this\.judgeApiKey.*localStorage" index.html || true
+          echo "Looking for line containing localStorage:"
+          grep -n "localStorage\.getItem('judge0-api-key')" index.html || echo "Line not found"
           exit 1
         fi
 
