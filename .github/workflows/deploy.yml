@@ -25,73 +25,75 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Embed API Key for Private Deployment
       run: |
-        # Create a copy of IDE.html for deployment
-        cp IDE.html index.html
+  - name: Embed API Key for Private Deployment (IDE only)
+    run: |
+    # NOTE: Do NOT overwrite index.html. We want the site landing page to remain index.html.
+    # Embed the API key into IDE.html only.
+
+    # Use Python for reliable string replacement (handles all special characters)
+    python3 << 'EOF'
+    import re
+    import os
         
-        # Use Python for reliable string replacement (handles all special characters)
-        python3 << 'EOF'
-        import re
-        import os
+    # Read the API key from environment
+    api_key = os.environ.get('JUDGE0_API_KEY', '')
         
-        # Read the API key from environment
-        api_key = os.environ.get('JUDGE0_API_KEY', '')
-        
-        if not api_key:
-            print("❌ No API key found in secrets!")
-            exit(1)
-        
-        # Read the HTML file
-        with open('index.html', 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        # Track replacements
-        replacements_made = 0
-        
-        # Replace localStorage-based API key with embedded secret
-        old_pattern = "this.judgeApiKey = localStorage.getItem('judge0-api-key') || null;"
-        new_pattern = f"this.judgeApiKey = '{api_key}';"
-        
-        if old_pattern in content:
-            content = content.replace(old_pattern, new_pattern)
-            replacements_made += 1
-            print(f"✅ Replaced localStorage assignment")
-        else:
-            print("❌ Could not find localStorage assignment line")
-        
-        # Replace RapidAPI headers
-        header_pattern = "'X-RapidAPI-Key': this.judgeApiKey"
-        header_replacement = f"'X-RapidAPI-Key': '{api_key}'"
-        
-        header_count = content.count(header_pattern)
-        if header_count > 0:
-            content = content.replace(header_pattern, header_replacement)
-            replacements_made += header_count
-            print(f"✅ Replaced {header_count} RapidAPI header references")
-        
-        # Disable API key validation
-        validation_pattern = "this.validateApiKey();"
-        validation_replacement = "// this.validateApiKey(); // API key embedded - validation disabled"
-        
-        if validation_pattern in content:
-            content = content.replace(validation_pattern, validation_replacement)
-            replacements_made += 1
-            print(f"✅ Disabled API key validation")
-        
-        # Write the modified content back
-        with open('index.html', 'w', encoding='utf-8') as f:
-            f.write(content)
-        
-        print(f"✅ Total replacements made: {replacements_made}")
-        
-        # Verify the API key is embedded
-        if api_key in content:
-            print("✅ API key embedding verified successfully!")
-        else:
-            print("❌ API key verification failed!")
-            exit(1)
-        EOF
+    if not api_key:
+      print("❌ No API key found in secrets!")
+      exit(1)
+
+    target_file = 'IDE.html'
+
+    # Read the HTML file
+    with open(target_file, 'r', encoding='utf-8') as f:
+      content = f.read()
+
+    replacements_made = 0
+
+    # Replace localStorage-based API key with embedded secret
+    old_pattern = "this.judgeApiKey = localStorage.getItem('judge0-api-key') || null;"
+    new_pattern = f"this.judgeApiKey = '{api_key}';"
+
+    if old_pattern in content:
+      content = content.replace(old_pattern, new_pattern)
+      replacements_made += 1
+      print("✅ Replaced localStorage assignment in IDE.html")
+    else:
+      print("⚠️ localStorage assignment not found in IDE.html")
+
+    # Replace RapidAPI headers if present
+    header_pattern = "'X-RapidAPI-Key': this.judgeApiKey"
+    header_replacement = f"'X-RapidAPI-Key': '{api_key}'"
+
+    header_count = content.count(header_pattern)
+    if header_count > 0:
+      content = content.replace(header_pattern, header_replacement)
+      replacements_made += header_count
+      print(f"✅ Replaced {header_count} RapidAPI header references in IDE.html")
+
+    # Optionally disable API key validation call inside IDE.html
+    validation_pattern = "this.validateApiKey();"
+    validation_replacement = "// this.validateApiKey(); // API key embedded - validation disabled"
+
+    if validation_pattern in content:
+      content = content.replace(validation_pattern, validation_replacement)
+      replacements_made += 1
+      print("✅ Disabled API key validation in IDE.html")
+
+    # Write the modified content back to IDE.html
+    with open(target_file, 'w', encoding='utf-8') as f:
+      f.write(content)
+
+    print(f"✅ Total replacements made in {target_file}: {replacements_made}")
+
+    # Verify the API key is embedded
+    if api_key in content:
+      print("✅ API key embedding verified successfully in IDE.html!")
+    else:
+      print("❌ API key verification failed for IDE.html!")
+      exit(1)
+    EOF
       env:
         JUDGE0_API_KEY: ${{ secrets.JUDGE0_API_KEY }}
 

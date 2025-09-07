@@ -419,10 +419,12 @@
             border: none;
             outline: none;
             background: transparent;
-            color: var(--text-primary);
             font-family: 'JetBrains Mono', monospace;
             font-size: 14px;
             line-height: 1.5;
+            font-weight: 400;
+            letter-spacing: normal;
+            word-spacing: normal;
             resize: none;
             tab-size: 4;
             white-space: pre;
@@ -475,6 +477,9 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 14px;
             line-height: 1.5;
+            font-weight: 400;
+            letter-spacing: normal;
+            word-spacing: normal;
             white-space: pre;
             overflow: hidden;
             pointer-events: none;
@@ -494,9 +499,57 @@
             caret-color: var(--text-primary);
         }
 
-        /* Syntax highlighting should be visible while base text is transparent */
-        .code-highlight * {
-            color: inherit !important;
+        /* Ensure textarea and highlight use identical font metrics */
+        .code-editor, .code-highlight {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            /* fixed pixel line-height to avoid subpixel differences */
+            line-height: 20px;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        /* Hide the textarea text but keep the cursor visible (re-asserted)
+           and ensure the textarea uses the same explicit line-height */
+        .code-editor {
+            color: transparent;
+            caret-color: var(--text-primary);
+            -webkit-text-fill-color: transparent;
+            line-height: 20px;
+        }
+
+        .code-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            margin: 0;
+            border: none;
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: pre;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1;
+            background: var(--bg-primary);
+        }
+
+        /* Force tokens to align to the top of the line and use exact metrics */
+        .code-highlight, .code-highlight pre, .code-highlight code, .code-highlight .token {
+            font-family: inherit !important;
+            font-size: inherit !important;
+            line-height: inherit !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Make text tokens inline-block with top alignment to match textarea caret */
+        .code-highlight .token {
+            display: inline-block;
+            vertical-align: top;
         }
 
         /* Prism.js custom theme for C/C++ */
@@ -600,12 +653,12 @@
             }
 
             .code-editor, .code-highlight {
-                padding: 15px;
+                padding: 20px;
                 font-size: 13px;
             }
 
             .line-numbers {
-                padding: 15px 10px 15px 15px;
+                padding: 20px 15px 20px 20px;
                 min-width: 50px;
                 font-size: 13px;
             }
@@ -1538,12 +1591,34 @@ int main() {
 
             updateStats() {
                 const editor = this.elements.editor;
-                const lines = editor.value.split('\n');
-                const currentLine = editor.value.substr(0, editor.selectionStart).split('\n').length;
-                const currentCol = editor.selectionStart - editor.value.lastIndexOf('\n', editor.selectionStart - 1);
+                const value = editor.value;
+                const cursorPos = editor.selectionStart;
+                
+                // Calculate current line number
+                const lines = value.substr(0, cursorPos).split('\n');
+                const currentLine = lines.length;
+                
+                // Calculate current column (handle tabs as 4 spaces)
+                const currentLineText = lines[lines.length - 1] || '';
+                const currentCol = this.getVisualColumn(currentLineText, cursorPos - value.lastIndexOf('\n', cursorPos - 1) - 1);
                 
                 this.elements.lineCol.textContent = `Ln ${currentLine}, Col ${currentCol}`;
-                this.elements.charCount.textContent = `${editor.value.length} characters`;
+                this.elements.charCount.textContent = `${value.length} characters`;
+            }
+
+            getVisualColumn(lineText, cursorIndex) {
+                let visualColumn = 1; // Columns are 1-indexed
+                
+                for (let i = 0; i < cursorIndex && i < lineText.length; i++) {
+                    if (lineText[i] === '\t') {
+                        // Tab is typically 4 spaces wide
+                        visualColumn += (4 - (visualColumn - 1) % 4);
+                    } else {
+                        visualColumn++;
+                    }
+                }
+                
+                return visualColumn;
             }
 
             scheduleAutoSave() {
