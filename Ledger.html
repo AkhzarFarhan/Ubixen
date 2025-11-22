@@ -18,14 +18,13 @@
 			<input class="text_box" type="text" placeholder="Details" id="details">
 
 			<div class="radio-wrap">
-				<p><input type="radio" id="1" value="Cash" name="CHECK">Cash</p>
-				<p><input type="radio" id="2" value="PhonePe" name="CHECK">PhonePe</p>
-				<p><input type="radio" id="3" value="PayTm" name="CHECK">PayTm</p>
-				<p><input type="radio" id="4" value="Other UPI" name="CHECK">Other UPIs</p>
-				<p><input type="radio" id="5" value="Card" name="CHECK">Card</p>
-				<p><input type="radio" id="6" value="Net Banking" name="CHECK">Net Banking</p>
-                <p><input type="radio" id="7" value="CashToBank" name="CHECK">Bank Deposit</p>
-                <p><input type="radio" id="8" value="BankToCash" name="CHECK">ATM Withdraw</p>
+				<label class="radio-button"><input type="radio" id="1" value="Cash" name="CHECK"><span>Cash</span></label>
+				<label class="radio-button"><input type="radio" id="2" value="PhonePe" name="CHECK"><span>PhonePe</span></label>
+				<label class="radio-button"><input type="radio" id="3" value="Other UPI" name="CHECK"><span>Other UPIs</span></label>
+				<label class="radio-button"><input type="radio" id="4" value="Card" name="CHECK"><span>Card</span></label>
+				<label class="radio-button"><input type="radio" id="5" value="Net Banking" name="CHECK"><span>Net Banking</span></label>
+                <label class="radio-button"><input type="radio" id="6" value="CashToBank" name="CHECK"><span>Bank Deposit</span></label>
+                <label class="radio-button"><input type="radio" id="7" value="BankToCash" name="CHECK"><span>ATM Withdraw</span></label>
 			</div>
 
             <div class="flex-button">
@@ -140,7 +139,7 @@
 		function getCheck()
         {
             check = "Unknown";
-			for(var i=1; i<=8; i++ ) {
+			for(var i=1; i<=7; i++ ) {
 				var id = i.toString();
 				var element = document.getElementById(id);
 				if(element.checked) {
@@ -396,6 +395,44 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             margin: 10px;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .radio-button {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .radio-button input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .radio-button span {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #f1f1f1;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .radio-button:hover span {
+            background-color: #e0e0e0;
+            border-color: #4CAF50;
+        }
+
+        .radio-button input[type="radio"]:checked + span {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+            font-weight: bold;
         }
 
         .box {
