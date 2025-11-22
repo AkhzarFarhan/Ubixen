@@ -1,0 +1,674 @@
+<!--
+LLM INSTRUCTION: CAR TRACKING DATA SCHEMA
+
+The following data points are required for tracking car usage, fuel efficiency, and expenses.
+Any implementation of a form or database for this file should adhere to this schema.
+
+1. ESSENTIAL DATA (Required for basic tracking)
+   - Date: Date (ISO 8601 format preferred)
+     Description: Date of the entry/transaction.
+   
+   - Odometer Reading: Integer
+     Description: Total distance shown on the dashboard. Used to calculate distance traveled since last fill.
+   
+   - Fuel Volume: Float
+     Description: Amount of fuel filled in Liters/Gallons.
+   
+   - Total Cost: Float
+     Description: Total amount paid for the fuel or service.
+   
+   - Is Full Tank: Boolean
+     Description: Critical for accurate mileage calculation. True if the tank was filled to capacity.
+
+2. DERIVED DATA (Calculated, not input)
+   - Fuel Price per Unit: Float (Total Cost / Fuel Volume)
+   - Distance Traveled: Float (Current Odometer - Previous Odometer)
+   - Mileage/Efficiency: Float (Distance Traveled / Fuel Volume) - Only valid if previous entry was Full Tank.
+
+3. OPTIONAL / ADVANCED DATA
+   - Service Cost: Float
+     Description: Cost for maintenance/repairs (separate from fuel).
+   
+   - Service Details: String
+     Description: Notes on maintenance (e.g., "Oil Change", "Tire Rotation").
+   
+   - Driving Mode: Enum [City, Highway, Mixed]
+     Description: Context for efficiency analysis.
+   
+   - Station/Location: String
+     Description: Name of the petrol pump or service center.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dataframe {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 100%;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        .dataframe th,
+        .dataframe td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .dataframe th {
+            background-color: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h2 {
+            font-size: 1.2rem;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input[type="date"],
+        .form-group input[type="number"],
+        .form-group input[type="text"],
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-wrapper:hover {
+            background: #eef1ff;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .checkbox-wrapper label {
+            margin: 0 !important;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .derived-info {
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .derived-info h3 {
+            color: #f57f17;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .derived-info p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .footer {
+            color: white;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media (max-width: 640px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚗 Car Tracker</h1>
+        <p>Track your fuel, mileage, and expenses</p>
+    </div>
+
+    <div class="container">
+        <form id="carForm">
+            <!-- Essential Data Section -->
+            <div class="form-section">
+                <h2>📝 Essential Information</h2>
+                
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="odometer">Odometer Reading (km)</label>
+                    <input type="number" id="odometer" name="odometer" placeholder="e.g., 12345" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fuelVolume">Fuel Volume (L)</label>
+                        <input type="number" id="fuelVolume" name="fuelVolume" step="0.01" placeholder="e.g., 35.5" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="totalCost">Total Cost (₹)</label>
+                        <input type="number" id="totalCost" name="totalCost" step="0.01" placeholder="e.g., 2000" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="fullTank" name="fullTank">
+                        <label for="fullTank">⛽ Full Tank (Check if filled to capacity)</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Optional Data Section -->
+            <div class="form-section">
+                <h2>🔧 Optional Details</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="serviceCost">Service Cost (₹)</label>
+                        <input type="number" id="serviceCost" name="serviceCost" step="0.01" placeholder="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="drivingMode">Driving Mode</label>
+                        <select id="drivingMode" name="drivingMode">
+                            <option value="">Select...</option>
+                            <option value="City">City</option>
+                            <option value="Highway">Highway</option>
+                            <option value="Mixed">Mixed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="serviceDetails">Service Details</label>
+                    <input type="text" id="serviceDetails" name="serviceDetails" placeholder="e.g., Oil Change, Tire Rotation">
+                </div>
+
+                <div class="form-group">
+                    <label for="station">Station/Location</label>
+                    <input type="text" id="station" name="station" placeholder="e.g., Shell Petrol Pump">
+                </div>
+            </div>
+
+            <!-- Derived Information -->
+            <div class="derived-info">
+                <h3>📊 Calculated Automatically</h3>
+                <p>• Fuel Price per Unit</p>
+                <p>• Distance Traveled (since last entry)</p>
+                <p>• Mileage/Efficiency (km/L)</p>
+            </div>
+
+            <!-- Buttons -->
+            <div class="button-group">
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">Clear</button>
+                <button type="button" class="btn btn-secondary" onclick="viewTable()">View Table</button>
+                <button type="submit" class="btn btn-primary">Save Entry</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="footer">
+        Developed and maintained by <a href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a>
+    </div>
+
+    <script>
+        const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json;charset=utf-8' };
+        var start_time;
+        const cred = JSON.parse(localStorage.getItem("user_info"));
+
+        function get_username() {
+            return cred["username"];
+        }
+
+        function get_password() {
+            return cred["password"];
+        }
+
+        function get_project_id() {
+            return cred["project_id"];
+        }
+
+        function get_project() {
+            return "car";
+        }
+
+        function get_url() {
+            const project_id = get_project_id();
+            const url = `https://us-central1-${project_id}.cloudfunctions.net/unified`;
+            return url;
+        }
+
+        function main() {
+            // Set today's date as default
+            document.getElementById('date').valueAsDate = new Date();
+            
+            // Set username in header if available
+            if (cred && cred["username"]) {
+                document.querySelector('.header p').textContent = `Welcome, ${get_username()}`;
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', main);
+
+        // Form submission handler
+        document.getElementById('carForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            SubmitForm(true);
+        });
+
+        function SubmitForm(is_save) {
+            // Getters
+            const url = get_url();
+            start_time = Date.now();
+            
+            const date = document.getElementById('date').value;
+            const odometer = parseInt(document.getElementById('odometer').value, 10);
+            const fuelVolume = parseFloat(document.getElementById('fuelVolume').value);
+            const totalCost = parseFloat(document.getElementById('totalCost').value);
+            const fullTank = document.getElementById('fullTank').checked;
+            const serviceCost = parseFloat(document.getElementById('serviceCost').value) || 0;
+            const drivingMode = document.getElementById('drivingMode').value || "Not specified";
+            const serviceDetails = document.getElementById('serviceDetails').value || "";
+            const station = document.getElementById('station').value || "";
+
+            const username = get_username();
+            const password = get_password();
+            const project = get_project();
+
+            // Calculate derived data
+            const fuelPricePerUnit = (totalCost / fuelVolume).toFixed(2);
+
+            const message = {
+                date: date,
+                odometer: odometer,
+                fuelVolume: fuelVolume,
+                totalCost: totalCost,
+                fullTank: fullTank,
+                serviceCost: serviceCost,
+                drivingMode: drivingMode,
+                serviceDetails: serviceDetails,
+                station: station,
+                fuelPricePerUnit: fuelPricePerUnit
+            };
+
+            // Show loading state
+            const container = document.querySelector('.container');
+            container.innerHTML = "<p style='text-align: center; padding: 40px;'>Encrypting your data for security...</p>";
+
+            var request_body;
+
+            if (is_save) {
+                request_body = {
+                    method: 'POST',
+                    message: message,
+                    username: username,
+                    password: password,
+                    project: project
+                };
+            } else {
+                request_body = {
+                    method: 'GET',
+                    message: message,
+                    username: username,
+                    password: password,
+                    project: project
+                };
+            }
+
+            const options = {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(request_body)
+            };
+
+            fetch(url, options)
+                .then(response => response.json())
+                .then(data => {
+                    getStatusHtml(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('Failed to connect to server. Please try again.');
+                });
+        }
+
+        function getStatusHtml(d) {
+            const container = document.querySelector('.container');
+            
+            if (d['success']) {
+                status_message = "Successfully Added!";
+                status_color = "#667eea";
+            } else {
+                status_message = `Failed!</br></br>${d['message']}`;
+                status_color = "red";
+            }
+
+            // Check if we're getting table data
+            if (typeof d['message']['message'] === 'undefined') {
+                d = d['message'];
+                document.body.innerHTML = '';
+                document.body.style.fontSize = '8px';
+                var tableContainer = document.createElement('div');
+                tableContainer.style.overflowX = 'auto';
+                tableContainer.style.maxWidth = '100%';
+                tableContainer.innerHTML = fixTableBorders(d);
+                document.body.appendChild(tableContainer);
+                return;
+            } else {
+                d = d['message']['message'];
+            }
+
+            const timestamp = d['timestamp'];
+            const date = d['date'];
+            const odometer = d['odometer'];
+            const fuelVolume = d['fuelVolume'];
+            const totalCost = d['totalCost'];
+            const fullTank = d['fullTank'];
+            const fuelPricePerUnit = d['fuelPricePerUnit'];
+            const serviceCost = d['serviceCost'];
+            const drivingMode = d['drivingMode'];
+            const serviceDetails = d['serviceDetails'];
+            const station = d['station'];
+            const time_taken = Date.now() - start_time;
+
+            container.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <h2 style="color: ${status_color};">Entry ${status_message}</h2>
+                    <div style="text-align: left; margin: 20px auto; max-width: 500px; background: #f8f9ff; padding: 20px; border-radius: 10px;">
+                        <p><strong>Timestamp:</strong> ${timestamp}</p>
+                        <p><strong>Date:</strong> ${date}</p>
+                        <p><strong>Odometer:</strong> ${odometer} km</p>
+                        <p><strong>Fuel Volume:</strong> ${fuelVolume} L</p>
+                        <p><strong>Total Cost:</strong> ₹${totalCost}</p>
+                        <p><strong>Fuel Price/L:</strong> ₹${fuelPricePerUnit}</p>
+                        <p><strong>Full Tank:</strong> ${fullTank ? 'Yes ✓' : 'No'}</p>
+                        ${serviceCost > 0 ? `<p><strong>Service Cost:</strong> ₹${serviceCost}</p>` : ''}
+                        ${drivingMode !== 'Not specified' ? `<p><strong>Driving Mode:</strong> ${drivingMode}</p>` : ''}
+                        ${serviceDetails ? `<p><strong>Service Details:</strong> ${serviceDetails}</p>` : ''}
+                        ${station ? `<p><strong>Station:</strong> ${station}</p>` : ''}
+                    </div>
+                    <p style="font-size: 0.85rem; color: #666;">Execution time: ${time_taken} ms</p>
+                    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="location.reload()">Add Another Entry</button>
+                        <button class="btn btn-secondary" onclick="viewTable()">View Table</button>
+                        ${d['status'] == 200 ? `<button class="btn btn-secondary" onclick="deleteInstance()" style="background: #ff6b6b;">Delete Last</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function viewTable() {
+            const container = document.querySelector('.container');
+            container.innerHTML = "<p style='text-align: center; padding: 40px;'>Loading table data...</p>";
+            SubmitForm(false);
+        }
+
+        function deleteInstance() {
+            if (!confirm('Are you sure you want to delete the last entry?')) {
+                return;
+            }
+
+            start_time = Date.now();
+            const username = get_username();
+            const password = get_password();
+
+            const request_body = {
+                run_cron: false,
+                get_html: false,
+                delete_instance: true,
+                username: username,
+                password: password
+            };
+
+            const options = {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(request_body)
+            };
+
+            const del_url = get_url();
+            
+            fetch(del_url, options)
+                .then(response => response.json())
+                .then(data => {
+                    getDeleteStatusHtml(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('Failed to delete. Please try again.');
+                });
+        }
+
+        function getDeleteStatusHtml(d) {
+            const time_taken = Date.now() - start_time;
+            const container = document.querySelector('.container');
+            
+            if (d['status'] == 200) {
+                status_message = "Successfully Deleted!";
+                status_color = "#3cc47a";
+            } else {
+                status_message = `Deletion Failed!</br></br>${d['reason']}`;
+                status_color = "red";
+            }
+
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <h2 style="color: ${status_color};">Entry ${status_message}</h2>
+                    <p style="font-size: 0.85rem; color: #666; margin-top: 20px;">Execution time: ${time_taken} ms</p>
+                    <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 20px;">Start Over</button>
+                </div>
+            `;
+        }
+
+        function fixTableBorders(html) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const tables = tempDiv.querySelectorAll('table.dataframe');
+
+            tables.forEach(table => {
+                table.removeAttribute('border');
+                table.style.borderCollapse = 'collapse';
+                table.style.width = '100%';
+                table.style.maxWidth = '100%';
+                table.style.marginBottom = '20px';
+
+                const ths = table.querySelectorAll('th');
+                const tds = table.querySelectorAll('td');
+
+                [...ths].forEach(cell => {
+                    cell.style.border = '1px solid #ddd';
+                    cell.style.padding = '8px';
+                    cell.style.textAlign = 'left';
+                    cell.style.backgroundColor = '#f2f2f2';
+                });
+
+                [...tds].forEach(cell => {
+                    cell.style.border = '1px solid #ddd';
+                    cell.style.padding = '8px';
+                    cell.style.textAlign = 'left';
+                });
+            });
+
+            return tempDiv.innerHTML;
+        }
+
+        function showError(message) {
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <h2 style="color: red;">Error</h2>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 20px;">Try Again</button>
+                </div>
+            `;
+        }
+
+        function resetForm() {
+            document.getElementById('carForm').reset();
+            document.getElementById('date').valueAsDate = new Date();
+        }
+    </script>
+</body>
+</html>
