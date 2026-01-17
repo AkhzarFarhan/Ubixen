@@ -4,39 +4,44 @@ LLM INSTRUCTION: CAR TRACKING DATA SCHEMA
 The following data points are required for tracking car usage, fuel efficiency, and expenses.
 Any implementation of a form or database for this file should adhere to this schema.
 
-1. ESSENTIAL DATA (Required for basic tracking)
+1. ESSENTIAL DATA (Required for daily tracking)
    - Date: Date (ISO 8601 format preferred)
      Description: Date of the entry/transaction.
    
    - Odometer Reading: Integer
-     Description: Total distance shown on the dashboard. Used to calculate distance traveled since last fill.
-   
+     Description: Total distance shown on the dashboard. Used to calculate distance traveled.
+
+2. FUEL DATA (Optional - fill when refueling)
    - Fuel Volume: Float
      Description: Amount of fuel filled in Liters/Gallons.
    
    - Total Cost: Float
-     Description: Total amount paid for the fuel or service.
+     Description: Total amount paid for the fuel.
    
    - Is Full Tank: Boolean
      Description: Critical for accurate mileage calculation. True if the tank was filled to capacity.
 
-2. DERIVED DATA (Calculated, not input)
+   - Station/Location: String
+     Description: Name of the petrol pump.
+
+3. SERVICE DATA (Optional - fill when servicing)
+   - Service Cost: Float
+     Description: Cost for maintenance/repairs.
+   
+   - Service Details: String
+     Description: Notes on maintenance (e.g., "Oil Change", "Tire Rotation").
+
+4. DERIVED DATA (Calculated, not input)
    - Fuel Price per Unit: Float (Total Cost / Fuel Volume)
    - Distance Traveled: Float (Current Odometer - Previous Odometer)
    - Mileage/Efficiency: Float (Distance Traveled / Fuel Volume) - Only valid if previous entry was Full Tank.
 
-3. OPTIONAL / ADVANCED DATA
-   - Service Cost: Float
-     Description: Cost for maintenance/repairs (separate from fuel).
-   
-   - Service Details: String
-     Description: Notes on maintenance (e.g., "Oil Change", "Tire Rotation").
-   
+5. ADDITIONAL DATA (Optional)
    - Driving Mode: Enum [City, Highway, Mixed]
      Description: Context for efficiency analysis.
    
-   - Station/Location: String
-     Description: Name of the petrol pump or service center.
+   - Notes: String
+     Description: Any additional notes for the entry.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -287,41 +292,65 @@ Any implementation of a form or database for this file should adhere to this sch
         <form id="carForm">
             <!-- Essential Data Section -->
             <div class="form-section">
-                <h2>📝 Essential Information</h2>
+                <h2>📝 Daily Entry (Required)</h2>
                 
-                <div class="form-group">
-                    <label for="date">Date</label>
-                    <input type="date" id="date" name="date" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="odometer">Odometer (km)</label>
+                        <input type="number" id="odometer" name="odometer" placeholder="e.g., 12345" required>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="odometer">Odometer Reading (km)</label>
-                    <input type="number" id="odometer" name="odometer" placeholder="e.g., 12345" required>
+                    <label for="drivingMode">Driving Mode</label>
+                    <select id="drivingMode" name="drivingMode">
+                        <option value="">Select...</option>
+                        <option value="City">City</option>
+                        <option value="Highway">Highway</option>
+                        <option value="Mixed">Mixed</option>
+                    </select>
                 </div>
+            </div>
+
+            <!-- Fuel Data Section -->
+            <div class="form-section">
+                <h2>⛽ Fuel Details (Optional)</h2>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="fuelVolume">Fuel Volume (L)</label>
-                        <input type="number" id="fuelVolume" name="fuelVolume" step="0.01" placeholder="e.g., 35.5" required>
+                        <input type="number" id="fuelVolume" name="fuelVolume" step="0.01" placeholder="e.g., 35.5">
                     </div>
 
                     <div class="form-group">
-                        <label for="totalCost">Total Cost (₹)</label>
-                        <input type="number" id="totalCost" name="totalCost" step="0.01" placeholder="e.g., 2000" required>
+                        <label for="totalCost">Fuel Cost (₹)</label>
+                        <input type="number" id="totalCost" name="totalCost" step="0.01" placeholder="e.g., 2000">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="fullTank" name="fullTank">
-                        <label for="fullTank">⛽ Full Tank (Check if filled to capacity)</label>
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="fullTank" name="fullTank">
+                            <label for="fullTank">Full Tank</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="station">Station</label>
+                        <input type="text" id="station" name="station" placeholder="e.g., HP Pump">
                     </div>
                 </div>
             </div>
 
-            <!-- Optional Data Section -->
+            <!-- Service Data Section -->
             <div class="form-section">
-                <h2>🔧 Optional Details</h2>
+                <h2>🔧 Service Details (Optional)</h2>
 
                 <div class="form-row">
                     <div class="form-group">
@@ -330,32 +359,25 @@ Any implementation of a form or database for this file should adhere to this sch
                     </div>
 
                     <div class="form-group">
-                        <label for="drivingMode">Driving Mode</label>
-                        <select id="drivingMode" name="drivingMode">
-                            <option value="">Select...</option>
-                            <option value="City">City</option>
-                            <option value="Highway">Highway</option>
-                            <option value="Mixed">Mixed</option>
-                        </select>
+                        <label for="serviceDetails">Service Type</label>
+                        <input type="text" id="serviceDetails" name="serviceDetails" placeholder="e.g., Oil Change">
                     </div>
                 </div>
+            </div>
 
+            <!-- Notes Section -->
+            <div class="form-section">
+                <h2>📋 Notes (Optional)</h2>
                 <div class="form-group">
-                    <label for="serviceDetails">Service Details</label>
-                    <input type="text" id="serviceDetails" name="serviceDetails" placeholder="e.g., Oil Change, Tire Rotation">
-                </div>
-
-                <div class="form-group">
-                    <label for="station">Station/Location</label>
-                    <input type="text" id="station" name="station" placeholder="e.g., Shell Petrol Pump">
+                    <input type="text" id="notes" name="notes" placeholder="Any additional notes...">
                 </div>
             </div>
 
             <!-- Derived Information -->
             <div class="derived-info">
                 <h3>📊 Calculated Automatically</h3>
-                <p>• Fuel Price per Unit</p>
                 <p>• Distance Traveled (since last entry)</p>
+                <p>• Fuel Price per Unit (if fuel added)</p>
                 <p>• Mileage/Efficiency (km/L)</p>
             </div>
 
@@ -425,20 +447,26 @@ Any implementation of a form or database for this file should adhere to this sch
             
             const date = document.getElementById('date').value;
             const odometer = parseInt(document.getElementById('odometer').value, 10);
-            const fuelVolume = parseFloat(document.getElementById('fuelVolume').value);
-            const totalCost = parseFloat(document.getElementById('totalCost').value);
+            const fuelVolume = parseFloat(document.getElementById('fuelVolume').value) || 0;
+            const totalCost = parseFloat(document.getElementById('totalCost').value) || 0;
             const fullTank = document.getElementById('fullTank').checked;
             const serviceCost = parseFloat(document.getElementById('serviceCost').value) || 0;
-            const drivingMode = document.getElementById('drivingMode').value || "Not specified";
+            const drivingMode = document.getElementById('drivingMode').value || "";
             const serviceDetails = document.getElementById('serviceDetails').value || "";
             const station = document.getElementById('station').value || "";
+            const notes = document.getElementById('notes').value || "";
 
             const username = get_username();
             const password = get_password();
             const project = get_project();
 
-            // Calculate derived data
-            const fuelPricePerUnit = (totalCost / fuelVolume).toFixed(2);
+            // Calculate derived data only if fuel was added
+            const fuelPricePerUnit = (fuelVolume > 0 && totalCost > 0) ? (totalCost / fuelVolume).toFixed(2) : "0";
+
+            // Determine entry type
+            let entryType = "odometer";
+            if (fuelVolume > 0) entryType = "fuel";
+            if (serviceCost > 0 || serviceDetails) entryType = (fuelVolume > 0) ? "fuel+service" : "service";
 
             const message = {
                 date: date,
@@ -450,7 +478,9 @@ Any implementation of a form or database for this file should adhere to this sch
                 drivingMode: drivingMode,
                 serviceDetails: serviceDetails,
                 station: station,
-                fuelPricePerUnit: fuelPricePerUnit
+                notes: notes,
+                fuelPricePerUnit: fuelPricePerUnit,
+                entryType: entryType
             };
 
             // Show loading state
@@ -523,37 +553,67 @@ Any implementation of a form or database for this file should adhere to this sch
             const timestamp = d['timestamp'];
             const date = d['date'];
             const odometer = d['odometer'];
-            const fuelVolume = d['fuelVolume'];
-            const totalCost = d['totalCost'];
+            const fuelVolume = d['fuelVolume'] || 0;
+            const totalCost = d['totalCost'] || 0;
             const fullTank = d['fullTank'];
-            const fuelPricePerUnit = d['fuelPricePerUnit'];
-            const serviceCost = d['serviceCost'];
-            const drivingMode = d['drivingMode'];
-            const serviceDetails = d['serviceDetails'];
-            const station = d['station'];
+            const fuelPricePerUnit = d['fuelPricePerUnit'] || 0;
+            const serviceCost = d['serviceCost'] || 0;
+            const drivingMode = d['drivingMode'] || "";
+            const serviceDetails = d['serviceDetails'] || "";
+            const station = d['station'] || "";
+            const notes = d['notes'] || "";
+            const entryType = d['entryType'] || "odometer";
+            const distanceTraveled = d['distanceTraveled'] || 0;
             const time_taken = Date.now() - start_time;
+
+            // Build dynamic content based on what was entered
+            let detailsHtml = `
+                <p><strong>Timestamp:</strong> ${timestamp}</p>
+                <p><strong>Date:</strong> ${date}</p>
+                <p><strong>Odometer:</strong> ${odometer} km</p>
+                ${distanceTraveled > 0 ? `<p><strong>Distance Traveled:</strong> ${distanceTraveled} km</p>` : ''}
+                ${drivingMode ? `<p><strong>Driving Mode:</strong> ${drivingMode}</p>` : ''}
+            `;
+
+            // Add fuel details if fuel was added
+            if (fuelVolume > 0) {
+                detailsHtml += `
+                    <hr style="margin: 10px 0; border: none; border-top: 1px solid #ddd;">
+                    <p><strong>⛽ Fuel Volume:</strong> ${fuelVolume} L</p>
+                    <p><strong>Fuel Cost:</strong> ₹${totalCost}</p>
+                    <p><strong>Price/L:</strong> ₹${fuelPricePerUnit}</p>
+                    <p><strong>Full Tank:</strong> ${fullTank ? 'Yes ✓' : 'No'}</p>
+                    ${station ? `<p><strong>Station:</strong> ${station}</p>` : ''}
+                `;
+            }
+
+            // Add service details if service was done
+            if (serviceCost > 0 || serviceDetails) {
+                detailsHtml += `
+                    <hr style="margin: 10px 0; border: none; border-top: 1px solid #ddd;">
+                    ${serviceCost > 0 ? `<p><strong>🔧 Service Cost:</strong> ₹${serviceCost}</p>` : ''}
+                    ${serviceDetails ? `<p><strong>Service Type:</strong> ${serviceDetails}</p>` : ''}
+                `;
+            }
+
+            // Add notes if any
+            if (notes) {
+                detailsHtml += `
+                    <hr style="margin: 10px 0; border: none; border-top: 1px solid #ddd;">
+                    <p><strong>📋 Notes:</strong> ${notes}</p>
+                `;
+            }
 
             container.innerHTML = `
                 <div style="text-align: center; padding: 20px;">
                     <h2 style="color: ${status_color};">Entry ${status_message}</h2>
                     <div style="text-align: left; margin: 20px auto; max-width: 500px; background: #f8f9ff; padding: 20px; border-radius: 10px;">
-                        <p><strong>Timestamp:</strong> ${timestamp}</p>
-                        <p><strong>Date:</strong> ${date}</p>
-                        <p><strong>Odometer:</strong> ${odometer} km</p>
-                        <p><strong>Fuel Volume:</strong> ${fuelVolume} L</p>
-                        <p><strong>Total Cost:</strong> ₹${totalCost}</p>
-                        <p><strong>Fuel Price/L:</strong> ₹${fuelPricePerUnit}</p>
-                        <p><strong>Full Tank:</strong> ${fullTank ? 'Yes ✓' : 'No'}</p>
-                        ${serviceCost > 0 ? `<p><strong>Service Cost:</strong> ₹${serviceCost}</p>` : ''}
-                        ${drivingMode !== 'Not specified' ? `<p><strong>Driving Mode:</strong> ${drivingMode}</p>` : ''}
-                        ${serviceDetails ? `<p><strong>Service Details:</strong> ${serviceDetails}</p>` : ''}
-                        ${station ? `<p><strong>Station:</strong> ${station}</p>` : ''}
+                        ${detailsHtml}
                     </div>
                     <p style="font-size: 0.85rem; color: #666;">Execution time: ${time_taken} ms</p>
                     <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
                         <button class="btn btn-primary" onclick="location.reload()">Add Another Entry</button>
                         <button class="btn btn-secondary" onclick="viewTable()">View Table</button>
-                        ${d['status'] == 200 ? `<button class="btn btn-secondary" onclick="deleteInstance()" style="background: #ff6b6b;">Delete Last</button>` : ''}
                     </div>
                 </div>
             `;
