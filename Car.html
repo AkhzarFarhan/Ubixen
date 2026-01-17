@@ -561,8 +561,41 @@ Any implementation of a form or database for this file should adhere to this sch
 
         function viewTable() {
             const container = document.querySelector('.container');
-            container.innerHTML = "<p style='text-align: center; padding: 40px;'>Loading table data...</p>";
-            SubmitForm(false);
+            if (container) {
+                container.innerHTML = "<p style='text-align: center; padding: 40px;'>Loading table data...</p>";
+            } else {
+                document.body.innerHTML = "<p style='text-align: center; padding: 40px;'>Loading table data...</p>";
+            }
+            
+            const url = get_url();
+            start_time = Date.now();
+            const username = get_username();
+            const password = get_password();
+            const project = get_project();
+
+            const request_body = {
+                method: 'GET',
+                message: {},
+                username: username,
+                password: password,
+                project: project
+            };
+
+            const options = {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(request_body)
+            };
+
+            fetch(url, options)
+                .then(response => response.json())
+                .then(data => {
+                    getStatusHtml(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('Failed to connect to server. Please try again.');
+                });
         }
 
         function deleteInstance() {
