@@ -91,13 +91,14 @@
                     rides.forEach(ride => {
                         const passengers = ride.passengers ? Object.values(ride.passengers) : [];
                         const createdDate = new Date(ride.created_at).toLocaleString();
+                        const formattedTime = formatTime12Hour(ride.departure_time);
                         
                         html += `
                             <div class="bg-white p-4 rounded-lg shadow border border-red-200">
                                 <div class="flex justify-between items-start mb-2">
                                     <div>
                                         <h3 class="font-bold text-lg">${ride.masjid_name}</h3>
-                                        <p class="text-gray-600 text-sm">🕒 ${ride.departure_time}</p>
+                                        <p class="text-gray-600 text-sm">🕒 ${formattedTime}</p>
                                         <p class="text-gray-400 text-xs">Created: ${createdDate}</p>
                                     </div>
                                     <div class="flex gap-2">
@@ -307,12 +308,17 @@
                 const seatsLeft = ride.total_seats - seatsTaken;
                 const isFull = seatsLeft <= 0;
 
+                // Format time to 12-hour format with AM/PM
+                const formattedTime = formatTime12Hour(ride.departure_time);
+
                 // If full, add the grayscale class
                 const cardClass = isFull ? "bg-white p-4 rounded-lg shadow border border-gray-200 full-ride" : "bg-white p-4 rounded-lg shadow border border-blue-100";
                 const statusText = isFull ? `<span class="text-red-500 font-bold">FULL</span>` : `<span class="text-green-600 font-bold">${seatsLeft} seats left</span>`;
                 
-                const helmetBadge = (ride.vehicle_type === 'Bike' && ride.extra_helmet) 
-                    ? `<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">⛑️ Helmet</span>` 
+                const helmetBadge = (ride.vehicle_type === 'Bike') 
+                    ? (ride.extra_helmet 
+                        ? `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">⛑️ Helmet provided</span>` 
+                        : `<span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">⛑️ Bring your helmet</span>`)
                     : '';
 
                 html += `
@@ -320,7 +326,7 @@
                         <div class="flex justify-between items-start mb-2">
                             <div>
                                 <h3 class="font-bold text-lg">${ride.masjid_name}</h3>
-                                <p class="text-gray-600 text-sm">🕒 ${ride.departure_time}</p>
+                                <p class="text-gray-600 text-sm">🕒 ${formattedTime}</p>
                             </div>
                             <div class="text-right">
                                 ${statusText}
@@ -364,11 +370,28 @@
         // LOGIC & DATA HANDLING
         // ==========================================
 
+        function formatTime12Hour(time24) {
+            if (!time24) return '';
+            const [hours, minutes] = time24.split(':');
+            const h = parseInt(hours);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const h12 = h % 12 || 12;
+            return `${h12}:${minutes} ${ampm}`;
+        }
+
         function toggleHelmetOption() {
             const type = document.getElementById('vehicleType').value;
             const div = document.getElementById('helmetDiv');
-            if(type === 'Bike') div.classList.remove('hidden');
-            else div.classList.add('hidden');
+            const seatsInput = document.getElementById('seats');
+            
+            if(type === 'Bike') {
+                div.classList.remove('hidden');
+                seatsInput.max = 1;
+                seatsInput.value = 1;
+            } else {
+                div.classList.add('hidden');
+                seatsInput.max = 10;
+            }
         }
 
         async function handlePostRide(e) {
