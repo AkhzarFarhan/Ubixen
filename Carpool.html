@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jumu'ah Carpool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom grayscale class for full vehicles */
+        .full-ride {
+            filter: grayscale(100%);
+            opacity: 0.6;
+            pointer-events: none; /* Disables clicking */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans">
+
+    <header id="adminTrigger" class="bg-emerald-600 text-white p-4 shadow-md text-center cursor-pointer select-none">
+        <h1 class="text-2xl font-bold">🕌 Jumu'ah Carpool</h1>
+        <p class="text-sm opacity-90">Let's strive for Jannah together</p>
+    </header>
+
+    <main id="app" class="max-w-md mx-auto p-4">
+        </main>
+
+    <script>
+        // ==========================================
+        // CONFIGURATION
+        // ==========================================
+        // TODO: REPLACE THIS URL WITH YOUR FIREBASE DATABASE URL
+        const DB_URL = "https://openware-ai-default-rtdb.firebaseio.com/carpool"; 
+        // Example: "https://friday-carpool-12345-default-rtdb.firebaseio.com"
+        
+        const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+
+        // ==========================================
+        // ADMIN TRIGGER (10 clicks on header)
+        // ==========================================
+        let clickCount = 0;
+        let clickTimer = null;
+        const CLICK_THRESHOLD = 10;
+        const CLICK_TIMEOUT = 3000; // Reset after 3 seconds of no clicks
+
+        document.getElementById('adminTrigger').addEventListener('click', () => {
+            clickCount++;
+            
+            // Reset timer on each click
+            if (clickTimer) clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, CLICK_TIMEOUT);
+
+            if (clickCount >= CLICK_THRESHOLD) {
+                clickCount = 0;
+                clearTimeout(clickTimer);
+                renderAdminConsole();
+            }
+        });
+
+        // ==========================================
+        // STATE MANAGEMENT
+        // ==========================================
+        const app = document.getElementById('app');
+
+        // Initial Load
+        renderHome();
+
+        // ==========================================
+        // VIEWS (UI)
+        // ==========================================
+
+        async function renderAdminConsole() {
+            app.innerHTML = `<div class="text-center mt-10 text-gray-500">Loading admin console...</div>`;
+            
+            try {
+                const response = await fetch(`${DB_URL}/rides.json`);
+                const data = await response.json();
+                
+                let html = `
+                    <button onclick="renderHome()" class="text-sm text-gray-500 mb-4">← Back to Home</button>
+                    <h2 class="text-xl font-bold mb-4 text-red-700">🔐 Admin Console</h2>
+                    <div class="space-y-4">
+                `;
+
+                if (!data || Object.keys(data).length === 0) {
+                    html += `<div class="text-center text-gray-400 py-10">No rides in database.</div>`;
+                } else {
+                    const rides = Object.entries(data).map(([id, ride]) => ({ id, ...ride }));
+                    
+                    rides.forEach(ride => {
+                        const passengers = ride.passengers ? Object.values(ride.passengers) : [];
+                        const createdDate = new Date(ride.created_at).toLocaleString();
+                        
+                        html += `
+                            <div class="bg-white p-4 rounded-lg shadow border border-red-200">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h3 class="font-bold text-lg">${ride.masjid_name}</h3>
+                                        <p class="text-gray-600 text-sm">🕒 ${ride.departure_time}</p>
+                                        <p class="text-gray-400 text-xs">Created: ${createdDate}</p>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button onclick="showEditForm('${ride.id}')" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600">✏️ Edit</button>
+                                        <button onclick="deleteRide('${ride.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">🗑️ Delete</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-sm text-gray-700 mb-2">
+                                    <span class="font-semibold">${ride.owner_name}</span> 
+                                    <span class="text-gray-400">(${ride.vehicle_type})</span>
+                                    <span class="text-gray-400">| ${ride.owner_phone}</span>
+                                </div>
+                                
+                                <div class="text-sm text-gray-600">
+                                    Seats: ${ride.total_seats} | Passengers: ${passengers.length}
+                                </div>
+                                
+                                <div id="edit-form-${ride.id}" class="hidden mt-3 p-3 bg-gray-50 rounded border">
+                                    <div class="space-y-2">
+                                        <input type="text" id="edit-name-${ride.id}" value="${ride.owner_name}" placeholder="Owner Name" class="w-full p-2 border text-sm rounded">
+                                        <input type="tel" id="edit-phone-${ride.id}" value="${ride.owner_phone}" placeholder="Phone" class="w-full p-2 border text-sm rounded">
+                                        <input type="text" id="edit-masjid-${ride.id}" value="${ride.masjid_name}" placeholder="Masjid Name" class="w-full p-2 border text-sm rounded">
+                                        <input type="time" id="edit-time-${ride.id}" value="${ride.departure_time}" class="w-full p-2 border text-sm rounded">
+                                        <input type="number" id="edit-seats-${ride.id}" value="${ride.total_seats}" min="1" max="10" placeholder="Total Seats" class="w-full p-2 border text-sm rounded">
+                                        <select id="edit-vehicle-${ride.id}" class="w-full p-2 border text-sm rounded">
+                                            <option value="Car" ${ride.vehicle_type === 'Car' ? 'selected' : ''}>Car</option>
+                                            <option value="Bike" ${ride.vehicle_type === 'Bike' ? 'selected' : ''}>Bike</option>
+                                        </select>
+                                        <div class="flex gap-2">
+                                            <button onclick="saveEdit('${ride.id}')" class="flex-1 bg-green-600 text-white py-1 rounded text-sm">Save</button>
+                                            <button onclick="hideEditForm('${ride.id}')" class="flex-1 bg-gray-300 text-gray-700 py-1 rounded text-sm">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                ${passengers.length > 0 ? `
+                                    <div class="mt-2 pt-2 border-t">
+                                        <p class="text-xs text-gray-500 font-semibold mb-1">Passengers:</p>
+                                        ${Object.entries(ride.passengers).map(([pId, p]) => `
+                                            <div class="flex justify-between items-center text-xs text-gray-600 py-1">
+                                                <span>${p.name} ${p.phone ? '(' + p.phone + ')' : ''}</span>
+                                                <button onclick="deletePassenger('${ride.id}', '${pId}')" class="text-red-500 hover:text-red-700">✕</button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `</div>`;
+                app.innerHTML = html;
+
+            } catch (err) {
+                app.innerHTML = `<div class="text-center text-red-500 mt-10">Error loading admin data: ${err.message}</div>`;
+            }
+        }
+
+        function showEditForm(id) {
+            document.getElementById(`edit-form-${id}`).classList.remove('hidden');
+        }
+
+        function hideEditForm(id) {
+            document.getElementById(`edit-form-${id}`).classList.add('hidden');
+        }
+
+        async function saveEdit(rideId) {
+            const updatedData = {
+                owner_name: document.getElementById(`edit-name-${rideId}`).value,
+                owner_phone: document.getElementById(`edit-phone-${rideId}`).value,
+                masjid_name: document.getElementById(`edit-masjid-${rideId}`).value,
+                departure_time: document.getElementById(`edit-time-${rideId}`).value,
+                total_seats: parseInt(document.getElementById(`edit-seats-${rideId}`).value),
+                vehicle_type: document.getElementById(`edit-vehicle-${rideId}`).value
+            };
+
+            try {
+                await fetch(`${DB_URL}/rides/${rideId}.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData)
+                });
+                alert("Ride updated successfully!");
+                renderAdminConsole();
+            } catch (err) {
+                alert("Error updating ride: " + err.message);
+            }
+        }
+
+        async function deleteRide(rideId) {
+            if (!confirm("Are you sure you want to delete this ride?")) return;
+            
+            try {
+                await fetch(`${DB_URL}/rides/${rideId}.json`, {
+                    method: 'DELETE'
+                });
+                alert("Ride deleted successfully!");
+                renderAdminConsole();
+            } catch (err) {
+                alert("Error deleting ride: " + err.message);
+            }
+        }
+
+        async function deletePassenger(rideId, passengerId) {
+            if (!confirm("Remove this passenger?")) return;
+            
+            try {
+                await fetch(`${DB_URL}/rides/${rideId}/passengers/${passengerId}.json`, {
+                    method: 'DELETE'
+                });
+                renderAdminConsole();
+            } catch (err) {
+                alert("Error removing passenger: " + err.message);
+            }
+        }
+
+        function renderHome() {
+            app.innerHTML = `
+                <div class="flex flex-col gap-4 mt-10">
+                    <button onclick="renderRegister()" class="p-8 bg-white border-2 border-emerald-500 rounded-xl shadow-lg hover:bg-emerald-50 transition flex flex-col items-center">
+                        <span class="text-4xl mb-2">🚗</span>
+                        <span class="text-xl font-bold text-emerald-700">I Have a Vehicle</span>
+                        <span class="text-gray-500 text-sm">Offer a ride to others</span>
+                    </button>
+
+                    <button onclick="fetchAndRenderList()" class="p-8 bg-white border-2 border-blue-500 rounded-xl shadow-lg hover:bg-blue-50 transition flex flex-col items-center">
+                        <span class="text-4xl mb-2">🙋‍♂️</span>
+                        <span class="text-xl font-bold text-blue-700">I Need a Ride</span>
+                        <span class="text-gray-500 text-sm">Find available seats</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderRegister() {
+            app.innerHTML = `
+                <button onclick="renderHome()" class="text-sm text-gray-500 mb-4">← Back to Home</button>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold mb-4 text-emerald-700">Offer a Ride</h2>
+                    <form id="rideForm" onsubmit="handlePostRide(event)" class="space-y-3">
+                        
+                        <div>
+                            <label class="block text-sm font-medium">Your Name</label>
+                            <input type="text" id="ownerName" required class="w-full p-2 border rounded">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium">Phone Number</label>
+                            <input type="tel" id="ownerPhone" required class="w-full p-2 border rounded">
+                        </div>
+
+                        <div class="flex gap-2">
+                            <div class="w-1/2">
+                                <label class="block text-sm font-medium">Vehicle</label>
+                                <select id="vehicleType" onchange="toggleHelmetOption()" class="w-full p-2 border rounded">
+                                    <option value="Car">Car</option>
+                                    <option value="Bike">Bike</option>
+                                </select>
+                            </div>
+                            <div class="w-1/2">
+                                <label class="block text-sm font-medium">Seats Available</label>
+                                <input type="number" id="seats" min="1" max="10" required class="w-full p-2 border rounded">
+                            </div>
+                        </div>
+
+                        <div id="helmetDiv" class="hidden">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="extraHelmet" class="form-checkbox h-5 w-5 text-emerald-600">
+                                <span class="text-sm text-gray-700">I have an extra helmet</span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium">Masjid Name</label>
+                            <input type="text" id="masjid" placeholder="e.g. Samsung Campus Masjid" required class="w-full p-2 border rounded">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium">Departure Time</label>
+                            <input type="time" id="time" required class="w-full p-2 border rounded">
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="w-full bg-emerald-600 text-white py-3 rounded font-bold hover:bg-emerald-700 mt-4">
+                            Post Ride
+                        </button>
+                    </form>
+                </div>
+            `;
+        }
+
+        function renderList(rides = []) {
+            let html = `
+                <button onclick="renderHome()" class="text-sm text-gray-500 mb-4">← Back to Home</button>
+                <h2 class="text-xl font-bold mb-4 text-blue-700">Available Rides</h2>
+                <div class="space-y-4">
+            `;
+
+            if (rides.length === 0) {
+                html += `<div class="text-center text-gray-400 py-10">No active rides found.</div>`;
+            }
+
+            rides.forEach(ride => {
+                const passengers = ride.passengers ? Object.values(ride.passengers) : [];
+                const seatsTaken = passengers.length;
+                const seatsLeft = ride.total_seats - seatsTaken;
+                const isFull = seatsLeft <= 0;
+
+                // If full, add the grayscale class
+                const cardClass = isFull ? "bg-white p-4 rounded-lg shadow border border-gray-200 full-ride" : "bg-white p-4 rounded-lg shadow border border-blue-100";
+                const statusText = isFull ? `<span class="text-red-500 font-bold">FULL</span>` : `<span class="text-green-600 font-bold">${seatsLeft} seats left</span>`;
+                
+                const helmetBadge = (ride.vehicle_type === 'Bike' && ride.extra_helmet) 
+                    ? `<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">⛑️ Helmet</span>` 
+                    : '';
+
+                html += `
+                    <div class="${cardClass}">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-lg">${ride.masjid_name}</h3>
+                                <p class="text-gray-600 text-sm">🕒 ${ride.departure_time}</p>
+                            </div>
+                            <div class="text-right">
+                                ${statusText}
+                            </div>
+                        </div>
+                        
+                        <div class="text-sm text-gray-700 mb-2">
+                            <span class="font-semibold">${ride.owner_name}</span> 
+                            <span class="text-gray-400">(${ride.vehicle_type})</span>
+                            ${helmetBadge}
+                        </div>
+
+                        <div class="border-t pt-2 mt-2">
+                            ${!isFull ? `
+                                <div id="join-form-${ride.id}">
+                                    <button onclick="showJoinInputs('${ride.id}')" class="w-full bg-blue-500 text-white py-2 rounded text-sm hover:bg-blue-600">Join Ride</button>
+                                </div>
+                                <div id="confirm-form-${ride.id}" class="hidden mt-2 space-y-2">
+                                    <input type="text" id="p-name-${ride.id}" placeholder="Your Name (Required)" class="w-full p-2 border text-sm rounded">
+                                    <input type="tel" id="p-phone-${ride.id}" placeholder="Phone (Optional)" class="w-full p-2 border text-sm rounded">
+                                    <div class="flex gap-2">
+                                        <button onclick="handleJoin('${ride.id}')" class="flex-1 bg-green-600 text-white py-1 rounded text-sm">Confirm</button>
+                                        <button onclick="cancelJoin('${ride.id}')" class="flex-1 bg-gray-300 text-gray-700 py-1 rounded text-sm">Cancel</button>
+                                    </div>
+                                </div>
+                            ` : `<div class="text-center text-sm text-gray-400 italic">Occupied</div>`}
+                        </div>
+                        
+                        <div class="mt-2 text-xs text-gray-400">
+                            Passengers: ${passengers.map(p => p.name).join(', ') || 'None yet'}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            app.innerHTML = html;
+        }
+
+        // ==========================================
+        // LOGIC & DATA HANDLING
+        // ==========================================
+
+        function toggleHelmetOption() {
+            const type = document.getElementById('vehicleType').value;
+            const div = document.getElementById('helmetDiv');
+            if(type === 'Bike') div.classList.remove('hidden');
+            else div.classList.add('hidden');
+        }
+
+        async function handlePostRide(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Posting...";
+            btn.disabled = true;
+
+            const rideData = {
+                owner_name: document.getElementById('ownerName').value,
+                owner_phone: document.getElementById('ownerPhone').value,
+                vehicle_type: document.getElementById('vehicleType').value,
+                total_seats: parseInt(document.getElementById('seats').value),
+                masjid_name: document.getElementById('masjid').value,
+                departure_time: document.getElementById('time').value,
+                extra_helmet: document.getElementById('extraHelmet').checked,
+                created_at: Date.now() // Timestamp for expiration logic
+            };
+
+            try {
+                // REST API Call to Firebase
+                await fetch(`${DB_URL}/rides.json`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(rideData)
+                });
+                alert("Ride Posted Successfully!");
+                fetchAndRenderList();
+            } catch (err) {
+                alert("Error posting ride: " + err.message);
+                btn.innerText = "Post Ride";
+                btn.disabled = false;
+            }
+        }
+
+        async function fetchAndRenderList() {
+            app.innerHTML = `<div class="text-center mt-10 text-gray-500">Loading rides...</div>`;
+            
+            try {
+                const response = await fetch(`${DB_URL}/rides.json`);
+                const data = await response.json();
+                
+                if (!data) {
+                    renderList([]);
+                    return;
+                }
+
+                const now = Date.now();
+                const rides = Object.entries(data)
+                    .map(([id, ride]) => ({ id, ...ride })) // Convert ID key to property
+                    .filter(ride => {
+                        // Expiration Logic: Check if created within last 48 hours
+                        return (now - ride.created_at) < TWO_DAYS_MS;
+                    });
+                
+                // Sort rides by departure time (optional UX improvement)
+                rides.sort((a, b) => a.departure_time.localeCompare(b.departure_time));
+
+                renderList(rides);
+
+            } catch (err) {
+                app.innerHTML = `<div class="text-center text-red-500 mt-10">Error loading data. Check internet connection.</div>`;
+            }
+        }
+
+        function showJoinInputs(id) {
+            document.getElementById(`join-form-${id}`).classList.add('hidden');
+            document.getElementById(`confirm-form-${id}`).classList.remove('hidden');
+        }
+
+        function cancelJoin(id) {
+            document.getElementById(`join-form-${id}`).classList.remove('hidden');
+            document.getElementById(`confirm-form-${id}`).classList.add('hidden');
+        }
+
+        async function handleJoin(rideId) {
+            const name = document.getElementById(`p-name-${rideId}`).value;
+            const phone = document.getElementById(`p-phone-${rideId}`).value;
+
+            if (!name) {
+                alert("Name is mandatory!");
+                return;
+            }
+
+            const passengerData = { name, phone };
+
+            try {
+                // Add passenger to the specific ride's 'passengers' list
+                await fetch(`${DB_URL}/rides/${rideId}/passengers.json`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(passengerData)
+                });
+                // Reload list to update seat count and grey out if full
+                fetchAndRenderList(); 
+            } catch (err) {
+                alert("Error booking seat. Please try again.");
+            }
+        }
+    </script>
+</body>
+</html>
