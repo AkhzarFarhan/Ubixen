@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stocks</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .input-group label {
+            flex: 1;
+            font-weight: bold;
+        }
+        .input-group input {
+            flex: 2;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #2c3e50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .positive {
+            color: green;
+            font-weight: bold;
+        }
+        .negative {
+            color: red;
+            font-weight: bold;
+        }
+        .result-summary {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Stock Profit Calculator</h1>
+    
+    <div class="input-group">
+        <label for="totalAmount">Total Buy Amount (₹):</label>
+        <input type="number" id="totalAmount" placeholder="Total amount spent (incl. charges)" step="0.01">
+    </div>
+
+    <div class="input-group">
+        <label for="buyPrice">Buy Price (₹):</label>
+        <input type="number" id="buyPrice" placeholder="Enter Purchase Price" step="0.01">
+    </div>
+    
+    <div class="input-group">
+        <label for="sellPrice">Sell Price (₹):</label>
+        <input type="number" id="sellPrice" placeholder="Enter Sale Price" step="0.01">
+    </div>
+
+    <button onclick="calculateProfit()">Calculate</button>
+
+    <div id="results" style="display:none;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Charge Head</th>
+                    <th>Zerodha (₹)</th>
+                    <th>Groww (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Turnover</td>
+                    <td id="z-turnover"></td>
+                    <td id="g-turnover"></td>
+                </tr>
+                <tr>
+                    <td>Brokerage</td>
+                    <td id="z-brokerage"></td>
+                    <td id="g-brokerage"></td>
+                </tr>
+                <tr>
+                    <td>STT / CTT (0.1% on Buy & Sell)</td>
+                    <td id="z-stt"></td>
+                    <td id="g-stt"></td>
+                </tr>
+                <tr>
+                    <td>Exchange Txn Charge (NSE 0.00297%)</td>
+                    <td id="z-etx"></td>
+                    <td id="g-etx"></td>
+                </tr>
+                <tr>
+                    <td>SEBI Turnover Fees (0.0001%)</td>
+                    <td id="z-sebi"></td>
+                    <td id="g-sebi"></td>
+                </tr>
+                <tr>
+                    <td>Stamp Duty (0.015% on Buy)</td>
+                    <td id="z-stamp"></td>
+                    <td id="g-stamp"></td>
+                </tr>
+                <tr>
+                    <td>GST (18% on Brok+SEBI+Txn)</td>
+                    <td id="z-gst"></td>
+                    <td id="g-gst"></td>
+                </tr>
+                <tr>
+                    <td>DP Charges (incl. GST)</td>
+                    <td id="z-dp"></td>
+                    <td id="g-dp"></td>
+                </tr>
+                <tr style="background-color:#e8f4f8; font-weight:bold;">
+                    <td>Total Tax & Charges</td>
+                    <td id="z-total-charges"></td>
+                    <td id="g-total-charges"></td>
+                </tr>
+                <tr style="font-size: 1.1em;">
+                    <td>Net Profit / Loss</td>
+                    <td id="z-net-pl"></td>
+                    <td id="g-net-pl"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function calculateProfit() {
+        const totalAmount = parseFloat(document.getElementById('totalAmount').value);
+        const buyPrice = parseFloat(document.getElementById('buyPrice').value);
+        const sellPrice = parseFloat(document.getElementById('sellPrice').value);
+
+        if (isNaN(buyPrice) || isNaN(sellPrice) || isNaN(totalAmount) || totalAmount <= 0) {
+            alert("Please enter valid numbers");
+            return;
+        }
+
+        // Derive quantity: User pays Total Amount which includes charges. 
+        // Gross Buy Value + Buy Charges = Total Amount.
+        // Approx Buy Charges ~ 0.12% to 0.15% usually.
+        // Let's approximate finding max Q such that cost <= totalAmount
+        
+        // Naive approximation first:
+        let quantity = Math.floor(totalAmount / buyPrice);
+        
+        // Refine down if needed (though typically this floor is enough unless price is very low and charges are high relative to unit price)
+        // Since we don't know if the user entered EXACTLY the charges, we can stick to this or just show it.
+        // If the user meant "Total Principal Invested", then this is exact.
+        // If the user meant "Cumulatively paid", this effectively strips charges to get Q.
+        
+        if (quantity < 1) quantity = 0;
+
+        const buyValue = buyPrice * quantity;
+        const sellValue = sellPrice * quantity;
+        const turnover = buyValue + sellValue;
+        const grossProfit = sellValue - buyValue;
+
+        // Constants (Hardcoded rates as of Feb 2026 based on 2025/24 data)
+        const RATE_STT = 0.001; // 0.1% on delivery buy & sell
+        const RATE_EXCH_TXN_NSE = 0.0000297; // 0.00297%
+        const RATE_SEBI = 0.000001; // Rs 10 per crore
+        const RATE_STAMP = 0.00015; // 0.015% on buy
+        const RATE_GST = 0.18;
+
+        // --- ZERODHA ---
+        // Brokerage: Equity Delivery is 0
+        const z_brokerage_buy = 0;
+        const z_brokerage_sell = 0;
+        const z_brokerage = 0; 
+
+        // STT
+        const z_stt = Math.round(turnover * RATE_STT);
+
+        // Exchange Txn
+        const z_etx = (turnover * RATE_EXCH_TXN_NSE);
+
+        // SEBI
+        const z_sebi = (turnover * RATE_SEBI);
+
+        // Stamp Duty (Buy side only)
+        const z_stamp = Math.round(buyValue * RATE_STAMP);
+
+        // GST (on Brokerage + SEBI + Txn)
+        const z_gst = (z_brokerage + z_sebi + z_etx) * RATE_GST;
+
+        // DP Charges: Zerodha ₹13 + 18% GST = ₹15.34 per sell
+        // DP charges apply once per day per scrip, assuming all sold today.
+        const z_dp = quantity > 0 ? (13 + (13 * 0.18)) : 0; 
+
+        const z_total_charges = z_brokerage + z_stt + z_etx + z_sebi + z_stamp + z_gst + z_dp;
+        const z_net = grossProfit - z_total_charges;
+
+
+        // --- GROWW ---
+        // Brokerage: 0.05% or Rs 20 whichever is lower per order
+        // Buy Brokerage
+        let g_brok_buy = Math.min(20, buyValue * 0.0005);
+        // Sell Brokerage
+        let g_brok_sell = Math.min(20, sellValue * 0.0005);
+        const g_brokerage = g_brok_buy + g_brok_sell;
+
+        // STT (Same)
+        const g_stt = Math.round(turnover * RATE_STT);
+
+        // Exchange Txn (Same)
+        const g_etx = (turnover * RATE_EXCH_TXN_NSE);
+
+        // SEBI (Same)
+        const g_sebi = (turnover * RATE_SEBI);
+
+        // Stamp Duty (Same)
+        const g_stamp = Math.round(buyValue * RATE_STAMP);
+
+        // GST (on Brokerage + SEBI + Txn)
+        const g_gst = (g_brokerage + g_sebi + g_etx) * RATE_GST;
+
+        // DP Charges: Groww ₹13.5 + 18% GST = ₹15.93 per sell
+        const g_dp = quantity > 0 ? (13.5 + (13.5 * 0.18)) : 0;
+
+        const g_total_charges = g_brokerage + g_stt + g_etx + g_sebi + g_stamp + g_gst + g_dp;
+        const g_net = grossProfit - g_total_charges;
+
+        // --- UPDATE UI ---
+        document.getElementById('results').style.display = 'block';
+
+        // Format function
+        const fmt = (num) => num.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 });
+
+        // Update derived quantity in UI if needed, but not asked. 
+        // We will add a row for it for clarity since it's derived.
+        let qtyRow = document.getElementById('qty-row');
+        if(!qtyRow) {
+             const tbody = document.querySelector("#results tbody");
+             const tr = document.createElement("tr");
+             tr.id = "qty-row";
+             tr.innerHTML = `<td><strong>Derived Quantity</strong></td><td colspan="2" style="text-align:center; font-weight:bold;">${quantity}</td>`;
+             tbody.insertBefore(tr, tbody.firstChild);
+        } else {
+             qtyRow.innerHTML = `<td><strong>Derived Quantity</strong></td><td colspan="2" style="text-align:center; font-weight:bold;">${quantity}</td>`;
+        }
+
+
+        document.getElementById('z-turnover').innerText = fmt(turnover);
+        document.getElementById('g-turnover').innerText = fmt(turnover);
+
+        document.getElementById('z-brokerage').innerText = fmt(z_brokerage);
+        document.getElementById('g-brokerage').innerText = fmt(g_brokerage);
+
+        document.getElementById('z-stt').innerText = fmt(z_stt);
+        document.getElementById('g-stt').innerText = fmt(g_stt);
+
+        document.getElementById('z-etx').innerText = fmt(z_etx);
+        document.getElementById('g-etx').innerText = fmt(g_etx);
+
+        document.getElementById('z-sebi').innerText = fmt(z_sebi);
+        document.getElementById('g-sebi').innerText = fmt(g_sebi);
+
+        document.getElementById('z-stamp').innerText = fmt(z_stamp);
+        document.getElementById('g-stamp').innerText = fmt(g_stamp);
+
+        document.getElementById('z-gst').innerText = fmt(z_gst);
+        document.getElementById('g-gst').innerText = fmt(g_gst);
+
+        document.getElementById('z-dp').innerText = fmt(z_dp);
+        document.getElementById('g-dp').innerText = fmt(g_dp);
+
+        document.getElementById('z-total-charges').innerText = fmt(z_total_charges);
+        document.getElementById('g-total-charges').innerText = fmt(g_total_charges);
+
+        const z_net_el = document.getElementById('z-net-pl');
+        z_net_el.innerText = fmt(z_net);
+        z_net_el.className = z_net >= 0 ? 'positive' : 'negative';
+
+        const g_net_el = document.getElementById('g-net-pl');
+        g_net_el.innerText = fmt(g_net);
+        g_net_el.className = g_net >= 0 ? 'positive' : 'negative';
+    }
+</script>
+
+</body>
+</html>

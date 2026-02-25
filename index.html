@@ -3,65 +3,340 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ubixen</title>
+    <title>Ubixen | Dashboard</title>
+    <!-- Google Fonts for a modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5; /* Indigo */
+            --primary-hover: #4338ca;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-secondary: #6b7280;
+            --danger: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.95rem;
+        }
+        
+        #username-id {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .btn-logout {
+            background-color: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            flex: 1;
+            width: 100%;
+            box-sizing: border-box;
+            display: none; /* Hidden by default until auth check */
+        }
+
+        .greeting {
+            margin-bottom: 2rem;
+        }
+        .greeting h1 {
+            font-size: 2rem;
+            margin: 0;
+            font-weight: 300;
+        }
+        .greeting p {
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* App Grid */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .app-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-main);
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: 1px solid transparent;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: var(--primary-color);
+        }
+
+        .app-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .app-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        /* Login Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex; /* Flex by default for auth check */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-card h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: auto;
+        }
+
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Input styling overrides */
+        input[type="text"], input[type="password"] {
+            font-family: inherit; /* Ensure font is consistent */
+        }
+    </style>
 </head>
 <body>
-    <h1 class="heading">Ubixen: An Endless Possibility</h1>
-    <div class="container">
-        <div class="button-container" id="button-container-id">
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Ledger.html">Ledger</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Car.html">Car</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Salah.html">Salah</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Task.html">Task</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Carpool.html">Carpool</a>
-            <a class="button" href="https://akhzarfarhan.github.io/ESP32/LIDAR/src/lidar.html">LIDAR</a>
-            <a class="button" href="https://akhzarfarhan.github.io/ESP32/KeepItUp/src/drone.html">Drone</a>
-            <a class="button" href="https://akhzarfarhan.github.io/MeetMe/index.html">MeetMe</a>
-            <a class="button" href="https://akhzarfarhan.github.io/MeetMe/admin.html">MeetMe-A</a>
-            <a class="button" href="https://akhzarfarhan.github.io/BehavioralAssessment/index.html">Behavior</a>
-            <a class="button" href="https://akhzarfarhan.github.io/FamilySync/index.html">Family Sync</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/IDE.html">IDE</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Gym.html">Gym</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Tasbih.html">Tasbih</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Texter.html">Texter</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Daily.html">Daily</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/BondAnalyzer.html">Bond</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/UbiCards.html">UbiCards</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Finance.html">Finance</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Delivery.html">Delivery</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/eDiary.html">eDiary</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Inventory.html">Inventory</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/SplitIt.html">Split It</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/YouTube.html">YouTube</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Accounts.html">Accounts</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Banking.html">Banking</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/ConstructionV2.html">Construction</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Blog.html">Portfolio</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Sales.html">Sales</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Game/ZenSudoku.html">Zen Sudoku</a>
-            <a class="button" href="https://akhzarfarhan.github.io/Ubixen/Game/GuessWord.html">Guess Word</a>
-            <a class="button" href="https://akhzarfarhan.github.io/al-Quran/">Al-Quran</a>
-            <a class="button" href="https://akhzarfarhan.github.io/sahih-bukhari/">Al-Bukhari</a>
+
+    <!-- Navbar -->
+    <nav class="navbar hidden" id="navbar">
+        <a href="#" class="brand">
+            <span>🔹 Ubixen</span>
+        </a>
+        <div class="user-controls" id="user-controls">
+            <span>Hello, <span id="username-id">Guest</span></span>
+            <button class="btn-logout" onclick="signout()">Logout</button>
         </div>
-        <div id="popupForm" class="popup-form">
-            <div class="form-container">
-                <h2 class="heading">Introduce Yourself</h2>
-                <div id="registerForm">
-                    <input class="text_box" type="text" id="username" name="username" placeholder="Enter Username" required>
-                    <input class="text_box" type="password" id="password" name="password" placeholder="Enter Password" required>
-                    <input class="text_box" type="text" id="project_id" name="project_id" placeholder="Enter Project ID" required>
-                    <button class="button" type="submit" onclick="take_user_input_from_alert_window()">Save</button>
+    </nav>
+
+    <!-- Main Dashboard -->
+    <div class="main-container" id="dashboard-container">
+        <div class="greeting">
+            <h1>Apps Dashboard</h1>
+            <p>Select a tool to get started</p>
+        </div>
+
+        <div class="app-grid">
+            <!-- Productivity -->
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Task.html"><span class="app-icon">✅</span><span class="app-name">Task</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/eDiary.html"><span class="app-icon">📔</span><span class="app-name">eDiary</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/IDE.html"><span class="app-icon">💻</span><span class="app-name">IDE</span></a>
+            
+            <!-- Finance -->
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Finance.html"><span class="app-icon">💰</span><span class="app-name">Finance</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Stocks.html"><span class="app-icon">📈</span><span class="app-name">Stocks</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Ledger.html"><span class="app-icon">📒</span><span class="app-name">Ledger</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/BondAnalyzer.html"><span class="app-icon">📜</span><span class="app-name">Bond</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/SplitIt.html"><span class="app-icon">➗</span><span class="app-name">Split It</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Banking.html"><span class="app-icon">🏦</span><span class="app-name">Banking</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Accounts.html"><span class="app-icon">🧾</span><span class="app-name">Accounts</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Sales.html"><span class="app-icon">📊</span><span class="app-name">Sales</span></a>
+
+            <!-- Lifestyle & Social -->
+            <a class="app-card" href="https://akhzarfarhan.github.io/FamilySync/index.html"><span class="app-icon">👨‍👩‍👧‍👦</span><span class="app-name">Family Sync</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/MeetMe/index.html"><span class="app-icon">🤝</span><span class="app-name">MeetMe</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Texter.html"><span class="app-icon">💬</span><span class="app-name">Texter</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Car.html"><span class="app-icon">🚗</span><span class="app-name">Car</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Carpool.html"><span class="app-icon">🚕</span><span class="app-name">Carpool</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Gym.html"><span class="app-icon">🏋️</span><span class="app-name">Gym</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Inventory.html"><span class="app-icon">📦</span><span class="app-name">Inventory</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Delivery.html"><span class="app-icon">🚚</span><span class="app-name">Delivery</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/ConstructionV2.html"><span class="app-icon">🏗️</span><span class="app-name">Construction</span></a>
+
+            <!-- Religious -->
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Salah.html"><span class="app-icon">🕌</span><span class="app-name">Salah</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/al-Quran/"><span class="app-icon">📖</span><span class="app-name">Al-Quran</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/sahih-bukhari/"><span class="app-icon">📚</span><span class="app-name">Al-Bukhari</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Tasbih.html"><span class="app-icon">📿</span><span class="app-name">Tasbih</span></a>
+
+            <!-- IoT & Technical -->
+            <a class="app-card" href="https://akhzarfarhan.github.io/ESP32/LIDAR/src/lidar.html"><span class="app-icon">📡</span><span class="app-name">LIDAR</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/ESP32/KeepItUp/src/drone.html"><span class="app-icon">🚁</span><span class="app-name">Drone</span></a>
+            
+            <!-- Games & Fun -->
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Game/ZenSudoku.html"><span class="app-icon">🧩</span><span class="app-name">Zen Sudoku</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Game/GuessWord.html"><span class="app-icon">🔤</span><span class="app-name">Guess Word</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/YouTube.html"><span class="app-icon">📺</span><span class="app-name">YouTube</span></a>
+            
+            <!-- Tools & Admin -->
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/UbiCards.html"><span class="app-icon">🗂️</span><span class="app-name">UbiCards</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Daily.html"><span class="app-icon">📅</span><span class="app-name">Daily</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/BehavioralAssessment/index.html"><span class="app-icon">🧠</span><span class="app-name">Behavior</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/MeetMe/admin.html"><span class="app-icon">🔐</span><span class="app-name">MeetMe-A</span></a>
+            <a class="app-card" href="https://akhzarfarhan.github.io/Ubixen/Blog.html"><span class="app-icon">🌐</span><span class="app-name">Portfolio</span></a>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal-overlay">
+        <div class="login-card">
+            <h2>Welcome to Ubixen</h2>
+            <p>Please identity yourself to continue.</p>
+            <div id="registerForm">
+                <div class="form-group">
+                    <input class="form-input" type="text" id="username" name="username" placeholder="Username" required autocomplete="username">
                 </div>
+                <div class="form-group">
+                    <input class="form-input" type="password" id="password" name="password" placeholder="Password" required autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <input class="form-input" type="text" id="project_id" name="project_id" placeholder="Project ID" required>
+                </div>
+                <button class="btn-primary" type="submit" onclick="take_user_input_from_alert_window()">Start Session</button>
             </div>
         </div>
-    </br>
-        <div class="user-flex" id="user-flex-id">
-            <div>Hello</div><div id="username-id"></div>
-        </div>
-        <div class="signout-class" id="signout-id" onclick="signout()">Logout</div>
-        <div id="copyright" class="copyright">Developed and maintained by <a class="copyright_link" href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a></div>
     </div>
+
+    <div class="footer">
+        © <span id="year"></span> Ubixen. Developed and maintained by <a href="https://github.com/AkhzarFarhan/">Akhzar Farhan</a>
+    </div>
+
     <script>
+        document.getElementById('year').innerText = new Date().getFullYear();
 
         window["user_info"] = {
             "username":   "UNKNOWN",
@@ -71,153 +346,83 @@
             "otp":        "UNKNOWN"
         }
 
-        function take_user_input_from_alert_window()
-        {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-            const project_id = document.getElementById("project_id").value;
-            window["user_info"]["username"]   = username;
-            window["user_info"]["password"]   = password;
-            window["user_info"]["project_id"] = project_id;
-            window.localStorage.setItem("user_info", JSON.stringify(window["user_info"]));
+        const dashboardContainer = document.getElementById('dashboard-container');
+        const loginModal = document.getElementById('login-modal');
+        const navbar = document.getElementById('navbar');
+        const usernameDisplay = document.getElementById('username-id');
+
+        function checkAuth() {
+            try {
+                const credString = localStorage.getItem("user_info");
+                // Check if credString exists and has actual valid content
+                if (credString) {
+                    const cred = JSON.parse(credString);
+                    if(cred.username && cred.username !== "UNKNOWN") {
+                        showDashboard(cred);
+                        return;
+                    }
+                }
+            } catch(e) {
+                console.error("Auth Error", e);
+            }
+            showLogin();
+        }
+
+        function showDashboard(cred) {
+            window["user_info"] = cred;
+            usernameDisplay.innerText = cred.username;
+            
+            // Hide Login
+            loginModal.classList.add('hidden');
+            loginModal.style.display = 'none'; 
+            
+            // Show Dashboard
+            dashboardContainer.classList.remove('hidden');
+            dashboardContainer.style.display = 'block';
+
+            // Show Navbar
+            navbar.classList.remove('hidden');
+            navbar.style.display = 'flex';
+        }
+
+        function showLogin() {
+            // Hide Dashboard
+            dashboardContainer.classList.add('hidden');
+            
+            // Hide Navbar (optional, but cleaner for login screen)
+            navbar.classList.add('hidden');
+
+            // Show Login
+            loginModal.classList.remove('hidden');
+            loginModal.style.display = 'flex'; // Use flex for centering
+        }
+
+        function take_user_input_from_alert_window() {
+            const usernameInput = document.getElementById("username").value;
+            const passwordInput = document.getElementById("password").value;
+            const projectInput = document.getElementById("project_id").value;
+
+            if(!usernameInput || !passwordInput || !projectInput) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            window["user_info"]["username"]   = usernameInput;
+            window["user_info"]["password"]   = passwordInput;
+            window["user_info"]["project_id"] = projectInput;
+            
+            localStorage.setItem("user_info", JSON.stringify(window["user_info"]));
             location.reload();
         }
 
-        function get_cred_from_cache()
-        {
-            var cred = localStorage.getItem("user_info");
-            console.log(cred);
-            if(cred)
-            {
-                document.getElementById("button-container-id").style.display = true;
-                document.getElementById("user-flex-id").style.display        = true;
-                document.getElementById("signout-id").style.display          = true;
-                document.getElementById("popupForm").style.display           = 'none';
-                cred = JSON.parse(cred);
-                window["user_info"] = cred;
-                document.getElementById("username-id").innerText = `${window["user_info"]["username"]}`;
-            }
-            else
-            {
-                document.getElementById("button-container-id").style.display = 'none';
-                document.getElementById("user-flex-id").style.display = 'none';
-                document.getElementById("signout-id").style.display = 'none';
-                document.getElementById("popupForm").style.display = true;
-            }
-        }
-
-        function signout()
-        {
-            window.localStorage.removeItem("user_info");
+        function signout() {
+            localStorage.removeItem("user_info");
             location.reload();
         }
 
-        get_cred_from_cache();
+        // Initialize
+        checkAuth();
 
     </script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f1f1f1;
-            margin: 10px;
-            padding: 0;
-            align-items: center;
-            text-align: center;
-            height: 70vh;
-        }
-
-        #username-id {
-            color: #45a049;
-            margin-left: 5px;
-        }
-
-        #signout-id {
-            margin-left: 5px;
-            display: inline-block;
-            padding: 5px 10px;
-            margin: 5px;
-            background-color: red;
-            color: #fff;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 13px;
-            transition: background-color 0.3s ease;
-        }
-
-        .user-flex {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-        }
-
-        .text_box {
-            padding: 10px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            outline: none;
-            box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
-            width: 87%;
-            transition: box-shadow 0.3s ease;
-            margin: 5px;
-        }
-
-        .text_box:focus {
-            box-shadow: 0px 3px 20px rgba(0, 123, 255, 0.4);
-        }
-        
-        .button-container {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-        
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 10px;
-            background-color: #4285f4;
-            color: #fff;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 18px;
-            transition: background-color 0.3s ease;
-        }
-        
-        .button:hover {
-            background-color: #0056b3;
-        }
-        
-        .container {
-            text-align: center;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin: 10px;
-        }
-
-        .a {
-            text-decoration: none;
-        }
-
-        .copyright {
-            font-size: 10pt;
-            text-align: center;
-            padding: 10px;
-            color: #000000;
-            margin-right: 10px;
-            margin-top: 30px;
-        }
-
-        .copyright_link {
-            color: #45a049;
-            text-decoration: none;
-        }
-
-        .heading {
-            font-weight: lighter;
-        }
-    </style>
 </body>
 </html>
