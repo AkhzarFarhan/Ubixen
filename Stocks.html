@@ -84,6 +84,213 @@
             text-align: center;
             font-size: 1.2em;
         }
+
+        /* ===== Progress Bar Styles ===== */
+        .progress-container {
+            display: none;
+            margin-top: 20px;
+            padding: 24px;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-container::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(52,152,219,0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(155,89,182,0.06) 0%, transparent 50%);
+            animation: bgShift 8s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        @keyframes bgShift {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(5%, -3%); }
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+            margin-bottom: 20px;
+        }
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+        .step-icon {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: rgba(255,255,255,0.35);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 2;
+        }
+        .step-icon svg {
+            width: 20px; height: 20px;
+            fill: currentColor;
+        }
+        .step-label {
+            margin-top: 8px;
+            font-size: 0.72em;
+            color: rgba(255,255,255,0.35);
+            text-align: center;
+            transition: all 0.5s ease;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        .progress-step.active .step-icon {
+            background: linear-gradient(135deg, #3498db, #9b59b6);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 0 20px rgba(52,152,219,0.5), 0 0 40px rgba(155,89,182,0.2);
+            animation: stepPulse 1.8s ease-in-out infinite;
+        }
+        .progress-step.active .step-label {
+            color: rgba(255,255,255,0.95);
+        }
+        .progress-step.completed .step-icon {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 0 12px rgba(46,204,113,0.4);
+            animation: none;
+        }
+        .progress-step.completed .step-label {
+            color: rgba(46,204,113,0.9);
+        }
+        @keyframes stepPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(52,152,219,0.5), 0 0 40px rgba(155,89,182,0.2); transform: scale(1); }
+            50% { box-shadow: 0 0 30px rgba(52,152,219,0.7), 0 0 60px rgba(155,89,182,0.35); transform: scale(1.08); }
+        }
+
+        /* Connecting line between steps */
+        .progress-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 22px;
+            left: calc(50% + 26px);
+            width: calc(100% - 52px);
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1;
+        }
+        .progress-step.completed:not(:last-child)::after {
+            background: linear-gradient(90deg, #2ecc71, rgba(46,204,113,0.3));
+        }
+
+        /* Main progress bar track */
+        .progress-track {
+            position: relative;
+            z-index: 2;
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #3498db, #9b59b6, #e74c3c, #f39c12, #2ecc71);
+            background-size: 300% 100%;
+            animation: gradientMove 3s ease infinite;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            right: 0; top: -2px;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(52,152,219,0.5);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .progress-fill.moving::after {
+            opacity: 1;
+        }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Status text */
+        .progress-status {
+            text-align: center;
+            font-size: 0.85em;
+            color: rgba(255,255,255,0.7);
+            z-index: 2;
+            position: relative;
+            min-height: 20px;
+        }
+        .progress-status .status-text {
+            display: inline-block;
+            animation: fadeSlideIn 0.4s ease;
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Sub-progress for individual stock fetches */
+        .sub-progress-wrap {
+            display: none;
+            margin-top: 12px;
+            z-index: 2;
+            position: relative;
+        }
+        .sub-progress-label {
+            font-size: 0.75em;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 4px;
+        }
+        .sub-progress-track {
+            height: 3px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .sub-progress-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+            transition: width 0.4s ease;
+        }
+
+        /* Particle sparkle effect */
+        .sparkle {
+            position: absolute;
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 3;
+        }
+        @keyframes sparkle {
+            0% { opacity: 0; transform: scale(0) translateY(0); }
+            40% { opacity: 1; transform: scale(1) translateY(-8px); }
+            100% { opacity: 0; transform: scale(0) translateY(-20px); }
+        }
     </style>
 </head>
 <body>
@@ -177,6 +384,45 @@
     <button id="mf-load-btn" onclick="loadMFData()">Load Mutual Fund Analysis</button>
     <p id="mf-status" style="font-size:0.9em; color:#666;">* Live fetch using public endpoints (mobile friendly).</p>
     <p id="mf-source" style="font-size:0.9em; color:#2c3e50; font-weight:600;">Data Source: Not loaded</p>
+
+    <div class="progress-container" id="progress-container">
+        <div class="progress-steps">
+            <div class="progress-step" id="pstep-1">
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                </div>
+                <span class="step-label">Discover Funds</span>
+            </div>
+            <div class="progress-step" id="pstep-2">
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                </div>
+                <span class="step-label">Fetch Holdings</span>
+            </div>
+            <div class="progress-step" id="pstep-3">
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                </div>
+                <span class="step-label">Halal Filter</span>
+            </div>
+            <div class="progress-step" id="pstep-4">
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+                </div>
+                <span class="step-label">Price History</span>
+            </div>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="sub-progress-wrap" id="sub-progress-wrap">
+            <div class="sub-progress-label" id="sub-progress-label">Loading stock 1 / 10...</div>
+            <div class="sub-progress-track">
+                <div class="sub-progress-fill" id="sub-progress-fill"></div>
+            </div>
+        </div>
+        <div class="progress-status"><span class="status-text" id="progress-status-text">Initializing...</span></div>
+    </div>
 </div>
 
 <script>
@@ -365,6 +611,122 @@
         'CASINO', 'GAMBL', 'LOTTERY',
         'PORK', 'BACON'
     ];
+
+    /* ===== Progress Bar Controller ===== */
+    const ProgressBar = {
+        container: null,
+        fill: null,
+        statusText: null,
+        subWrap: null,
+        subFill: null,
+        subLabel: null,
+        steps: [],
+        _sparkleTimer: null,
+
+        init() {
+            this.container = document.getElementById('progress-container');
+            this.fill = document.getElementById('progress-fill');
+            this.statusText = document.getElementById('progress-status-text');
+            this.subWrap = document.getElementById('sub-progress-wrap');
+            this.subFill = document.getElementById('sub-progress-fill');
+            this.subLabel = document.getElementById('sub-progress-label');
+            this.steps = [1,2,3,4].map(i => document.getElementById(`pstep-${i}`));
+        },
+
+        show() {
+            if (!this.container) this.init();
+            this.container.style.display = 'block';
+            this.fill.style.width = '0%';
+            this.fill.classList.add('moving');
+            this.subWrap.style.display = 'none';
+            this.steps.forEach(s => { s.className = 'progress-step'; });
+            this._startSparkles();
+        },
+
+        hide() {
+            this.fill.classList.remove('moving');
+            this._stopSparkles();
+        },
+
+        setProgress(percent) {
+            if (!this.fill) this.init();
+            this.fill.style.width = Math.min(100, Math.max(0, percent)) + '%';
+        },
+
+        setStatus(text) {
+            if (!this.statusText) this.init();
+            this.statusText.style.animation = 'none';
+            void this.statusText.offsetWidth; // reflow
+            this.statusText.style.animation = 'fadeSlideIn 0.4s ease';
+            this.statusText.textContent = text;
+        },
+
+        activateStep(stepNum) {
+            if (!this.steps.length) this.init();
+            this.steps.forEach((s, i) => {
+                if (i + 1 < stepNum) s.className = 'progress-step completed';
+                else if (i + 1 === stepNum) s.className = 'progress-step active';
+                else s.className = 'progress-step';
+            });
+        },
+
+        completeStep(stepNum) {
+            if (!this.steps.length) this.init();
+            const s = this.steps[stepNum - 1];
+            if (s) s.className = 'progress-step completed';
+        },
+
+        showSubProgress(current, total, stockName) {
+            if (!this.subWrap) this.init();
+            this.subWrap.style.display = 'block';
+            this.subLabel.textContent = `Fetching stock ${current} / ${total}: ${stockName}`;
+            this.subFill.style.width = ((current / total) * 100) + '%';
+        },
+
+        hideSubProgress() {
+            if (this.subWrap) this.subWrap.style.display = 'none';
+        },
+
+        complete() {
+            this.setProgress(100);
+            this.steps.forEach(s => { s.className = 'progress-step completed'; });
+            this.fill.classList.remove('moving');
+            this.hideSubProgress();
+            this.setStatus('All done! \u2728');
+            this._stopSparkles();
+            // Emit completion sparkles
+            this._burstSparkles(8);
+            setTimeout(() => {
+                if (this.container) this.container.style.display = 'none';
+            }, 3000);
+        },
+
+        _startSparkles() {
+            this._stopSparkles();
+            this._sparkleTimer = setInterval(() => this._burstSparkles(1), 600);
+        },
+
+        _stopSparkles() {
+            if (this._sparkleTimer) { clearInterval(this._sparkleTimer); this._sparkleTimer = null; }
+        },
+
+        _burstSparkles(count) {
+            if (!this.container) return;
+            for (let i = 0; i < count; i++) {
+                const s = document.createElement('div');
+                s.className = 'sparkle';
+                const rect = this.fill.getBoundingClientRect();
+                const contRect = this.container.getBoundingClientRect();
+                s.style.left = (rect.right - contRect.left - 2 + (Math.random() * 20 - 10)) + 'px';
+                s.style.top = (rect.top - contRect.top + (Math.random() * 10 - 5)) + 'px';
+                s.style.background = ['#3498db','#9b59b6','#f39c12','#2ecc71','#e74c3c','#fff'][Math.floor(Math.random()*6)];
+                s.style.animation = `sparkle ${0.6 + Math.random()*0.5}s ease forwards`;
+                s.style.animationDelay = (Math.random() * 0.2) + 's';
+                this.container.appendChild(s);
+                setTimeout(() => s.remove(), 1200);
+            }
+        }
+    };
 
     function setMFStatus(text, isError = false) {
         const statusEl = document.getElementById('mf-status');
@@ -692,22 +1054,48 @@
         btn.disabled = true;
         setMFSource('Loading');
 
+        ProgressBar.show();
+
         try {
+            // === STEP 1: Discover Funds ===
+            ProgressBar.activateStep(1);
+            ProgressBar.setProgress(5);
+            ProgressBar.setStatus('Discovering top 20 mutual funds by 3Y returns...');
             setMFStatus('Fetching top 20 mutual funds (highest 3Y returns)...');
+
             const fundResult = await fetchTopFunds();
             const funds = fundResult.funds;
             let sourceMode = fundResult.source;
 
+            ProgressBar.completeStep(1);
+            ProgressBar.setProgress(15);
+
+            // === STEP 2: Fetch Holdings ===
+            ProgressBar.activateStep(2);
+            ProgressBar.setStatus(`Fetching holdings for ${funds.length} funds...`);
             setMFStatus(`Fetching holdings for ${funds.length} funds...`);
+
             const holdingBatches = await Promise.all(
-                funds.map(async (fund) => {
+                funds.map(async (fund, idx) => {
                     try {
-                        return await fetchFundHoldings(fund.id);
+                        const result = await fetchFundHoldings(fund.id);
+                        // Smoothly increment progress within step 2 (15% to 50%)
+                        const stepProg = 15 + ((idx + 1) / funds.length) * 35;
+                        ProgressBar.setProgress(stepProg);
+                        ProgressBar.setStatus(`Holdings loaded: ${idx + 1} / ${funds.length} funds`);
+                        return result;
                     } catch (error) {
                         return [];
                     }
                 })
             );
+
+            ProgressBar.completeStep(2);
+            ProgressBar.setProgress(55);
+
+            // === STEP 3: Halal Filter ===
+            ProgressBar.activateStep(3);
+            ProgressBar.setStatus('Applying Shariah compliance filter...');
 
             const weightedTotals = new Map();
             holdingBatches.forEach((holdings) => {
@@ -724,7 +1112,6 @@
                 }))
                 .sort((a, b) => b.weight - a.weight);
 
-            // Step 1: Filter out haram stocks and 'Others' first
             const halalStocks = weightedStocks.filter((stock) => {
                 const name = stock.company.trim().toUpperCase();
                 if (name === 'OTHERS' || name === 'OTHER') return false;
@@ -732,16 +1119,26 @@
             });
             const haramFiltered = weightedStocks.length - halalStocks.length;
 
-            // Step 2: Pick top 10 from halal stocks
             const top10Halal = halalStocks.slice(0, 10);
 
             if (!top10Halal.length) {
                 throw new Error('No halal stocks found after filtering. No stocks to display.');
             }
 
+            ProgressBar.completeStep(3);
+            ProgressBar.setProgress(62);
+            ProgressBar.setStatus(`${haramFiltered} haram stocks filtered. Top 10 halal selected!`);
+
+            // === STEP 4: Fetch Price History ===
+            ProgressBar.activateStep(4);
+            ProgressBar.setStatus(`Fetching 30-day price data for ${top10Halal.length} halal stocks...`);
             setMFStatus(`Top 10 selected, ${haramFiltered} haram filtered out. Fetching 30-day price data for ${top10Halal.length} halal stocks...`);
+
             for (let i = 0; i < top10Halal.length; i += 1) {
                 const stock = top10Halal[i];
+                ProgressBar.showSubProgress(i + 1, top10Halal.length, stock.company);
+                const stepProg = 62 + ((i + 1) / top10Halal.length) * 35;
+                ProgressBar.setProgress(stepProg);
                 try {
                     const ticker = await resolveTicker(stock.company);
                     stock.ticker = ticker;
@@ -751,6 +1148,9 @@
                 }
             }
 
+            ProgressBar.hideSubProgress();
+            ProgressBar.completeStep(4);
+
             const stocksWithoutHistory = top10Halal.filter((stock) => !stock.history || stock.history.length === 0).length;
             if (stocksWithoutHistory > 0) {
                 sourceMode = sourceMode === 'LIVE' ? 'LIVE (partial)' : 'FALLBACK (partial)';
@@ -759,10 +1159,13 @@
             renderHalalTable(top10Halal);
             renderCharts(top10Halal);
 
+            ProgressBar.complete();
+
             setMFSource(sourceMode, `${funds.length} funds`);
             setMFStatus(`Done! ${top10Halal.length} halal stocks (from top 10 by weight across ${funds.length} MFs, ${haramFiltered} haram removed).`);
         } catch (error) {
             console.error(error);
+            ProgressBar.hide();
             setMFStatus('Live fetch failed due to endpoint/CORS limitations. Try again or use a server-side proxy endpoint.', true);
             setMFSource('FALLBACK', 'No usable live response');
             alert('Live fetch failed. Some public APIs block direct browser calls from mobile/localhost.');
