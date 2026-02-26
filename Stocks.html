@@ -166,6 +166,17 @@
             </tbody>
         </table>
     </div>
+
+    <div id="mf-analysis" style="display:none; margin-top:30px;">
+        <h2>Halal Stock Screener (Top 10 Stocks from 20 MFs)</h2>
+        <div id="halal-stock-list"></div>
+    </div>
+</div>
+
+<div class="container" style="margin-top: 20px; text-align: center;">
+    <button id="mf-load-btn" onclick="loadMFData()">Load Mutual Fund Analysis</button>
+    <p id="mf-status" style="font-size:0.9em; color:#666;">* Live fetch using public endpoints (mobile friendly).</p>
+    <p id="mf-source" style="font-size:0.9em; color:#2c3e50; font-weight:600;">Data Source: Not loaded</p>
 </div>
 
 <script>
@@ -319,7 +330,443 @@
         g_net_el.innerText = fmt(g_net);
         g_net_el.className = g_net >= 0 ? 'positive' : 'negative';
     }
-</script>
 
+    // --- Shariah Compliant Mutual Fund Analysis ---
+    const ETMONEY_TOP_FUNDS_URL = 'https://www.etmoney.com/mutual-funds/filter/return-3-year';
+    const ETMONEY_HOLDING_API = 'https://www.etmoney.com/api/mffeed/portfolio-details/';
+    const FALLBACK_TOP_FUNDS = [
+        { id: '16930', name: 'Quant Infrastructure Fund' },
+        { id: '16925', name: 'Quant Small Cap Fund' },
+        { id: '40971', name: 'Aditya Birla Sun Life PSU Equity Fund' },
+        { id: '16934', name: 'Quant Mid Cap Fund' },
+        { id: '15878', name: 'SBI PSU Fund' },
+        { id: '37177', name: 'ICICI Prudential BHARAT 22 FOF Scheme' },
+        { id: '16394', name: 'Invesco India PSU Equity Fund' },
+        { id: '21857', name: 'Axis Small Cap Fund' },
+        { id: '11077', name: 'Nippon India Small Cap Fund' },
+        { id: '32489', name: 'Quant ELSS Tax Saver Fund' },
+        { id: '43952', name: '360 One Flexicap Fund' },
+        { id: '27976', name: '360 One Focused Fund' },
+        { id: '19230', name: 'Parag Parikh Flexi Cap Fund' },
+        { id: '32321', name: 'SBI Contra Fund' },
+        { id: '5428',  name: 'Quant Infrastructure Fund Direct' },
+        { id: '32611', name: 'Quant Mid Cap Fund Direct Growth' },
+        { id: '31845', name: 'Quant Small Cap Fund Direct Growth' },
+        { id: '39062', name: 'ICICI Prudential India Opportunities Fund' },
+        { id: '23600', name: 'Motilal Oswal Midcap Fund' },
+        { id: '31962', name: 'Nippon India Growth Mid Cap Fund' }
+    ];
+
+    // Proven haram: conventional banking/lending, alcohol, tobacco, gambling, pork
+    const HARAM_KEYWORDS = [
+        'BANK', 'NBFC',
+        'ALCOHOL', 'BREWER', 'SPIRIT', 'DISTILLER', 'LIQUOR', 'WINE',
+        'TOBACCO',
+        'CASINO', 'GAMBL', 'LOTTERY',
+        'PORK', 'BACON'
+    ];
+
+    function setMFStatus(text, isError = false) {
+        const statusEl = document.getElementById('mf-status');
+        statusEl.innerText = text;
+        statusEl.style.color = isError ? '#c0392b' : '#666';
+    }
+
+    function setMFSource(mode, details = '') {
+        const sourceEl = document.getElementById('mf-source');
+        sourceEl.innerText = details ? `Data Source: ${mode} (${details})` : `Data Source: ${mode}`;
+        sourceEl.style.color = mode === 'FALLBACK' ? '#e67e22' : '#2c3e50';
+    }
+
+    function proxyCandidates(url) {
+        return [
+            url,
+            `https://corsproxy.io/?${encodeURIComponent(url)}`,
+            `https://cors.isomorphic-git.org/${url}`,
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+            `https://r.jina.ai/http://${url.replace(/^https?:\/\//, '')}`
+        ];
+    }
+
+    function withTimeout(ms = 12000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), ms);
+        return { signal: controller.signal, clear: () => clearTimeout(timer) };
+    }
+
+    async function fetchTextWithFallback(url) {
+        let lastError = null;
+        const candidates = proxyCandidates(url);
+
+        for (const candidate of candidates) {
+            const timeout = withTimeout(12000);
+            try {
+                const response = await fetch(candidate, { method: 'GET', signal: timeout.signal });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const text = await response.text();
+                if (text && text.trim().length > 0) {
+                    timeout.clear();
+                    return text;
+                }
+            } catch (error) {
+                lastError = error;
+            } finally {
+                timeout.clear();
+            }
+        }
+
+        throw lastError || new Error('Unable to fetch data');
+    }
+
+    async function fetchJsonWithFallback(url) {
+        const text = await fetchTextWithFallback(url);
+        const cleaned = text.trim().startsWith('```')
+            ? text.replace(/```(?:json)?/g, '').trim()
+            : text;
+
+        if (cleaned.startsWith('{') || cleaned.startsWith('[')) {
+            return JSON.parse(cleaned);
+        }
+
+        const objStart = cleaned.indexOf('{');
+        const objEnd = cleaned.lastIndexOf('}');
+        if (objStart !== -1 && objEnd !== -1 && objEnd > objStart) {
+            try {
+                return JSON.parse(cleaned.slice(objStart, objEnd + 1));
+            } catch (error) {
+            }
+        }
+
+        const arrStart = cleaned.indexOf('[');
+        const arrEnd = cleaned.lastIndexOf(']');
+        if (arrStart !== -1 && arrEnd !== -1 && arrEnd > arrStart) {
+            return JSON.parse(cleaned.slice(arrStart, arrEnd + 1));
+        }
+
+        throw new Error('Could not parse JSON response from endpoint/proxy');
+    }
+
+    function isHaram(companyName) {
+        const name = companyName.toUpperCase();
+        return HARAM_KEYWORDS.some(keyword => name.includes(keyword));
+    }
+
+    function parseTopFundsFromHtml(html, limit = 10) {
+        const regex = /\/mutual-funds\/([a-z0-9-]+)\/(\d+)/g;
+        const seen = new Set();
+        const funds = [];
+
+        let match = regex.exec(html);
+        while (match && funds.length < limit) {
+            const slug = match[1];
+            const id = match[2];
+            if (!seen.has(id)) {
+                seen.add(id);
+                funds.push({
+                    id,
+                    name: slug.replace(/-/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase())
+                });
+            }
+            match = regex.exec(html);
+        }
+        return funds;
+    }
+
+    async function fetchTopFunds() {
+        try {
+            const html = await fetchTextWithFallback(ETMONEY_TOP_FUNDS_URL);
+            const funds = parseTopFundsFromHtml(html, 20);
+            if (funds.length >= 20) {
+                return { funds, source: 'LIVE' };
+            }
+        } catch (error) {
+        }
+
+        setMFStatus('Live top-fund list blocked by CORS. Using fallback 20 funds with live holdings...');
+        return { funds: FALLBACK_TOP_FUNDS, source: 'FALLBACK' };
+    }
+
+    async function fetchFundHoldings(mfid) {
+        const data = await fetchJsonWithFallback(`${ETMONEY_HOLDING_API}${mfid}`);
+        const holdings = data?.mfLAHDTOList || [];
+        const companyMap = data?.mfCompanyDTOMap || {};
+
+        return holdings
+            .map((holding) => {
+                const cid = String(holding.cId);
+                const company = companyMap[cid]?.company;
+                if (!company) {
+                    return null;
+                }
+                return {
+                    company,
+                    percentage: Number(holding.astPer) || 0
+                };
+            })
+            .filter(Boolean);
+    }
+
+    async function resolveTicker(companyName) {
+        const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(companyName)}&quotesCount=8&newsCount=0`;
+        const data = await fetchJsonWithFallback(url);
+        const quotes = data?.quotes || [];
+
+        if (!quotes.length) {
+            return null;
+        }
+
+        const preferred = quotes.find((q) => {
+            const symbol = q?.symbol || '';
+            const exchange = (q?.exchange || '') + (q?.exchDisp || '');
+            return (symbol.endsWith('.NS') || symbol.endsWith('.BO')) && /NSI|NSE|BSE/i.test(exchange);
+        });
+
+        if (preferred?.symbol) {
+            return preferred.symbol;
+        }
+
+        const indian = quotes.find((q) => /IN/i.test(q?.region || '') && q?.symbol);
+        return indian?.symbol || quotes[0]?.symbol || null;
+    }
+
+    async function fetchThirtyDayHistory(ticker) {
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=30d`;
+        const data = await fetchJsonWithFallback(url);
+        const result = data?.chart?.result?.[0];
+        const timestamps = result?.timestamp || [];
+        const closes = result?.indicators?.quote?.[0]?.close || [];
+
+        const history = [];
+        for (let i = 0; i < timestamps.length; i += 1) {
+            const close = closes[i];
+            if (close === null || close === undefined) {
+                continue;
+            }
+            history.push({
+                date: new Date(timestamps[i] * 1000).toISOString().slice(0, 10),
+                price: Number(close)
+            });
+        }
+        return history;
+    }
+
+    function renderHalalTable(stocks) {
+        const container = document.getElementById('mf-analysis');
+        container.style.display = 'block';
+
+        const listDiv = document.getElementById('halal-stock-list');
+        listDiv.innerHTML = '';
+
+        stocks.forEach((stock, index) => {
+            const card = document.createElement('div');
+            card.style.cssText = 'border:1px solid #ddd; border-radius:8px; padding:16px; margin-bottom:20px; background:#fafafa;';
+
+            const hasHistory = stock.history && stock.history.length > 0;
+            const firstPrice = hasHistory ? stock.history[0].price : 0;
+            const lastPrice = hasHistory ? stock.history[stock.history.length - 1].price : 0;
+            const change = firstPrice ? ((lastPrice - firstPrice) / firstPrice * 100).toFixed(2) : '—';
+            const changeColor = change > 0 ? 'green' : change < 0 ? 'red' : '#555';
+            const tickerLabel = stock.ticker ? ` (${stock.ticker})` : '';
+
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
+                    <div>
+                        <strong style="font-size:1.1em;">#${index + 1} ${stock.company}</strong>
+                        <span style="color:#888; font-size:0.85em;">${tickerLabel}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="background:#2c3e50; color:white; padding:3px 8px; border-radius:4px; font-size:0.85em;">Avg Holding: ${stock.weight.toFixed(2)}%</span>
+                        ${hasHistory ? `<span style="color:${changeColor}; font-weight:bold; margin-left:8px; font-size:0.95em;">${change > 0 ? '+' : ''}${change}% (30d)</span>` : ''}
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.82em; color:#666; margin-bottom:4px;">
+                    ${hasHistory ? `<span>Open: ₹${firstPrice.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</span><span>Close: ₹${lastPrice.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>` : ''}
+                </div>
+                <div style="width:100%; overflow-x:auto;">
+                    <canvas id="chart-${index}" style="width:100%; height:220px;"></canvas>
+                </div>
+            `;
+            listDiv.appendChild(card);
+        });
+    }
+
+    function renderCharts(stocks) {
+        stocks.forEach((stock, index) => {
+            const canvas = document.getElementById(`chart-${index}`);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const history = stock.history || [];
+            const labels = history.map((h) => h.date);
+            const dataPoints = history.map((h) => h.price);
+
+            if (!dataPoints.length) {
+                canvas.style.height = '60px';
+                ctx.font = '13px Segoe UI';
+                ctx.fillStyle = '#999';
+                ctx.fillText('Price data unavailable', 10, 35);
+                return;
+            }
+
+            const firstPrice = dataPoints[0];
+            const lastPrice = dataPoints[dataPoints.length - 1];
+            const lineColor = lastPrice >= firstPrice ? '#27ae60' : '#e74c3c';
+            const fillColor = lastPrice >= firstPrice ? 'rgba(39,174,96,0.10)' : 'rgba(231,76,60,0.10)';
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: `${stock.company} Price (₹)`,
+                        data: dataPoints,
+                        borderColor: lineColor,
+                        backgroundColor: fillColor,
+                        borderWidth: 2,
+                        fill: true,
+                        pointRadius: 2,
+                        pointBackgroundColor: lineColor,
+                        pointHoverRadius: 5,
+                        tension: 0.25
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#2c3e50',
+                            titleFont: { size: 12 },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                title: function(items) {
+                                    return items[0]?.label || '';
+                                },
+                                label: function(context) {
+                                    const val = context.parsed.y;
+                                    return `₹${val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: { display: true, text: 'Date', font: { size: 11 }, color: '#666' },
+                            ticks: {
+                                maxRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 10,
+                                font: { size: 10 },
+                                color: '#888'
+                            },
+                            grid: { display: false }
+                        },
+                        y: {
+                            display: true,
+                            title: { display: true, text: 'Price (₹)', font: { size: 11 }, color: '#666' },
+                            ticks: {
+                                font: { size: 10 },
+                                color: '#888',
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString('en-IN');
+                                }
+                            },
+                            grid: { color: 'rgba(0,0,0,0.06)' }
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    async function loadMFData() {
+        const btn = document.getElementById('mf-load-btn');
+        btn.disabled = true;
+        setMFSource('Loading');
+
+        try {
+            setMFStatus('Fetching top 20 mutual funds (highest 3Y returns)...');
+            const fundResult = await fetchTopFunds();
+            const funds = fundResult.funds;
+            let sourceMode = fundResult.source;
+
+            setMFStatus(`Fetching holdings for ${funds.length} funds...`);
+            const holdingBatches = await Promise.all(
+                funds.map(async (fund) => {
+                    try {
+                        return await fetchFundHoldings(fund.id);
+                    } catch (error) {
+                        return [];
+                    }
+                })
+            );
+
+            const weightedTotals = new Map();
+            holdingBatches.forEach((holdings) => {
+                holdings.forEach((item) => {
+                    const current = weightedTotals.get(item.company) || 0;
+                    weightedTotals.set(item.company, current + item.percentage);
+                });
+            });
+
+            const weightedStocks = Array.from(weightedTotals.entries())
+                .map(([company, total]) => ({
+                    company,
+                    weight: total / funds.length
+                }))
+                .sort((a, b) => b.weight - a.weight);
+
+            // Step 1: Pick top 10 stocks by weighted average holding
+            const top10Stocks = weightedStocks.slice(0, 10);
+
+            // Step 2: Apply strict halal screening on those 10
+            const top10Halal = top10Stocks.filter((stock) => !isHaram(stock.company));
+            const haramFiltered = top10Stocks.length - top10Halal.length;
+
+            if (!top10Halal.length) {
+                throw new Error('All top 10 stocks were filtered as haram. No halal stocks to display.');
+            }
+
+            setMFStatus(`Top 10 selected, ${haramFiltered} haram filtered out. Fetching 30-day price data for ${top10Halal.length} halal stocks...`);
+            for (let i = 0; i < top10Halal.length; i += 1) {
+                const stock = top10Halal[i];
+                try {
+                    const ticker = await resolveTicker(stock.company);
+                    stock.ticker = ticker;
+                    stock.history = ticker ? await fetchThirtyDayHistory(ticker) : [];
+                } catch (error) {
+                    stock.history = [];
+                }
+            }
+
+            const stocksWithoutHistory = top10Halal.filter((stock) => !stock.history || stock.history.length === 0).length;
+            if (stocksWithoutHistory > 0) {
+                sourceMode = sourceMode === 'LIVE' ? 'LIVE (partial)' : 'FALLBACK (partial)';
+            }
+
+            renderHalalTable(top10Halal);
+            renderCharts(top10Halal);
+
+            setMFSource(sourceMode, `${funds.length} funds`);
+            setMFStatus(`Done! ${top10Halal.length} halal stocks (from top 10 by weight across ${funds.length} MFs, ${haramFiltered} haram removed).`);
+        } catch (error) {
+            console.error(error);
+            setMFStatus('Live fetch failed due to endpoint/CORS limitations. Try again or use a server-side proxy endpoint.', true);
+            setMFSource('FALLBACK', 'No usable live response');
+            alert('Live fetch failed. Some public APIs block direct browser calls from mobile/localhost.');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
