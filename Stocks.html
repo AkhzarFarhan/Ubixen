@@ -724,15 +724,19 @@
                 }))
                 .sort((a, b) => b.weight - a.weight);
 
-            // Step 1: Pick top 10 stocks by weighted average holding
-            const top10Stocks = weightedStocks.slice(0, 10);
+            // Step 1: Filter out haram stocks and 'Others' first
+            const halalStocks = weightedStocks.filter((stock) => {
+                const name = stock.company.trim().toUpperCase();
+                if (name === 'OTHERS' || name === 'OTHER') return false;
+                return !isHaram(stock.company);
+            });
+            const haramFiltered = weightedStocks.length - halalStocks.length;
 
-            // Step 2: Apply strict halal screening on those 10
-            const top10Halal = top10Stocks.filter((stock) => !isHaram(stock.company));
-            const haramFiltered = top10Stocks.length - top10Halal.length;
+            // Step 2: Pick top 10 from halal stocks
+            const top10Halal = halalStocks.slice(0, 10);
 
             if (!top10Halal.length) {
-                throw new Error('All top 10 stocks were filtered as haram. No halal stocks to display.');
+                throw new Error('No halal stocks found after filtering. No stocks to display.');
             }
 
             setMFStatus(`Top 10 selected, ${haramFiltered} haram filtered out. Fetching 30-day price data for ${top10Halal.length} halal stocks...`);
